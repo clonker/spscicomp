@@ -13,7 +13,7 @@ class Kmeans:
         self._importer = importer
 
     @abstractmethod
-    def CalculateCenters(self, k):
+    def calculate_centers(self, k):
         raise NotImplementedError('subclasses must override CalculateCenters()!')
 
 
@@ -23,14 +23,14 @@ class DefaultKmeans(Kmeans):
         self._max_steps = max_steps
         self._chunk_size = chunk_size
 
-    def CalculateCenters(self, k):
+    def calculate_centers(self, k):
         data = self._importer.get_data(self._chunk_size)
         d = data[0].shape[0]
         centers = [list(np.zeros(d)) for _ in xrange(k)]
         while True:
             for i in xrange(1, self._max_steps):
                 old_centers = centers
-                centers = self.KmeansIterate(data, centers)
+                centers = self.kmeans_iterate(data, centers)
         
                 if np.array_equal(centers, old_centers):
                     break
@@ -44,13 +44,13 @@ class DefaultKmeans(Kmeans):
     
         return centers
 
-    def KmeansIterate(self, data, centers):
+    def kmeans_iterate(self, data, centers):
         k = len(centers)
         centers_counter = np.zeros(k)
         new_centers = np.zeros(centers.shape[0], k)
        
         for p in data:
-            closest_center = self.ClosestCenter(p, centers)
+            closest_center = self.closest_center(p, centers)
             new_centers[closest_center] += p
             centers_counter[closest_center] += 1
 
@@ -60,7 +60,7 @@ class DefaultKmeans(Kmeans):
 
         return new_centers
 
-    def ClosestCenter(self, p, centers):
+    def closest_center(self, p, centers):
         min_dist = float('inf')
         closest_center = 0
         for i, center in enumerate(centers):
@@ -79,7 +79,7 @@ class MiniBatchKmeans(Kmeans):
         self._max_steps = max_steps
         self._chunk_size = chunk_size
 
-    def CalculateCenters(self, k):
+    def calculate_centers(self, k):
         data = self._importer.get_data(self._chunk_size)
         d = data[0].shape[0]
         centers = [list(np.zeros(d)) for _ in xrange(k)]
@@ -87,7 +87,7 @@ class MiniBatchKmeans(Kmeans):
 
         while True:
             for i in xrange(1, self._max_steps):
-                centers, centers_counter = self.MiniBatchKmeansIterate(data, centers, centers_counter)
+                centers, centers_counter = self.mini_batch_kmeans_iterate(data, centers, centers_counter)
 
             data = self._importer.get_data(self._chunk_size)
 
@@ -98,12 +98,12 @@ class MiniBatchKmeans(Kmeans):
 
         return centers
 
-    def MiniBatchKmeansIterate(self, data, centers, centers_counter):
+    def mini_batch_kmeans_iterate(self, data, centers, centers_counter):
         mini_batch_centers = [list([]) for _ in xrange(self._batch_size)]
 
         for i in xrange(0, self._batch_size):
             j = rand.random.randint(0, 1000)
-            closest_center = self.ClosestCenter(data[j], centers)
+            closest_center = self.closest_center(data[j], centers)
             mini_batch_centers[closest_center].append(j)
 
         for i, mini_batch_center in enumerate(mini_batch_centers):
@@ -114,7 +114,7 @@ class MiniBatchKmeans(Kmeans):
 
         return centers, centers_counter
 
-    def ClosestCenter(self, p, centers):
+    def closest_center(self, p, centers):
         min_dist = float('inf')
         closest_center = 0
         for i, center in enumerate(centers):

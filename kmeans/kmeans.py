@@ -19,18 +19,18 @@ class Kmeans:
 
 class DefaultKmeans(Kmeans):
     def __init__(self, metric=EuclideanMetric(), importer=None, chunk_size=1000, max_steps=100):
-        super(MiniBatchKmeans, self).__init__(metric, importer)
+        super(DefaultKmeans, self).__init__(metric, importer)
         self._max_steps = max_steps
+        self._chunk_size = chunk_size
 
     def CalculateCenters(self, k):
         data = self._importer.get_data(self._chunk_size)
         d = data[0].shape[0]
-        old_centers = [list(np.zeros(d)) for _ in xrange(k)]
-
+        centers = [list(np.zeros(d)) for _ in xrange(k)]
         while True:
             for i in xrange(1, self._max_steps):
                 old_centers = centers
-                centers = KmeansIterate(data, centers)
+                centers = self.KmeansIterate(data, centers)
         
                 if np.array_equal(centers, old_centers):
                     break
@@ -45,11 +45,12 @@ class DefaultKmeans(Kmeans):
         return centers
 
     def KmeansIterate(self, data, centers):
+        k = len(centers)
         centers_counter = np.zeros(k)
         new_centers = np.zeros(centers.shape[0], k)
        
         for p in data:
-            closest_center = ClosestCenter(p, centers)
+            closest_center = self.ClosestCenter(p, centers)
             new_centers[closest_center] += p
             centers_counter[closest_center] += 1
 
@@ -76,11 +77,12 @@ class MiniBatchKmeans(Kmeans):
         super(MiniBatchKmeans, self).__init__(metric, importer)
         self._batch_size = batch_size
         self._max_steps = max_steps
+        self._chunk_size = chunk_size
 
     def CalculateCenters(self, k):
         data = self._importer.get_data(self._chunk_size)
         d = data[0].shape[0]
-        centers = [list(np.zeros(d) for _ in xrange(k)]
+        centers = [list(np.zeros(d)) for _ in xrange(k)]
         centers_counter = np.zeros(k)
 
         while True:

@@ -5,7 +5,7 @@ import numpy as np
 from kmeans_metric import EuclideanMetric
 
 class Kmeans:
-    """ abstract metric """
+    """ abstract k-means algorithm """
     __metaclass__ = ABCMeta
 
     def __init__(self, metric=EuclideanMetric(), importer=None):
@@ -14,7 +14,7 @@ class Kmeans:
 
     @abstractmethod
     def calculate_centers(self, k):
-        raise NotImplementedError('subclasses must override CalculateCenters()!')
+        raise NotImplementedError('subclasses must override calculate_centers()!')
 
 
 class DefaultKmeans(Kmeans):
@@ -27,6 +27,7 @@ class DefaultKmeans(Kmeans):
         data = self._importer.get_data(self._chunk_size)
         d = data[0].shape[0]
         centers = [list(np.zeros(d)) for _ in xrange(k)]
+
         while True:
             for i in xrange(1, self._max_steps):
                 old_centers = centers
@@ -63,6 +64,7 @@ class DefaultKmeans(Kmeans):
     def closest_center(self, p, centers):
         min_dist = float('inf')
         closest_center = 0
+
         for i, center in enumerate(centers):
             dist = self._metric.dist(p, center)
             if dist < min_dist:
@@ -117,6 +119,7 @@ class MiniBatchKmeans(Kmeans):
     def closest_center(self, p, centers):
         min_dist = float('inf')
         closest_center = 0
+
         for i, center in enumerate(centers):
             dist = self._metric.dist(p, center)
             if dist < min_dist:

@@ -3,7 +3,7 @@ import numpy as np
 
 
 class KmeansDataImporter:
-    """ abstract metric """
+    """ abstract data importer """
 
     def __init__(self):
         pass
@@ -12,7 +12,7 @@ class KmeansDataImporter:
 
     @abstractmethod
     def get_data(self, size):
-        raise NotImplementedError('subclasses must override calculate_centers()!')
+        raise NotImplementedError('subclasses must override get_data()!')
 
 
 class KmeansFileDataImporter(KmeansDataImporter):

@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from numpy import random as rand
 import numpy as np
+
 from kmeans_metric import EuclideanMetric
 
 
@@ -8,27 +9,29 @@ class Kmeans:
     """ abstract metric """
     __metaclass__ = ABCMeta
 
-    def __init__(self, metric=EuclideanMetric()):
+    def __init__(self, metric=EuclideanMetric(), importer=None):
         self._metric = metric
+        self._chunk = None
+        self._importer = importer
 
     @abstractmethod
-    def calculate_centers(self, k, data):
+    def calculate_centers(self, k):
         raise NotImplementedError('subclasses must override calculate_centers()!')
 
 
 class DefaultKmeans(Kmeans):
-    def calculate_centers(self, k, data):
+    def calculate_centers(self, k):
         return ''
 
 
 class WeakKmeans(Kmeans):
-    def calculate_centers(self, k, data):
+    def calculate_centers(self, k):
         return ''
 
 
 class MiniBatchKMeans(Kmeans):
-    def __init__(self, metric=EuclideanMetric(), batch_size=20, max_steps=100):
-        super(MiniBatchKMeans, self).__init__(metric)
+    def __init__(self, metric=EuclideanMetric(), importer=None, batch_size=20, max_steps=100):
+        super(MiniBatchKMeans, self).__init__(metric, importer)
         self._batch_size = batch_size
         self._max_steps = max_steps
 

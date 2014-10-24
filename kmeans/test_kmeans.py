@@ -33,8 +33,11 @@ class TestKmeans(unittest.TestCase):
             importer.rewind()
 
     def test_kmeans_plot(self):
-        centers = [list(np.random.uniform(0, 100, (1, 2))) for _ in xrange(3)]
+        data_generator = KmeansRandomDataGenerator(1000, 2, 3)
+        centers = data_generator.get_centers()
         plot = KmeansPlot(centers)
+        plot.plot_data(data_generator.get_data())
+        plot.plot_centers()
         plot.show_plot()
 
 

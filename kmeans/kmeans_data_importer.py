@@ -14,6 +14,13 @@ class KmeansDataImporter:
     def get_data(self, size):
         raise NotImplementedError('subclasses must override get_data()!')
 
+    def rewind(self):
+        pass
+
+    @abstractmethod
+    def has_more_data(self):
+        raise NotImplementedError('subclasses must override has_more_data()!')
+
 
 class KmeansFileDataImporter(KmeansDataImporter):
     def __init__(self, filename):

@@ -1,11 +1,13 @@
 import unittest
 import numpy as np
+
 from kmeans_metric import EuclideanMetric
 from kmeans_data_importer import KmeansFileDataImporter
 from kmeans_data_generator import KmeansRandomDataGenerator
+from kmeans_plot import KmeansPlot
 
 
-class TestKmeansMetric(unittest.TestCase):
+class TestKmeans(unittest.TestCase):
     def setUp(self):
         pass
 
@@ -29,6 +31,11 @@ class TestKmeansMetric(unittest.TestCase):
                 if not importer.has_more_data():
                     break
             importer.rewind()
+
+    def test_kmeans_plot(self):
+        centers = [list(np.random.uniform(0, 100, (1, 2))) for _ in xrange(3)]
+        plot = KmeansPlot(centers)
+        plot.show_plot()
 
 
 """

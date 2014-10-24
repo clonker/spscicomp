@@ -4,6 +4,7 @@ import numpy as np
 
 from kmeans_metric import EuclideanMetric
 
+
 class Kmeans:
     """ abstract k-means algorithm """
     __metaclass__ = ABCMeta

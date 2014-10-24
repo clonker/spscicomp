@@ -1,13 +1,15 @@
 import unittest
 import numpy as np
 
+from kmeans import DefaultKmeans
+from kmeans import MiniBatchKmeans
 from kmeans_metric import EuclideanMetric
 from kmeans_data_importer import KmeansFileDataImporter
 from kmeans_data_generator import KmeansRandomDataGenerator
 from kmeans_plot import KmeansPlot
 
 
-class TestKmeans(unittest.TestCase):
+class TestKmeansMetric(unittest.TestCase):
     def setUp(self):
         pass
 
@@ -17,6 +19,11 @@ class TestKmeans(unittest.TestCase):
                          'for points (0,0) and (0,0): Expected distance is zero!')
         self.assertEqual(metric.dist(np.array([0, 0]), np.array([3, 4])), 5, 'for euclidean metric: d((0,0),(3,4))=5.')
         self.assertEqual(metric.dist(np.array([3, 4]), np.array([0, 0])), 5, 'any metric should be symmetric.')
+
+
+class TestKmeansData(unittest.TestCase):
+    def setUp(self):
+        pass
 
     def test_kmeans_random_data_generator(self):
         data_generator = KmeansRandomDataGenerator(1000, 2, 3)
@@ -32,11 +39,41 @@ class TestKmeans(unittest.TestCase):
                     break
             importer.rewind()
 
+
+class TestKmeansPlot(unittest.TestCase):
+    def setUp(self):
+        pass
+
     def test_kmeans_plot(self):
         data_generator = KmeansRandomDataGenerator(1000, 2, 3)
         centers = data_generator.get_centers()
         plot = KmeansPlot(centers)
         plot.plot_data(data_generator.get_data())
+        plot.plot_centers()
+        plot.show_plot()
+
+
+class TestKmeans(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def test_default_kmeans(self):
+        importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt')
+        kmeans = DefaultKmeans(importer=importer)
+        centers = kmeans.calculate_centers(3)
+        print centers
+        plot = KmeansPlot(centers)
+        plot.plot_data(importer.get_data(1000))
+        plot.plot_centers()
+        plot.show_plot()
+
+    def test_mini_batch_kmeans(self):
+        importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt')
+        kmeans = MiniBatchKmeans(importer=importer)
+        centers = kmeans.calculate_centers(3)
+        print centers
+        plot = KmeansPlot(centers)
+        plot.plot_data(importer.get_data(1000))
         plot.plot_centers()
         plot.show_plot()
 

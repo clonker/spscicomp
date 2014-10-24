@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-from numpy import random as rand
 import numpy as np
 
 from kmeans_metric import EuclideanMetric
@@ -23,11 +22,12 @@ class DefaultKmeans(Kmeans):
         super(DefaultKmeans, self).__init__(metric, importer)
         self._max_steps = max_steps
         self._chunk_size = chunk_size
+        self._dimension = None
 
     def calculate_centers(self, k):
         data = self._importer.get_data(self._chunk_size)
-        d = data[0].shape[0]
-        centers = [list(np.zeros(d)) for _ in xrange(k)]
+        self._dimension = data[0].shape[0]
+        centers = [np.zeros(self._dimension) for _ in xrange(k)]
         while True:
             for i in xrange(1, self._max_steps):
                 old_centers = centers
@@ -44,7 +44,7 @@ class DefaultKmeans(Kmeans):
     def kmeans_iterate(self, data, centers):
         k = len(centers)
         centers_counter = np.zeros(k)
-        new_centers = np.zeros(centers.shape[0], k)
+        new_centers = [np.zeros(self._dimension) for _ in xrange(k)]
         for p in data:
             closest_center = self.closest_center(p, centers)
             new_centers[closest_center] += p
@@ -73,11 +73,12 @@ class MiniBatchKmeans(Kmeans):
         self._batch_size = batch_size
         self._max_steps = max_steps
         self._chunk_size = chunk_size
+        self._dimension = None
 
     def calculate_centers(self, k):
         data = self._importer.get_data(self._chunk_size)
-        d = data[0].shape[0]
-        centers = [list(np.zeros(d)) for _ in xrange(k)]
+        self._dimension = data[0].shape[0]
+        centers = [np.zeros(self._dimension) for _ in xrange(k)]
         centers_counter = np.zeros(k)
         while True:
             for i in xrange(1, self._max_steps):
@@ -92,7 +93,7 @@ class MiniBatchKmeans(Kmeans):
     def mini_batch_kmeans_iterate(self, data, centers, centers_counter):
         mini_batch_centers = [list([]) for _ in xrange(self._batch_size)]
         for i in xrange(0, self._batch_size):
-            j = rand.random.randint(0, 1000)
+            j = np.random.randint(0, 1000)
             closest_center = self.closest_center(data[j], centers)
             mini_batch_centers[closest_center].append(j)
         for i, mini_batch_center in enumerate(mini_batch_centers):

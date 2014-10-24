@@ -15,7 +15,8 @@ class KmeansPlot:
 
     def plot_centers(self):
         for i, center in enumerate(self._centers):
-            center = center[0]
+            if type(center) is list:
+                center = center[0]
             plt.plot(center[0], center[1], linestyle='None', marker='o', color=self._colors[i, :])
 
     def plot_data(self, data):

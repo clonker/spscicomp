@@ -27,7 +27,9 @@ class DefaultKmeans(Kmeans):
     def calculate_centers(self, k):
         data = self._importer.get_data(self._chunk_size)
         self._dimension = data[0].shape[0]
-        centers = [np.zeros(self._dimension) for _ in xrange(k)]
+        centers = []
+        for i in xrange(k):
+            centers.append(data[np.random.randint(0, len(data))])
         while True:
             for i in xrange(1, self._max_steps):
                 old_centers = centers
@@ -52,7 +54,8 @@ class DefaultKmeans(Kmeans):
         for i, center in enumerate(new_centers):
             if centers_counter[i] > 0:
                 new_centers[i] /= centers_counter[i]
-
+            else:
+                new_centers[i] = centers[i]
         return new_centers
 
     def closest_center(self, p, centers):
@@ -78,7 +81,9 @@ class MiniBatchKmeans(Kmeans):
     def calculate_centers(self, k):
         data = self._importer.get_data(self._chunk_size)
         self._dimension = data[0].shape[0]
-        centers = [np.zeros(self._dimension) for _ in xrange(k)]
+        centers = []
+        for i in xrange(k):
+            centers.append(data[np.random.randint(0, len(data))])
         centers_counter = np.zeros(k)
         while True:
             for i in xrange(1, self._max_steps):
@@ -114,3 +119,56 @@ class MiniBatchKmeans(Kmeans):
                 closest_center = i
 
         return int(closest_center)
+
+
+class SoftKmeans(Kmeans):
+    def __init__(self, metric=EuclideanMetric(), importer=None, chunk_size=1000, max_steps=100, beta=0.5):
+        super(SoftKmeans, self).__init__(metric, importer)
+        self._max_steps = max_steps
+        self._chunk_size = chunk_size
+        self._dimension = None
+        self._beta = beta
+
+    def calculate_centers(self, k):
+        data = self._importer.get_data(self._chunk_size)
+        self._dimension = data[0].shape[0]
+        centers = []
+        for i in xrange(k):
+            centers.append(data[np.random.randint(0, len(data))])
+
+        while True:
+            for i in xrange(1, self._max_steps):
+                old_centers = centers
+                centers = self.soft_kmeans_iterate(data, centers)
+                if np.array_equal(centers, old_centers):
+                    break
+            data = self._importer.get_data(self._chunk_size)
+            if not self._importer.has_more_data():
+                break
+        self._importer.rewind()
+
+        return centers
+
+    def soft_kmeans_iterate(self, data, centers):
+        k = len(centers)
+        data_len = len(data)
+        new_centers = [np.zeros(self._dimension) for _ in xrange(k)]
+        responsibility = []
+        for p in data:
+            responsibility.append(self.weight_distance(p, centers))
+        sum_respon = np.zeros(k)
+        for i, center in enumerate(new_centers):
+            for j in xrange(data_len):
+                new_centers[i] += responsibility[j][i]*data[j]
+                sum_respon[i] += responsibility[j][i]
+            new_centers[i] /= sum_respon[i]
+        return new_centers
+
+    def weight_distance(self, p, centers):
+        k = len(centers)
+        distance = np.zeros(k)
+        for i, center in enumerate(centers):
+            distance[i] = np.exp(-1*self._beta*self._metric.dist(p, center))
+        distance /= np.sum(distance)
+        return distance
+

@@ -65,6 +65,15 @@ class TestKmeans(unittest.TestCase):
         plot.plot_centers()
         plot.show_plot()
 
+    def test_soft_kmeans(self):
+        importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt')
+        soft_kmeans = SoftKmeans(importer=importer)
+        centers = soft_kmeans.calculate_centers(3)
+        plot = KmeansPlot(centers)
+        plot.plot_data(importer.get_data(1000))
+        plot.plot_centers()
+        plot.show_plot()
+
     def test_mini_batch_kmeans(self):
         importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt')
         kmeans = MiniBatchKmeans(importer=importer)

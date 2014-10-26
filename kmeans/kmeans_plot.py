@@ -7,11 +7,10 @@ from kmeans import DefaultKmeans
 
 # Plots 2D data only.
 class KmeansPlot:
-    def __init__(self, centers=None, axis=[0, 100, 0, 100]):
+    def __init__(self, centers=None):
         self._centers = centers
         self._colors = cm.rainbow(np.linspace(0, 1, len(centers)))
         self._kmeans = DefaultKmeans()
-        plt.axis(axis)
 
     def plot_centers(self):
         for i, center in enumerate(self._centers):

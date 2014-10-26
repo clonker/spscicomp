@@ -1,12 +1,10 @@
 import unittest
-import numpy as np
 
-from kmeans import DefaultKmeans
-from kmeans import MiniBatchKmeans
-from kmeans_metric import EuclideanMetric
-from kmeans_data_importer import KmeansFileDataImporter
-from kmeans_data_generator import KmeansRandomDataGenerator
-from kmeans_plot import KmeansPlot
+from kmeans import *
+from kmeans_metric import *
+from kmeans_data_importer import *
+from kmeans_data_generator import *
+from kmeans_plot import *
 
 
 class TestKmeansMetric(unittest.TestCase):

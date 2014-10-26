@@ -1,1 +1,8 @@
+# ignore vim swap
 *.swp
+
+# ignore compiled python
+*.pyc
+
+# ignore optimized compiled python
+*.pyo

@@ -1,4 +1,5 @@
 import unittest
+import timeit
 
 from kmeans import *
 from kmeans_metric import *
@@ -29,7 +30,7 @@ class TestKmeansData(unittest.TestCase):
 
     def test_kmeans_file_data_importer(self):
         importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt')
-        for i in range(0, 5):
+        for i in xrange(0, 5):
             while True:
                 chunk = importer.get_data(1000)
                 print len(chunk)
@@ -59,7 +60,7 @@ class TestKmeans(unittest.TestCase):
         importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt')
         kmeans = DefaultKmeans(importer=importer)
         centers = kmeans.calculate_centers(3)
-        print centers
+        print "default_kmeans: " + str(centers)
         plot = KmeansPlot(centers)
         plot.plot_data(importer.get_data(1000))
         plot.plot_centers()
@@ -67,8 +68,9 @@ class TestKmeans(unittest.TestCase):
 
     def test_soft_kmeans(self):
         importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt')
-        soft_kmeans = SoftKmeans(importer=importer)
-        centers = soft_kmeans.calculate_centers(3)
+        kmeans = SoftKmeans(importer=importer)
+        centers = kmeans.calculate_centers(3)
+        print "soft_kmeans: " + str(centers)
         plot = KmeansPlot(centers)
         plot.plot_data(importer.get_data(1000))
         plot.plot_centers()
@@ -78,11 +80,46 @@ class TestKmeans(unittest.TestCase):
         importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt')
         kmeans = MiniBatchKmeans(importer=importer)
         centers = kmeans.calculate_centers(3)
-        print centers
+        print "mini_batch_kmeans: " + str(centers)
         plot = KmeansPlot(centers)
         plot.plot_data(importer.get_data(1000))
         plot.plot_centers()
         plot.show_plot()
+
+
+class TestKmeansTimed(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def test_default_kmeans(self):
+        print "default_kmeans, average from 10 iterations:"
+        print timeit.timeit('kmeans.calculate_centers(3)', setup="from kmeans import DefaultKmeans;"
+                                                                 "from kmeans_data_importer import "
+                                                                 "KmeansFileDataImporter;"
+                                                                 "importer = KmeansFileDataImporter(filename="
+                                                                 "'test_kmeans_random_data_generator.txt');"
+                                                                 "kmeans = DefaultKmeans(importer=importer)",
+                            number=10)
+
+    def test_soft_kmeans(self):
+        print "soft_kmeans, average from 10 iterations:"
+        print timeit.timeit('kmeans.calculate_centers(3)', setup="from kmeans import SoftKmeans;"
+                                                                 "from kmeans_data_importer import "
+                                                                 "KmeansFileDataImporter;"
+                                                                 "importer = KmeansFileDataImporter(filename="
+                                                                 "'test_kmeans_random_data_generator.txt');"
+                                                                 "kmeans = SoftKmeans(importer=importer)",
+                            number=10)
+
+    def test_mini_batch_kmeans(self):
+        print "mini_batch_kmeans, average from 10 iterations:"
+        print timeit.timeit('kmeans.calculate_centers(3)', setup="from kmeans import MiniBatchKmeans;"
+                                                                 "from kmeans_data_importer import "
+                                                                 "KmeansFileDataImporter;"
+                                                                 "importer = KmeansFileDataImporter(filename="
+                                                                 "'test_kmeans_random_data_generator.txt');"
+                                                                 "kmeans = MiniBatchKmeans(importer=importer)",
+                            number=10)
 
 
 """

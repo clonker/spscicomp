@@ -37,7 +37,7 @@ class KmeansFileDataImporter(KmeansDataImporter):
 
     def get_data(self, size):
         data = []
-        for i in range(0, size):
+        for i in xrange(0, size):
             line = next(self._fileLineEnum, None)
             if line is not None:
                 _, line = line

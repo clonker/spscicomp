@@ -27,9 +27,7 @@ class DefaultKmeans(Kmeans):
     def calculate_centers(self, k):
         data = self._importer.get_data(self._chunk_size)
         self._dimension = data[0].shape[0]
-        centers = []
-        for i in xrange(k):
-            centers.append(data[np.random.randint(0, len(data))])
+        centers = [data[np.random.randint(0, len(data))] for _ in xrange(k)]
         while True:
             for i in xrange(1, self._max_steps):
                 old_centers = centers
@@ -81,9 +79,7 @@ class MiniBatchKmeans(Kmeans):
     def calculate_centers(self, k):
         data = self._importer.get_data(self._chunk_size)
         self._dimension = data[0].shape[0]
-        centers = []
-        for i in xrange(k):
-            centers.append(data[np.random.randint(0, len(data))])
+        centers = [data[np.random.randint(0, len(data))] for _ in xrange(k)]
         centers_counter = np.zeros(k)
         while True:
             for i in xrange(1, self._max_steps):
@@ -132,9 +128,7 @@ class SoftKmeans(Kmeans):
     def calculate_centers(self, k):
         data = self._importer.get_data(self._chunk_size)
         self._dimension = data[0].shape[0]
-        centers = []
-        for i in xrange(k):
-            centers.append(data[np.random.randint(0, len(data))])
+        centers = [data[np.random.randint(0, len(data))] for _ in xrange(k)]
 
         while True:
             for i in xrange(1, self._max_steps):
@@ -159,7 +153,7 @@ class SoftKmeans(Kmeans):
         sum_respon = np.zeros(k)
         for i, center in enumerate(new_centers):
             for j in xrange(data_len):
-                new_centers[i] += responsibility[j][i]*data[j]
+                new_centers[i] += responsibility[j][i] * data[j]
                 sum_respon[i] += responsibility[j][i]
             new_centers[i] /= sum_respon[i]
         return new_centers

@@ -11,6 +11,7 @@ class KmeansPlot:
         self._centers = centers
         self._colors = cm.rainbow(np.linspace(0, 1, len(centers)))
         self._kmeans = DefaultKmeans()
+        plt.figure()
 
     def plot_centers(self):
         for i, center in enumerate(self._centers):
@@ -25,3 +26,7 @@ class KmeansPlot:
 
     def show_plot(self):
         plt.show()
+
+    def save_plot(self, filename):
+        plt.savefig(filename)
+        plt.close()

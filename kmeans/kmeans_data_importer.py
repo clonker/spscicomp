@@ -45,13 +45,16 @@ class KmeansFileDataImporter(KmeansDataImporter):
                 data.append(np.array(parts, dtype=np.float))
             else:
                 self._hasMoreData = False
+                self._file.close()
                 break
 
         return data
 
     def rewind(self):
-        self._file.close()
         self.init_file_input_stream()
 
     def has_more_data(self):
         return self._hasMoreData
+
+    def close_file(self):
+        self._file.close()

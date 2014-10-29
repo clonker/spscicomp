@@ -57,4 +57,5 @@ class KmeansFileDataImporter(KmeansDataImporter):
         return self._hasMoreData
 
     def close_file(self):
-        self._file.close()
+        if self._file is not None and not self._file.closed:
+            self._file.close()

@@ -8,6 +8,9 @@ from kmeans_data_generator import *
 from kmeans_plot import *
 
 
+# TODO: cleanup + split
+
+
 class TestKmeansMetric(unittest.TestCase):
     def setUp(self):
         pass
@@ -108,32 +111,38 @@ class TestKmeansTimed(unittest.TestCase):
 
     def test_default_kmeans(self):
         print "default_kmeans, average from 10 iterations:"
-        print timeit.timeit('kmeans.calculate_centers(3)', setup="from kmeans import DefaultKmeans;"
-                                                                 "from kmeans_data_importer import "
-                                                                 "KmeansFileDataImporter;"
-                                                                 "importer = KmeansFileDataImporter(filename="
-                                                                 "'test_kmeans_random_data_generator.txt');"
-                                                                 "kmeans = DefaultKmeans(importer=importer)",
+        print timeit.timeit('kmeans.calculate_centers(3, initial_centers=initial_centers, save_history=True)',
+                            setup="import numpy as np;"
+                                  "from kmeans import DefaultKmeans;"
+                                  "from kmeans_data_importer import KmeansFileDataImporter;"
+                                  "importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt');"
+                                  "kmeans = DefaultKmeans(importer=importer);"
+                                  "initial_centers = [np.array([11.36545498, 32.76316854]),"
+                                  "np.array([44.56166088, 3.98325672]),np.array([3.70092085, 36.24628609])]",
                             number=10)
 
     def test_soft_kmeans(self):
         print "soft_kmeans, average from 10 iterations:"
-        print timeit.timeit('kmeans.calculate_centers(3)', setup="from kmeans import SoftKmeans;"
-                                                                 "from kmeans_data_importer import "
-                                                                 "KmeansFileDataImporter;"
-                                                                 "importer = KmeansFileDataImporter(filename="
-                                                                 "'test_kmeans_random_data_generator.txt');"
-                                                                 "kmeans = SoftKmeans(importer=importer)",
+        print timeit.timeit('kmeans.calculate_centers(3, initial_centers=initial_centers, save_history=True)',
+                            setup="import numpy as np;"
+                                  "from kmeans import SoftKmeans;"
+                                  "from kmeans_data_importer import KmeansFileDataImporter;"
+                                  "importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt');"
+                                  "kmeans = SoftKmeans(importer=importer, max_steps=20);"
+                                  "initial_centers = [np.array([11.36545498, 32.76316854]),"
+                                  "np.array([44.56166088, 3.98325672]),np.array([3.70092085, 36.24628609])]",
                             number=10)
 
     def test_mini_batch_kmeans(self):
         print "mini_batch_kmeans, average from 10 iterations:"
-        print timeit.timeit('kmeans.calculate_centers(3)', setup="from kmeans import MiniBatchKmeans;"
-                                                                 "from kmeans_data_importer import "
-                                                                 "KmeansFileDataImporter;"
-                                                                 "importer = KmeansFileDataImporter(filename="
-                                                                 "'test_kmeans_random_data_generator.txt');"
-                                                                 "kmeans = MiniBatchKmeans(importer=importer)",
+        print timeit.timeit('kmeans.calculate_centers(3, initial_centers=initial_centers, save_history=True)',
+                            setup="import numpy as np;"
+                                  "from kmeans import MiniBatchKmeans;"
+                                  "from kmeans_data_importer import KmeansFileDataImporter;"
+                                  "importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt');"
+                                  "kmeans = MiniBatchKmeans(importer=importer, max_steps=20);"
+                                  "initial_centers = [np.array([11.36545498, 32.76316854]),"
+                                  "np.array([44.56166088, 3.98325672]),np.array([3.70092085, 36.24628609])]",
                             number=10)
 
 

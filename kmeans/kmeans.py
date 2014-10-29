@@ -97,7 +97,9 @@ class MiniBatchKmeans(Kmeans):
         while True:
             for i in xrange(1, self._max_steps):
                 if save_history:
-                    history.append(centers)
+                    history.append(centers[:])  # we need to _copy_ the old centers since they get modified in place
+                                                # in the iterate method (the iterate methods for default_kmeans
+                                                # and soft_kmeans start afresh instead)
                 centers, centers_counter = self.mini_batch_kmeans_iterate(data, centers, centers_counter)
             data = self._importer.get_data(self._chunk_size)
             if not self._importer.has_more_data():

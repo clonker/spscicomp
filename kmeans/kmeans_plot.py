@@ -24,9 +24,11 @@ class KmeansPlot:
             j = self._kmeans.closest_center(p, self._centers)
             plt.plot(p[0], p[1], linestyle='None', marker='.', color=self._colors[j])
 
-    def show_plot(self):
+    @staticmethod
+    def show_plot():
         plt.show()
 
-    def save_plot(self, filename):
+    @staticmethod
+    def save_plot(filename):
         plt.savefig(filename)
         plt.close()

@@ -61,33 +61,51 @@ class TestKmeans(unittest.TestCase):
 
     def test_default_kmeans(self):
         importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt')
-        kmeans = DefaultKmeans(importer=importer)
+        kmeans = DefaultKmeans(importer=importer, chunk_size=200)
         initial_centers = [np.array([11.36545498, 32.76316854]),
                            np.array([44.56166088, 3.98325672]),
                            np.array([3.70092085, 36.24628609])]
-        centers, history = kmeans.calculate_centers(3, initial_centers=initial_centers, save_history=True)
+        history = None
+        centers = kmeans.calculate_centers(3)
+        #centers, history = kmeans.calculate_centers(3, initial_centers=initial_centers, save_history=True)
         print "default_kmeans: " + str(centers)
-        for i in xrange(len(history)):
-            plot = KmeansPlot(history[i])
+        if history:
+            for i in xrange(len(history)):
+                plot = KmeansPlot(history[i])
+                plot.plot_data(importer.get_data(1000))
+                importer.rewind()
+                plot.plot_centers()
+                #plot.save_plot("plots/default_kmeans_%s" % str(i))
+        else:
+            plot = KmeansPlot(centers)
             plot.plot_data(importer.get_data(1000))
             importer.rewind()
             plot.plot_centers()
-            plot.save_plot("plots/default_kmeans_%s" % str(i))
+            plot.show_plot()
 
     def test_soft_kmeans(self):
         importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt')
-        kmeans = SoftKmeans(importer=importer, max_steps=20)
+        kmeans = SoftKmeans(importer=importer, chunk_size=500)
         initial_centers = [np.array([11.36545498, 32.76316854]),
                            np.array([44.56166088, 3.98325672]),
                            np.array([3.70092085, 36.24628609])]
-        centers, history = kmeans.calculate_centers(3, initial_centers=initial_centers, save_history=True)
-        print "soft_kmeans: " + str(centers)
-        for i in xrange(len(history)):
-            plot = KmeansPlot(history[i])
+        history = None
+        centers = kmeans.calculate_centers(3)
+        #centers, history = kmeans.calculate_centers(3, initial_centers=initial_centers, save_history=True)
+        print "default_kmeans: " + str(centers)
+        if history:
+            for i in xrange(len(history)):
+                plot = KmeansPlot(history[i])
+                plot.plot_data(importer.get_data(1000))
+                importer.rewind()
+                plot.plot_centers()
+                #plot.save_plot("plots/default_kmeans_%s" % str(i))
+        else:
+            plot = KmeansPlot(centers)
             plot.plot_data(importer.get_data(1000))
             importer.rewind()
             plot.plot_centers()
-            plot.save_plot("plots/soft_kmeans_%s" % str(i))
+            plot.show_plot()
 
     def test_mini_batch_kmeans(self):
         importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt')

@@ -32,25 +32,39 @@ class DefaultKmeans(Kmeans):
         else:
             centers = [data[np.random.randint(0, len(data))] for _ in xrange(k)]
         history = []
-        while True:
-            for i in xrange(1, self._max_steps):
-                old_centers = centers
-                if save_history:
-                    history.append(centers)
-                centers = self.kmeans_iterate(data, centers)
-                if np.array_equal(centers, old_centers):
-                    break
-            data = self._importer.get_data(self._chunk_size)
-            if not self._importer.has_more_data():
-                break
         self._importer.rewind()
-
+        for i in xrange(1, self._max_steps):
+            old_centers = centers
+            if save_history:
+                history.append(centers)
+            centers = self.kmeans_iterate(centers)
+            #print "old", old_centers
+            #print "new", centers
+            if np.array_equal(centers, old_centers):
+                break
         if save_history:
             return centers, history
         else:
             return centers
 
-    def kmeans_iterate(self, data, centers):
+    def kmeans_iterate(self, centers):
+        centers_list = []
+        self._importer.rewind()
+        while True:
+            data = self._importer.get_data(self._chunk_size)
+            if not data:
+                break
+            else:
+                centers_list.append(self.kmeans_chunk_center(data, centers))
+            if not self._importer.has_more_data():
+                break
+        center_sum = np.zeros([len(centers), len(centers[0])])
+        print centers_list
+        for chunk_center in centers_list:
+            center_sum += chunk_center
+        return center_sum/len(centers_list)
+
+    def kmeans_chunk_center(self, data, centers):
         k = len(centers)
         centers_counter = np.zeros(k)
         new_centers = [np.zeros(self._dimension) for _ in xrange(k)]
@@ -137,7 +151,7 @@ class MiniBatchKmeans(Kmeans):
         return int(closest_center)
 
 
-class SoftKmeans(Kmeans):
+class SoftKmeans(DefaultKmeans):
     def __init__(self, metric=EuclideanMetric(), importer=None, chunk_size=1000, max_steps=100, beta=0.5):
         super(SoftKmeans, self).__init__(metric, importer)
         self._max_steps = max_steps
@@ -145,35 +159,7 @@ class SoftKmeans(Kmeans):
         self._dimension = None
         self._beta = beta
 
-    def calculate_centers(self, k, initial_centers=None, save_history=False):
-        data = self._importer.get_data(self._chunk_size)
-        self._dimension = data[0].shape[0]
-        if initial_centers:
-            centers = initial_centers
-        else:
-            centers = [data[np.random.randint(0, len(data))] for _ in xrange(k)]
-        history = []
-
-        while True:
-            for i in xrange(1, self._max_steps):
-                old_centers = centers
-                if save_history:
-                    history.append(centers)
-                centers = self.soft_kmeans_iterate(data, centers)
-                if np.array_equal(centers, old_centers):  # TODO: check instead if centers and old_centers are
-                                                          # reasonably close to each other
-                    break
-            data = self._importer.get_data(self._chunk_size)
-            if not self._importer.has_more_data():
-                break
-        self._importer.rewind()
-
-        if save_history:
-            return centers, history
-        else:
-            return centers
-
-    def soft_kmeans_iterate(self, data, centers):
+    def kmeans_chunk_center(self, data, centers):
         k = len(centers)
         data_len = len(data)
         new_centers = [np.zeros(self._dimension) for _ in xrange(k)]

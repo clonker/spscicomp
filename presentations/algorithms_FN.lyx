@@ -1,0 +1,939 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language american
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 3cm
+\topmargin 2cm
+\rightmargin 3cm
+\bottommargin 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip smallskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Algorithms and Implementation details
+\end_layout
+
+\begin_layout Section
+TICA
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Literature
+\series default
+: G.
+ Pérez-Hernández, F.
+ Paul, T.
+ Giorgino, G.
+ De Fabritiis and F.
+ Noé: Identification of slow molecular order parameters for Markov model
+ construction Citation: J.
+ Chem.
+ Phys.
+ 139, 015102 (2013); doi: 10.1063/1.4811489
+\end_layout
+
+\begin_layout Standard
+We consider a 
+\begin_inset Formula $d$
+\end_inset
+
+-dimensional vector of input data, called 
+\begin_inset Formula $\mathbf{r}(t)=(r_{i}(t))_{i=1,...,D}$
+\end_inset
+
+.
+ Here, 
+\begin_inset Formula $t$
+\end_inset
+
+ is an integer from 
+\begin_inset Formula $\{1...N\}$
+\end_inset
+
+ denoting the time step.
+ We assume that the data is mean-free, i.e.
+ from a general input vector 
+\begin_inset Formula $\tilde{\mathbf{r}}(t)$
+\end_inset
+
+, we first obtain:
+\begin_inset Formula 
+\[
+\mathbf{r}(t)=\tilde{\mathbf{r}}(t)-\langle\tilde{\mathbf{r}}(t)\rangle_{t}
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\langle\tilde{\mathbf{r}}(t)\rangle_{t}$
+\end_inset
+
+ is the data mean.
+\end_layout
+
+\begin_layout Standard
+We first compute the covariance matrices from the data:
+\begin_inset Formula 
+\[
+c_{ij}(\tau)=\langle r_{i}(t)\: r_{j}(t+\tau\rangle_{t}
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\tau$
+\end_inset
+
+ is the lag time.
+ We will need two matrices for TICA, for the choices 
+\begin_inset Formula $\tau=0$
+\end_inset
+
+ and another positive value of 
+\begin_inset Formula $\tau$
+\end_inset
+
+.
+ 
+\begin_inset Formula $\langle\cdot\rangle_{t}$
+\end_inset
+
+ denotes the time average.
+ We can evaluate it as follows:
+\begin_inset Formula 
+\[
+c_{ij}(\tau)=\frac{1}{N-\tau-1}\sum_{t=1}^{N-\tau}r_{i}(t)\, r_{j}(t+\tau).
+\]
+
+\end_inset
+
+It is easy to verify that 
+\begin_inset Formula $C(0)$
+\end_inset
+
+ is a symmetric matrix.
+ For algebraic reasons we will need that 
+\begin_inset Formula $C(\tau)$
+\end_inset
+
+ is also symmetric, which is not automatically guaranteed.
+ Therefore we enforce symmetry from a data-computed matrix 
+\begin_inset Formula $C_{d}(\tau)$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+C(\tau)=\frac{1}{2}\left(C_{d}(\tau)+C_{d}^{\top}(\tau)\right).
+\]
+
+\end_inset
+
+Now we solve the generalized eigenvalue problem:
+\begin_inset Formula 
+\[
+C(\tau)\: U=C(0)\: U\:\Lambda
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $U$
+\end_inset
+
+ is the eigenvector-matrix containing the independent components (ICs) in
+ the columns and 
+\begin_inset Formula $\Lambda$
+\end_inset
+
+ is a diagonal eigenvalue matrix.
+ This problem can be solved by an appropriate generalized eigenvalue solver
+ (directly), or in two steps.
+ The two step procedure is called AMUSE algorithm and works as follows:
+\end_layout
+
+\begin_layout Enumerate
+Solve the simple PCA Eigenvalue problem 
+\begin_inset Formula $\mathbf{C}(0)\:\mathbf{W}=\mathbf{W}\:\boldsymbol{\Sigma}$
+\end_inset
+
+, where 
+\begin_inset Formula $\mathbf{W}$
+\end_inset
+
+ is the eigenvector matrix with principal components and 
+\begin_inset Formula $\boldsymbol{\Sigma}$
+\end_inset
+
+ are their variances (diagonal Eigenvalue matrix).
+\end_layout
+
+\begin_layout Enumerate
+Transform the mean-free data 
+\begin_inset Formula $\mathbf{r}(t)$
+\end_inset
+
+ onto principal components 
+\begin_inset Formula $\mathbf{y}(t)=\mathbf{W}\:\mathbf{r}(t)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Normalize the principal components: 
+\begin_inset Formula $\mathbf{y}'(t)=\boldsymbol{\Sigma}^{-1}\mathbf{y}(t)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Compute the symmetrized time-lagged covariance matrix of the normalized
+ PCs: 
+\begin_inset Formula $\mathbf{C}_{sym}^{y}(\tau)=\frac{1}{2}\left[\mathbf{C}^{y}(\tau)+(\mathbf{C}^{y}(\tau))^{\top}\right]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Perform an eigenvalue decomposition of 
+\begin_inset Formula $\mathbf{C}_{sym}^{y}(\tau)$
+\end_inset
+
+ to obtain the eigenvector matrix 
+\begin_inset Formula $\mathbf{V}$
+\end_inset
+
+ and project the trajectory onto the dominant eigenvectors to obtain 
+\begin_inset Formula $\mathbf{z}(t)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+In summary, we can write the transformation equation in three linear transforms:
+\begin_inset Formula 
+\[
+\mathbf{z}^{\top}(t)=\mathbf{r}^{\top}(t)\mathbf{U}=\mathbf{r}^{\top}(t)\mathbf{W}\boldsymbol{\Sigma}^{-1}\mathbf{V}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+TICA will be used as a dimension reduction technique.
+ Only the dominant TICA components will be used to go to the next step.
+ In order to reduce the dimension, use only a few columns of 
+\begin_inset Formula $\mathbf{U}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Implementation notes
+\series default
+:
+\end_layout
+
+\begin_layout Itemize
+For large data sets, the construction of the covariance matrices is a very
+ most time-consuming procedure.
+ Think about how that can be done efficiently.
+ In particular, consider the case that not the entire data set can be kepts
+ in memory.
+\end_layout
+
+\begin_layout Itemize
+How many dimensions can we deal with before the eigenvalue problem(s) become
+ too large to solve?
+\end_layout
+
+\begin_layout Itemize
+Eigenvalue solvers do generally not guarantee to provide the eigenvalues
+ in a particular order.
+ If you want to use TICA as a dimension reduction technique, you might have
+ to reorder the eigenvalues and eigenvectors yourself, such that the dominant
+ eigenvalues come first.
+\end_layout
+
+\begin_layout Itemize
+Check every step of what you're doing.
+ Is the data really mean-free / really normalized after the appropriate
+ steps? Does the transformation make sense? How does the transformed data
+ look like?
+\end_layout
+
+\begin_layout Itemize
+Think of a good test case.
+\end_layout
+
+\begin_layout Section
+k-Means
+\end_layout
+
+\begin_layout Standard
+k-Means is perhaps the famous out of many clustering algorithms.
+ Clustering algorithms are used to classify or discretize data.
+ Note the two different purposes:
+\end_layout
+
+\begin_layout Enumerate
+Classification: We try to group data into 
+\emph on
+a few
+\emph default
+ classes that should be as distinct as possible.
+ The purpose of the algorithm is to distinguish data points in such a way
+ that it is easy to tell data points in different classes apart.
+\end_layout
+
+\begin_layout Enumerate
+Discretization: We don't mind if there are many clusters.
+ We just want to cluster finely enough such that clearly distinct data ends
+ up in different clusters.
+ This is usually just a data processing step in a larger pipeline.
+\end_layout
+
+\begin_layout Standard
+Here we will use clustering for discretization.
+ Therefore we don't have to worry too much that the the number of clusters,
+ 
+\begin_inset Formula $k$
+\end_inset
+
+, is chosen correctly.
+ It just has to be big enough.
+\end_layout
+
+\begin_layout Standard
+Consider that we have input data in the form 
+\begin_inset Formula $\mathbf{x}(t)=(x_{i}(t))_{i=1,...,d}$
+\end_inset
+
+.
+ Consider the following:
+\end_layout
+
+\begin_layout Itemize
+We need to define a distance metric in order to measure distances.
+ Usually we will use the normal Euclidean metric:
+\begin_inset Formula 
+\[
+d(\mathbf{x},\mathbf{y})=\left\Vert \mathbf{x}-\mathbf{y}\right\Vert _{2}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+There are two results of the clustering.
+ Result one are the cluster centers:
+\begin_inset Formula 
+\[
+\mathbf{Y}=\{\mathbf{y}_{1},...,\mathbf{y}_{k}\}
+\]
+
+\end_inset
+
+Result two is the assignment of the data:
+\begin_inset Formula 
+\[
+s(t)=(s_{1},...,s_{N})
+\]
+
+\end_inset
+
+where each data point is assigned to one of the cluster centers.
+ This is done by a Voronoi partition, i.e.
+ each data point is assigned to the nearest center in the above distance
+ metric.
+\end_layout
+
+\begin_layout Standard
+The 
+\begin_inset Formula $k$
+\end_inset
+
+-Means algorithm iterates the following steps:
+\end_layout
+
+\begin_layout Itemize
+Initialization: Pick 
+\begin_inset Formula $k$
+\end_inset
+
+ input data points at random and set them as initial cluster centers, 
+\begin_inset Formula $\mathbf{Y}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Assigment step:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+For each data point, find the nearest cluster center and assign the data
+ point to it:
+\begin_inset Formula 
+\[
+s(t)=\arg\min_{s}d(\mathbf{y}_{s},\mathbf{x}(t))
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Note that this assignment step creates a Voronoi partition!
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Update step:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+For each cluster center, update its position by setting it to the mean of
+ the data assigned to it:
+\begin_inset Formula 
+\[
+\mathbf{y}_{s}=\frac{1}{n_{s}}\sum_{i\in S}\mathbf{x}_{i}
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $S$
+\end_inset
+
+ is the set of data points assigned to cluster 
+\begin_inset Formula $s$
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+
+\series bold
+Implementation notes
+\series default
+:
+\end_layout
+
+\begin_layout Itemize
+When do you consider the algorithm to be converged? 
+\end_layout
+
+\begin_layout Itemize
+The maximum number of iterations is until convergence.
+ But since many iterations might be needed to convergence and in principle
+ we don't need the algorithm to converge if we want it to just do discretization
+ (as opposed to classficiation), we can also have the number of iterations
+ as an input parameter
+\end_layout
+
+\begin_layout Itemize
+Think about what happens if the entire set of input data cannot be kept
+ in memory.
+ How do we need to design the algorithm in order to deal with that?
+\end_layout
+
+\begin_layout Section
+Hidden Markov Model
+\end_layout
+
+\begin_layout Standard
+Estimation of a Hidden Markov model consists of estimating two quantities:
+\end_layout
+
+\begin_layout Itemize
+The hidden transition matrix 
+\begin_inset Formula $\mathbf{A}\in\mathbb{R}^{n\times n}$
+\end_inset
+
+ which governs the switching dynamics between 
+\begin_inset Formula $n$
+\end_inset
+
+ hidden states
+\end_layout
+
+\begin_layout Itemize
+The output matrix 
+\begin_inset Formula $\mathbf{B}\in\mathbb{R}^{n\times m}$
+\end_inset
+
+ which governs the translation of the 
+\begin_inset Formula $n$
+\end_inset
+
+ hidden system states to 
+\begin_inset Formula $m$
+\end_inset
+
+ observable system states.
+\end_layout
+
+\begin_layout Standard
+The determination of 
+\begin_inset Formula $n$
+\end_inset
+
+ is a difficult problem of statistical inference and we will ignore it for
+ now.
+ Instead we will just set 
+\begin_inset Formula $n$
+\end_inset
+
+ to a value that we know works well for the data.
+\end_layout
+
+\begin_layout Standard
+We will use the EM (Expectation-Maximization) Algorithm to do the estimation.
+ EM is actually a class of algorithms and here we will use the so-called
+ Baum-Welch implementation of it.
+ The expectation step consists of running two algorithms, the forward and
+ backward algorithm, and will provide us with a model of the hidden trajectory,
+ i.e.
+ statistics that contain our belief at which hidden state the system is
+ at time 
+\begin_inset Formula $t$
+\end_inset
+
+ given the evidence that we have so far.
+ The maximization step will then produce an estimate of the quantities 
+\begin_inset Formula $\mathbf{A}$
+\end_inset
+
+ and 
+\begin_inset Formula $\mathbf{B}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+Expectation step - forward algorithm
+\end_layout
+
+\begin_layout Standard
+Let 
+\begin_inset Formula $\alpha_{t}(i)$
+\end_inset
+
+ be the forward variable, defined as
+\begin_inset Formula 
+\[
+\alpha_{t}(i)=\mathbb{P}(o_{1},o_{2},...,o_{t},s_{t}=S_{i}\mid\Lambda)
+\]
+
+\end_inset
+
+We solve for 
+\begin_inset Formula $\alpha_{t}(i)$
+\end_inset
+
+ inductively as follows:
+\end_layout
+
+\begin_layout Enumerate
+Initialization:
+\begin_inset Formula 
+\[
+a_{1}(i)=\pi_{i}b_{i}(o_{1})
+\]
+
+\end_inset
+
+for all 
+\begin_inset Formula $i$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Induction:
+\begin_inset Formula 
+\[
+\alpha_{t+1}(j)=\left[\sum_{i=1}^{n}\alpha_{t}(i)\: a_{ij}\right]b_{j}(o_{t+1})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Implementation notes
+\series default
+:
+\end_layout
+
+\begin_layout Itemize
+If you implement the algorithm exactly as above, you will run into underflow
+ problems, because the 
+\begin_inset Formula $\alpha_{t}$
+\end_inset
+
+ values will become smaller an smaller.
+ Two procedures are common to avoid this problem: (1) rescaling of 
+\begin_inset Formula $\alpha_{t}$
+\end_inset
+
+ values such that they sum to 1 for every 
+\begin_inset Formula $t$
+\end_inset
+
+.
+ If you choose this option, you have to remember the scaling factors in
+ order to evalues the likelihood (below) correctly.
+ (2) work in the log-space 
+\begin_inset Formula $\ln\alpha_{t}$
+\end_inset
+
+.
+ If you choose this option you have to adapt all calculations with 
+\begin_inset Formula $\alpha_{t}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Subsection
+Expectation step - Likelihood
+\end_layout
+
+\begin_layout Standard
+The likelihood can be computed from the 
+\begin_inset Formula $\alpha$
+\end_inset
+
+-Variables:
+\begin_inset Formula 
+\[
+\mathbb{P}(O\mid\Lambda)=\sum_{i=1}^{N}\alpha_{N}(i)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Implementation notes
+\series default
+:
+\end_layout
+
+\begin_layout Itemize
+You have to adapt the calculation of the likelihood if you have rescaled
+ 
+\begin_inset Formula $\alpha_{t}$
+\end_inset
+
+ or worked in the log-space.
+\end_layout
+
+\begin_layout Subsection
+Expectation step - Backward algorithm
+\end_layout
+
+\begin_layout Standard
+Definition:
+\begin_inset Formula 
+\[
+\beta_{t}(i)=\mathbb{P}(o_{t+1},o_{t+2},...,o_{N}\mid s_{t}=S_{i},\Lambda)
+\]
+
+\end_inset
+
+We can solve for 
+\begin_inset Formula $\beta_{t}(i)$
+\end_inset
+
+ inductively as follows:
+\end_layout
+
+\begin_layout Enumerate
+Initialization:
+\begin_inset Formula 
+\[
+\beta_{N}(i)=1
+\]
+
+\end_inset
+
+for all 
+\begin_inset Formula $i$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Induction:
+\begin_inset Formula 
+\[
+\beta_{t}(i)=\sum_{j=1}^{n}a_{ij}b_{j}(o_{t+1)}\beta_{t+1}(j)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+The hidden trajectory
+\end_layout
+
+\begin_layout Standard
+You might be interested at which hidden state the system is at a given time
+ 
+\begin_inset Formula $t$
+\end_inset
+
+.
+ This can now be computed.
+ We define 
+\begin_inset Formula 
+\[
+\gamma_{t}(i)=\mathbb{P}(s_{t}=S_{i}\mid O,\Lambda)
+\]
+
+\end_inset
+
+the probability that the system is at hidden state 
+\begin_inset Formula $i$
+\end_inset
+
+ at time 
+\begin_inset Formula $t$
+\end_inset
+
+.
+ It is given by:
+\begin_inset Formula 
+\[
+\gamma_{t}(i)=\frac{\alpha_{t}(i)\beta_{t}(i)}{\sum_{j=1}^{N}\alpha_{t}(j)\beta_{t}(j)}
+\]
+
+\end_inset
+
+You can see that the normalization is not an issue in this equation.
+ 
+\begin_inset Formula $\gamma_{t}(i)$
+\end_inset
+
+ will be a normalized probability.
+ If you want you can not compute the path of maximum probability, either
+ by a simple arg-max or by the Viterbi algorithm.
+ This is optional - do it if you have time and interest.
+\end_layout
+
+\begin_layout Subsection
+Maximization step
+\end_layout
+
+\begin_layout Standard
+Now we are in a position to compute the maximum-likelihood values of 
+\begin_inset Formula $\mathbf{A}$
+\end_inset
+
+ and 
+\begin_inset Formula $\mathbf{B}$
+\end_inset
+
+.
+ We need an intermediate quantity, the expected number of transitions from
+ state 
+\begin_inset Formula $i$
+\end_inset
+
+ to 
+\begin_inset Formula $j$
+\end_inset
+
+ at time 
+\begin_inset Formula $t$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+\xi_{t}(i,j)=\frac{\alpha_{t}(i)\: a_{ij}\: b_{j}(o_{t+1})\:\beta_{t+1}(j)}{\sum_{i=1}^{n}\sum_{j=1}^{n}\alpha_{t}(i)\: a_{ij}\: b_{j}(o_{t+1})\:\beta_{t+1}(j)}.
+\]
+
+\end_inset
+
+From this we can also compute the probability to be in state 
+\begin_inset Formula $i$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+\gamma_{t}(i)=\sum_{j=1}^{n}\xi_{t}(i,j)
+\]
+
+\end_inset
+
+Now we compute the transition matrix:
+\begin_inset Formula 
+\[
+\hat{a}_{ij}=\frac{\sum_{t=1}^{N-1}\xi_{t}(i,j)}{\sum_{t=1}^{N-1}\gamma_{t}(i)}
+\]
+
+\end_inset
+
+As a small modification to the normal Baum-Welch algorithm we assume that
+ we have a stationary process, i.e.
+ that our starting probability is identical to the stationary probability
+ of transition matrix 
+\begin_inset Formula $\mathbf{A}$
+\end_inset
+
+.
+ We compute it as stationary eigenvector of 
+\begin_inset Formula $\mathbf{A}$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+\boldsymbol{\pi}^{\top}=\boldsymbol{\pi}^{\top}\mathbf{A}.
+\]
+
+\end_inset
+
+Finally we compute the output probability matrix as:
+\begin_inset Formula 
+\[
+\hat{b}_{ij}=\frac{\sum_{t=1,o_{t}=j}^{N}\gamma_{t}(i)}{\sum_{t=1}^{N}\gamma_{t}(i)}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Iteration
+\end_layout
+
+\begin_layout Standard
+In each iteration, the Likelihood 
+\begin_inset Formula $\mathbb{P}(O\mid\Lambda)$
+\end_inset
+
+ should increase.
+ Iterate the EM-steps until convergence
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Implementation notes
+\series default
+:
+\end_layout
+
+\begin_layout Itemize
+What is the most time-consuming part of the algorithm? How do we determine
+ this technically?
+\end_layout
+
+\begin_layout Itemize
+How can we speed the algorithm up?
+\end_layout
+
+\begin_layout Itemize
+Where are the numerical bottlenecks, i.e.
+ where do you expect underflows, overflows, cancelleation, etc.?
+\end_layout
+
+\begin_layout Itemize
+What is a good convergence criterion?
+\end_layout
+
+\end_body
+\end_document

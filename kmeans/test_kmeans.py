@@ -61,7 +61,7 @@ class TestKmeans(unittest.TestCase):
 
     def test_default_kmeans(self):
         importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt')
-        kmeans = DefaultKmeans(importer=importer, chunk_size=200)
+        kmeans = DefaultKmeans(importer=importer, chunk_size=100)
         initial_centers = [np.array([11.36545498, 32.76316854]),
                            np.array([44.56166088, 3.98325672]),
                            np.array([3.70092085, 36.24628609])]
@@ -72,14 +72,14 @@ class TestKmeans(unittest.TestCase):
         if history:
             for i in xrange(len(history)):
                 plot = KmeansPlot(history[i])
-                plot.plot_data(importer.get_data(1000))
                 importer.rewind()
+                plot.plot_data(importer.get_data(1000))
                 plot.plot_centers()
-                #plot.save_plot("plots/default_kmeans_%s" % str(i))
+                plot.save_plot("plots\default_kmeans_%s" % str(i))
         else:
             plot = KmeansPlot(centers)
-            plot.plot_data(importer.get_data(1000))
             importer.rewind()
+            plot.plot_data(importer.get_data(1000))
             plot.plot_centers()
             plot.show_plot()
 
@@ -163,9 +163,30 @@ class TestKmeansTimed(unittest.TestCase):
                                   "np.array([44.56166088, 3.98325672]),np.array([3.70092085, 36.24628609])]",
                             number=10)
 
-
+class TestCextensionTimed(unittest.TestCase):
+    def setUp(self):
+        pass
+    def test_default_kmeans(self):
+        print "default_kmeans, average from 10 iterations:"
+        print timeit.timeit('kmeans.calculate_centers(3)',
+                            setup="import numpy as np;"
+                                  "from kmeans import DefaultKmeans;"
+                                  "from kmeans_data_importer import KmeansFileDataImporter;"
+                                  "importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt');"
+                                  "kmeans = DefaultKmeans(importer=importer);",
+                            number=10)
+    def test_default_kmeans_extension(self):
+        print "default_kmeans_extension, average from 10 iterations:"
+        print timeit.timeit('kmeans.calculate_centers(3)',
+                            setup="import numpy as np;"
+                                  "from kmeans import DefaultKmeans;"
+                                  "from kmeans_data_importer import KmeansFileDataImporter;"
+                                  "importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt');"
+                                  "kmeans = DefaultKmeans(importer=importer,c_extension=True);",
+                            number=10)
 """
     main
 """
+
 if __name__ == '__main__':
     unittest.main()

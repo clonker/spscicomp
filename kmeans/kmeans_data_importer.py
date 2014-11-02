@@ -52,6 +52,7 @@ class KmeansFileDataImporter(KmeansDataImporter):
 
     def rewind(self):
         self.init_file_input_stream()
+        self._hasMoreData = True
 
     def has_more_data(self):
         return self._hasMoreData

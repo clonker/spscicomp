@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import numpy as np
+import Extension.kmeans_C_extension as kmc
 
 from kmeans_metric import EuclideanMetric
 
@@ -18,19 +19,22 @@ class Kmeans:
 
 
 class DefaultKmeans(Kmeans):
-    def __init__(self, metric=EuclideanMetric(), importer=None, chunk_size=1000, max_steps=100):
+    def __init__(self, metric=EuclideanMetric(), importer=None, chunk_size=1000, max_steps=100, c_extension=False):
         super(DefaultKmeans, self).__init__(metric, importer)
         self._max_steps = max_steps
         self._chunk_size = chunk_size
         self._dimension = None
+        self._c_extension = c_extension
 
     def calculate_centers(self, k, initial_centers=None, save_history=False):
+        self._importer.rewind()
         data = self._importer.get_data(self._chunk_size)
         self._dimension = data[0].shape[0]
         if initial_centers:
             centers = initial_centers
         else:
             centers = [data[np.random.randint(0, len(data))] for _ in xrange(k)]
+            centers = np.asarray(centers)
         history = []
         self._importer.rewind()
         for i in xrange(1, self._max_steps):
@@ -38,8 +42,6 @@ class DefaultKmeans(Kmeans):
             if save_history:
                 history.append(centers)
             centers = self.kmeans_iterate(centers)
-            #print "old", old_centers
-            #print "new", centers
             if np.array_equal(centers, old_centers):
                 break
         if save_history:
@@ -55,11 +57,14 @@ class DefaultKmeans(Kmeans):
             if not data:
                 break
             else:
-                centers_list.append(self.kmeans_chunk_center(data, centers))
+                if self._c_extension is False:
+                    centers_list.append(self.kmeans_chunk_center(data, centers))
+                else:
+                    centers_list.append(kmc.cal_chunk_centers(data, centers))
             if not self._importer.has_more_data():
                 break
         center_sum = np.zeros([len(centers), len(centers[0])])
-        print centers_list
+        #print centers_list
         for chunk_center in centers_list:
             center_sum += chunk_center
         return center_sum/len(centers_list)

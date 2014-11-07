@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import numpy as np
-import Extension.kmeans_C_extension as kmc
+from extension import kmeans_c_extension as kmc
 
 from kmeans_metric import EuclideanMetric
 

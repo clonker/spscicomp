@@ -24,17 +24,17 @@ static PyObject* cal_chunk_centers (PyObject *dummy, PyObject *args)
     return chunk_centers;
 }
 
-static PyMethodDef kmeans_C_extensionMethods[] = 
+static PyMethodDef kmeans_c_extensionMethods[] =
 {
     {"cal_chunk_centers", cal_chunk_centers, METH_VARARGS, "Calculate the centers of one chunk"},
     {NULL, NULL}
 };
 
-void initkmeans_C_extension() 
+void initkmeans_c_extension()
 {  
     import_array();
     PyObject* m;
-    m = Py_InitModule("kmeans_C_extension", kmeans_C_extensionMethods);
+    m = Py_InitModule("kmeans_c_extension", kmeans_c_extensionMethods);
 }
 
 #ifdef __cplusplus  

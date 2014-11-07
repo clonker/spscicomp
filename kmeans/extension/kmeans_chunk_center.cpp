@@ -45,15 +45,18 @@ PyObject* kmeans_chunk_center(PyObject *data, PyArrayObject *centers)
     double *new_centers = (double *)malloc(sizeof(double) * cluster_size * dimension);
     int i, j;
     int closest_center_index;
-    PyArrayObject *point_data;    
+    PyArrayObject *point_data;
+
     for (i = 0; i < cluster_size; i++)
     {
 	    (*(centers_counter + i)) = 0;
     }
+
     for (i = 0; i < cluster_size * dimension; i++)
     {
 	    (*(new_centers + i)) = 0;
     }
+
     for (i = 0; i < chunk_size; i++)
     {
         point_data = (PyArrayObject *)PyList_GetItem(data, i);

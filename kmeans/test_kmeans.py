@@ -163,9 +163,11 @@ class TestKmeansTimed(unittest.TestCase):
                                   "np.array([44.56166088, 3.98325672]),np.array([3.70092085, 36.24628609])]",
                             number=10)
 
+
 class TestCextensionTimed(unittest.TestCase):
     def setUp(self):
         pass
+
     def test_default_kmeans(self):
         print "default_kmeans, average from 10 iterations:"
         print timeit.timeit('kmeans.calculate_centers(3)',
@@ -175,6 +177,7 @@ class TestCextensionTimed(unittest.TestCase):
                                   "importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt');"
                                   "kmeans = DefaultKmeans(importer=importer);",
                             number=10)
+
     def test_default_kmeans_extension(self):
         print "default_kmeans_extension, average from 10 iterations:"
         print timeit.timeit('kmeans.calculate_centers(3)',

@@ -27,10 +27,8 @@ data_file = "demo/data.txt"
 importer = KmeansFileDataImporter(filename=data_file)
 
 kmeans = DefaultKmeans(importer=importer)
-kmeans_soft = SoftKmeans(importer=importer)
-kmeans_batched = MiniBatchKmeans(importer=importer)
-
-kmeans = kmeans_batched
+#kmeans = SoftKmeans(importer=importer)
+#kmeans = MiniBatchKmeans(importer=importer)
 
 _, history = kmeans.calculate_centers(k, save_history=True)
 

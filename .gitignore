@@ -6,3 +6,6 @@
 
 # ignore optimized compiled python
 *.pyo
+
+# ignore compiled cpp
+*.so

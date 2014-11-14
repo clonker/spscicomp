@@ -32,7 +32,6 @@ class TestKmeansData(unittest.TestCase):
         self.assertEqual(dim, data_generator.get_data()[0].shape[0], 'Dimension of data was wrong')
         self.assertEqual(n_points, len(data_generator.get_data()), 'Number of generated data points was wrong')
 
-
     def test_kmeans_file_data_importer(self):
         f_name = 'unittest_data.txt'
         data_generator = KmeansRandomDataGenerator(1234, 2, 3)

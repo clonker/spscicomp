@@ -6,6 +6,7 @@ from kmeans_data_importer import *
 from kmeans_data_generator import *
 from kmeans_plot import *
 
+
 class TestKmeansTimed(unittest.TestCase):
     def setUp(self):
         pass
@@ -70,6 +71,7 @@ class TestCextensionTimed(unittest.TestCase):
                                   "importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt');"
                                   "kmeans = DefaultKmeans(importer=importer,c_extension=True);",
                             number=10)
+
 
 class TestKmeansPlot(unittest.TestCase):
     def setUp(self):

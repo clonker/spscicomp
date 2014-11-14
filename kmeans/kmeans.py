@@ -6,7 +6,7 @@ from kmeans_metric import EuclideanMetric
 
 
 class Kmeans:
-    """ abstract k-means algorithm """
+    """ Abstract k-means algorithm """
     __metaclass__ = ABCMeta
 
     def __init__(self, metric=EuclideanMetric(), importer=None):
@@ -19,6 +19,11 @@ class Kmeans:
 
 
 class DefaultKmeans(Kmeans):
+    """
+    Default implementation of the k-means algorithm. Once supplied with an KmeansDataImporter object, use the
+    calculate_centers method to compute k cluster centers.
+    """
+
     def __init__(self, metric=EuclideanMetric(), importer=None, chunk_size=1000, max_steps=100, c_extension=False):
         super(DefaultKmeans, self).__init__(metric, importer)
         self._max_steps = max_steps
@@ -27,6 +32,18 @@ class DefaultKmeans(Kmeans):
         self._c_extension = c_extension
 
     def calculate_centers(self, k, initial_centers=None, save_history=False):
+        """
+        Main method of the k-means algorithm. Computes k cluster centers from the data supplied by a
+        KmeansDataImporter object.
+        :param k: Number of cluster centers to compute.
+        :param initial_centers: Array of cluster centers to start the iteration with. If omitted, random data points
+        from the first chunk of data are used.
+        :param save_history: If set to True then the cluster centers in each iteration step are returned.
+        :return: centers - an array of the computed cluster centers. data_assigns - an array of integers [c(xi)] where
+        xi is the i-th data point and c(xi) is the index of the cluster center to which xi belongs. history - a list of
+        arrays of the cluster centers in each iteration step.
+        """
+
         self._importer.rewind()
         data = self._importer.get_data(self._chunk_size)
         self._dimension = data[0].shape[0]
@@ -44,14 +61,25 @@ class DefaultKmeans(Kmeans):
             centers = self.kmeans_iterate(centers)
             if np.array_equal(centers, old_centers):
                 break
+        data_assigns = []
+        while True:
+            data = self._importer.get_data(self._chunk_size)
+            if not data:
+                break
+            else:
+                for p in data:
+                    closest_center = self.closest_center(p, centers)
+                    data_assigns.append(closest_center)
+            if not self._importer.has_more_data():
+                break
+        self._importer.rewind()
         if save_history:
-            return centers, history
+            return centers, data_assigns, history
         else:
-            return centers
+            return centers, data_assigns
 
     def kmeans_iterate(self, centers):
         centers_list = []
-        self._importer.rewind()
         while True:
             data = self._importer.get_data(self._chunk_size)
             if not data:
@@ -63,8 +91,8 @@ class DefaultKmeans(Kmeans):
                     centers_list.append(kmc.cal_chunk_centers(data, centers))
             if not self._importer.has_more_data():
                 break
+        self._importer.rewind()
         center_sum = np.zeros([len(centers), len(centers[0])])
-        #print centers_list
         for chunk_center in centers_list:
             center_sum += chunk_center
         return center_sum/len(centers_list)

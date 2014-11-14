@@ -16,7 +16,25 @@ This is the documentation
 import numpy as np
 import matplotlib.pyplot as plt
 
+# use the Hidden Markov Model algorithm to optimize the given 
+# model for 'maxIterations' times.
+# returns the optimized model and an array of the likelihoods recorded 
+# along the process.
+def optimize(model, observation, maxIterations, verbose=False):
+	likelies = np.zeros(maxIterations-1)
+	for iteration in range(1, maxIterations):
+		model, scalingFactors = propagate(model, observation)
+		likeli = logLikeli(scalingFactors)
+		likelies[iteration-1] = likeli
+	if verbose:
+		print 'transitionMatrix\n', model[0]
+		print 'observationProbs\n', model[1]
+		print 'initialState\n', model[2]
+		print 'loglikeli', likeli
+	return (model, likelies)	
+	
 # performs the update scheme once
+# Note that this function returns the scalingFactors of the 'old' model
 def propagate(model, observation):
 		transitionMatrix 	= model[0]
 		observationProbs	= model[1]
@@ -50,7 +68,7 @@ def propagate(model, observation):
 				newObservationProbs[i,k] = enumerator / denominator
 		
 		newModel = [newTransitionMatrix, newObservationProbs, newInitialState]
-		return newModel
+		return (newModel, scalingFactors)
 		
 # this computes the gamma
 def transitionFrom(t, i, alpha, beta):
@@ -136,42 +154,3 @@ def logLikeli(scalingFactors):
 	for i in range(0,len(scalingFactors)):
 		result += np.log(scalingFactors[i])
 	return -1. * result
-
-"""-----------------------------------------------------------------------------------------"""
-
-sample1 = np.loadtxt('testdata/sample1.dat')
-shortSample = sample1[0:100]
-
-testcase = '1'
-transitionMatrix = 	np.loadtxt('testdata/startmodelA_' + testcase + '.dat')
-observationProbs = 	np.loadtxt('testdata/startmodelB_' + testcase + '.dat')
-initialState = 		np.loadtxt('testdata/startmodelPi_' + testcase + '.dat')
-
-maxIterations = 700
-likelies = np.zeros(maxIterations)
-model = [transitionMatrix, observationProbs, initialState]
-alpha, scalingFactors = scaledForwardCoeffs(model, shortSample)
-likeli = logLikeli(scalingFactors)
-#"""
-print 'transitionMatrix\n', model[0]
-print 'observationProbs\n', model[1]
-print 'initialState\n', model[2]
-print 'loglikeli', likeli
-#"""
-likelies[0] = likeli
-
-for iteration in range(1, maxIterations):
-	#print iteration
-	#print '---------------------------------------'
-	model = propagate(model, shortSample)
-	alpha, scalingFactors = scaledForwardCoeffs(model, shortSample)
-	likeli = logLikeli(scalingFactors)
-	likelies[iteration] = likeli
-#"""
-print 'transitionMatrix\n', model[0]
-print 'observationProbs\n', model[1]
-print 'initialState\n', model[2]
-print 'loglikeli', likeli
-#"""
-plt.plot(likelies[1:])
-plt.show()

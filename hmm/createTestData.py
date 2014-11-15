@@ -41,18 +41,21 @@ import matplotlib.pyplot as plt
 import hmm as hmm
 
 '''
-
+in: pi - startprobabilities
+    A  - state transition probabilities
+    B  - observation probabilities by state
+    observationLength - length of observations
 '''
 def getObservationFromModel(pi, A, B, observationLength):
     observation = []
     # get the first urn
-    currentUrn = getRandomIndexByProbability(pi)
+    currentState = getRandomIndexByProbability(pi)
     # create the observationLength observation
     for i in range(observationLength):
         # create current observation
-        observation.append(getRandomIndexByProbability(B[currentUrn]))
+        observation.append(getRandomIndexByProbability(B[currentState]))
         # get next urn
-        currentUrn = getRandomIndexByProbability(A[currentUrn])
+        currentState = getRandomIndexByProbability(A[currentState])
 
     return observation
 

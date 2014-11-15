@@ -26,25 +26,26 @@ class TestKmeansTimed(unittest.TestCase):
 
 class TestCextensionTimed(unittest.TestCase):
     def setUp(self):
-        pass
+        data_generator = KmeansRandomDataGenerator(10000, 100, 50)
+        data_generator.to_file('test_kmeans_performance.txt')
 
     def test_default_kmeans(self):
         print "default_kmeans, average from 10 iterations:"
-        print timeit.timeit('kmeans.calculate_centers(3)',
+        print timeit.timeit('kmeans.calculate_centers(50)',
                             setup="import numpy as np;"
                                   "from kmeans import DefaultKmeans;"
                                   "from kmeans_data_importer import KmeansFileDataImporter;"
-                                  "importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt');"
+                                  "importer = KmeansFileDataImporter(filename='test_kmeans_performance.txt');"
                                   "kmeans = DefaultKmeans(importer=importer);",
                             number=10)
 
     def test_default_kmeans_extension(self):
         print "default_kmeans_extension, average from 10 iterations:"
-        print timeit.timeit('kmeans.calculate_centers(3)',
+        print timeit.timeit('kmeans.calculate_centers(50)',
                             setup="import numpy as np;"
                                   "from kmeans import DefaultKmeans;"
                                   "from kmeans_data_importer import KmeansFileDataImporter;"
-                                  "importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt');"
+                                  "importer = KmeansFileDataImporter(filename='test_kmeans_performance.txt');"
                                   "kmeans = DefaultKmeans(importer=importer, c_extension=True);",
                             number=10)
 

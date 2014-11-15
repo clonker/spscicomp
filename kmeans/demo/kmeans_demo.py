@@ -28,7 +28,7 @@ importer = KmeansFileDataImporter(filename=data_file)
 
 kmeans = DefaultKmeans(importer=importer)
 
-_, history = kmeans.calculate_centers(k, save_history=True)
+_, history = kmeans.calculate_centers(k, return_centers=True, save_history=True)
 
 plt.ion()
 plt.figure()

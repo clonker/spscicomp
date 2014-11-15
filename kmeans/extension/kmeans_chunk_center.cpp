@@ -31,7 +31,7 @@ int closest_center(PyArrayObject *point_data, PyArrayObject *centers, int cluste
             min_index = i;
         }
     }
-  return min_index;
+    return min_index;
 }
   
 PyObject* kmeans_chunk_center(PyObject *data, PyArrayObject *centers)

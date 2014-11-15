@@ -13,7 +13,7 @@ class TestKmeansTimed(unittest.TestCase):
 
     def test_default_kmeans(self):
         print "default_kmeans, average from 10 iterations:"
-        print timeit.timeit('kmeans.calculate_centers(3, initial_centers=initial_centers, save_history=True)',
+        print timeit.timeit('kmeans.calculate_centers(3, initial_centers=initial_centers)',
                             setup="import numpy as np;"
                                   "from kmeans import DefaultKmeans;"
                                   "from kmeans_data_importer import KmeansFileDataImporter;"
@@ -45,7 +45,7 @@ class TestCextensionTimed(unittest.TestCase):
                                   "from kmeans import DefaultKmeans;"
                                   "from kmeans_data_importer import KmeansFileDataImporter;"
                                   "importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt');"
-                                  "kmeans = DefaultKmeans(importer=importer,c_extension=True);",
+                                  "kmeans = DefaultKmeans(importer=importer, c_extension=True);",
                             number=10)
 
 
@@ -73,7 +73,7 @@ class TestKmeans(unittest.TestCase):
                            np.array([44.56166088, 3.98325672]),
                            np.array([3.70092085, 36.24628609])]
         history = None
-        centers = kmeans.calculate_centers(3)
+        centers, _ = kmeans.calculate_centers(3, return_centers=True)
         # centers, history = kmeans.calculate_centers(3, initial_centers=initial_centers, save_history=True)
         print "default_kmeans: " + str(centers)
         if history:

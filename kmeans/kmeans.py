@@ -30,6 +30,7 @@ class DefaultKmeans(Kmeans):
         self._chunk_size = chunk_size
         self._dimension = None
         self._c_extension = c_extension
+        self._data_assigns = []
 
     def calculate_centers(self, k, initial_centers=None, return_centers=False, save_history=False):
         """
@@ -64,7 +65,7 @@ class DefaultKmeans(Kmeans):
             if np.array_equal(centers, old_centers):
                 break
         data_assigns = []
-        while True:  # TODO: For this we want to use the data from the last kmeans_iterate instead
+        while True:  # TODO: obsolete once the C extension also returns the necessary assignment data (see below)
             data = self._importer.get_data(self._chunk_size)
             if not data:
                 break
@@ -81,10 +82,11 @@ class DefaultKmeans(Kmeans):
             else:
                 return centers, data_assigns
         else:
-            return data_assigns
+            return data_assigns  # self._data_assigns
 
     def kmeans_iterate(self, centers):
         centers_list = []
+        self._data_assigns = []  # reset the list once per iteration
         while True:
             data = self._importer.get_data(self._chunk_size)
             if not data:
@@ -93,7 +95,8 @@ class DefaultKmeans(Kmeans):
                 if self._c_extension is False:
                     centers_list.append(self.kmeans_chunk_center(data, centers))
                 else:
-                    centers_list.append(kmc.cal_chunk_centers(data, centers))
+                    centers_list.append(kmc.cal_chunk_centers(data, centers))  # TODO: append the assignment data
+                                                                               # to self._data_assigns
             if not self._importer.has_more_data():
                 break
         self._importer.rewind()
@@ -108,6 +111,7 @@ class DefaultKmeans(Kmeans):
         new_centers = [np.zeros(self._dimension) for _ in xrange(k)]
         for p in data:
             closest_center = self.closest_center(p, centers)
+            self._data_assigns.append(closest_center)
             new_centers[closest_center] += p
             centers_counter[closest_center] += 1
         for i, center in enumerate(new_centers):

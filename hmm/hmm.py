@@ -32,7 +32,7 @@ def optimize(model, observation, maxIterations, verbose=False):
 		print 'initialState\n', model[2]
 		print 'loglikeli', likeli
 	return (model, likelies)	
-	
+
 # performs the update scheme once
 # Note that this function returns the scalingFactors of the 'old' model
 def propagate(model, observation):

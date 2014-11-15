@@ -78,34 +78,33 @@ def getRandomIndexByProbability(probs):
 if __name__ == '__main__':
     testcase = '1'
     observationCount = 100
+
     transitionMatrix =     np.loadtxt('testdata/startUrnModelA_' + testcase + '.dat')
     observationProbs =     np.loadtxt('testdata/startUrnModelB_' + testcase + '.dat')
     initialState =         np.loadtxt('testdata/startUrnModelPi_' + testcase + '.dat')
+
+    originalTransitionMatrix =     np.loadtxt('testdata/startUrnModelA_' + testcase + '.dat')
+    originalObservationProbs =     np.loadtxt('testdata/startUrnModelB_' + testcase + '.dat')
+    originalInitialState =         np.loadtxt('testdata/startUrnModelPi_' + testcase + '.dat')
     
     #print len(getUrnObservation(initialState, transitionMatrix, observationProbs, observationCount))
     
     
     maxIterations = 1000
-    likelies = np.zeros(maxIterations)
+    likelies = np.zeros(maxIterations-1)
     model = [transitionMatrix, observationProbs, initialState]
-    alpha, scalingFactors = hmm.scaledForwardCoeffs(model, getObservationFromModel(initialState, transitionMatrix, observationProbs, observationCount))
-    likeli = hmm.logLikeli(scalingFactors)
     #"""
     print 'transitionMatrix\n', model[0]
     print 'observationProbs\n', model[1]
     print 'initialState\n', model[2]
-    print 'loglikeli', likeli
-    #"""
-    likelies[0] = likeli
     
     for iteration in range(1, maxIterations):
         #print iteration
         #print '---------------------------------------'
-        observation = getObservationFromModel(initialState, transitionMatrix, observationProbs, observationCount)
-        model = hmm.propagate(model, observation)
-        alpha, scalingFactors = hmm.scaledForwardCoeffs(model, observation)
+        observation = getObservationFromModel(originalInitialState, originalTransitionMatrix, originalObservationProbs, observationCount)
+        model, scalingFactors = hmm.propagate(model, observation)
         likeli = hmm.logLikeli(scalingFactors)
-        likelies[iteration] = likeli
+        likelies[iteration-1] = likeli
     #"""
     print 'transitionMatrix\n', model[0]
     print 'observationProbs\n', model[1]

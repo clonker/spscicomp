@@ -1,4 +1,4 @@
-from kmeans import SoftKmeans, MiniBatchKmeans
+from kmeans import DefaultKmeans
 from kmeans_data_importer import *
 from kmeans_plot import *
 
@@ -27,8 +27,6 @@ data_file = "demo/data.txt"
 importer = KmeansFileDataImporter(filename=data_file)
 
 kmeans = DefaultKmeans(importer=importer)
-#kmeans = SoftKmeans(importer=importer)
-#kmeans = MiniBatchKmeans(importer=importer)
 
 _, history = kmeans.calculate_centers(k, save_history=True)
 

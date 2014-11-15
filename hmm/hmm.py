@@ -81,23 +81,23 @@ def scaledForwardCoeffs(model, observation):
 	
 	# Initialization for t=0:
 	for i in range(0,N):
-		alpha[0,i] = pi[i] * B[i, observation[0]]
+		alpha[0, i] = pi[i] * B[i, observation[0]]
 	c[0] = 1./sum(alpha[0,:])
 	alpha[0,:] *= c[0]	# rescale alphas by factor c
 	
 	# Induction for 0 < t < T:
 	for t in range(1,T):
 		for i in range(0,N):
-			alpha[t,i] = alphaCoeff(t, i, alpha[t-1,:], A, B, observation)
-		c[t] = 1./sum(alpha[t,:])
-		alpha[t,:] *= c[t]
+			alpha[t, i] = alphaCoeff(t, i, alpha[t-1, :], A, B, observation)
+		c[t] = 1./sum(alpha[t, :])
+		alpha[t, :] *= c[t]
 	
 	return (alpha, c)
 
 def alphaCoeff(t, i, preAlpha, A, B, observation):
 	result = 0.
 	for j in range(0, len(A)):
-		result += preAlpha[j] * A[j,i]
+		result += preAlpha[j] * A[j, i]
 	return result*B[i, observation[t]]
 
 # generate the backward coefficients with the scalingFactors of the forward coefficients
@@ -139,39 +139,40 @@ def logLikeli(scalingFactors):
 
 """-----------------------------------------------------------------------------------------"""
 
-sample1 = np.loadtxt('testdata/sample1.dat')
-shortSample = sample1[0:100]
-
-testcase = '1'
-transitionMatrix = 	np.loadtxt('testdata/startmodelA_' + testcase + '.dat')
-observationProbs = 	np.loadtxt('testdata/startmodelB_' + testcase + '.dat')
-initialState = 		np.loadtxt('testdata/startmodelPi_' + testcase + '.dat')
-
-maxIterations = 700
-likelies = np.zeros(maxIterations)
-model = [transitionMatrix, observationProbs, initialState]
-alpha, scalingFactors = scaledForwardCoeffs(model, shortSample)
-likeli = logLikeli(scalingFactors)
-#"""
-print 'transitionMatrix\n', model[0]
-print 'observationProbs\n', model[1]
-print 'initialState\n', model[2]
-print 'loglikeli', likeli
-#"""
-likelies[0] = likeli
-
-for iteration in range(1, maxIterations):
-	#print iteration
-	#print '---------------------------------------'
-	model = propagate(model, shortSample)
+if __name__ == '__main__':
+	sample1 = np.loadtxt('testdata/sample1.dat')
+	shortSample = sample1[0:100]
+	
+	testcase = '1'
+	transitionMatrix = 	np.loadtxt('testdata/startmodelA_' + testcase + '.dat')
+	observationProbs = 	np.loadtxt('testdata/startmodelB_' + testcase + '.dat')
+	initialState = 		np.loadtxt('testdata/startmodelPi_' + testcase + '.dat')
+	
+	maxIterations = 700
+	likelies = np.zeros(maxIterations)
+	model = [transitionMatrix, observationProbs, initialState]
 	alpha, scalingFactors = scaledForwardCoeffs(model, shortSample)
 	likeli = logLikeli(scalingFactors)
-	likelies[iteration] = likeli
-#"""
-print 'transitionMatrix\n', model[0]
-print 'observationProbs\n', model[1]
-print 'initialState\n', model[2]
-print 'loglikeli', likeli
-#"""
-plt.plot(likelies[1:])
-plt.show()
+	#"""
+	print 'transitionMatrix\n', model[0]
+	print 'observationProbs\n', model[1]
+	print 'initialState\n', model[2]
+	print 'loglikeli', likeli
+	#"""
+	likelies[0] = likeli
+	
+	for iteration in range(1, maxIterations):
+		#print iteration
+		#print '---------------------------------------'
+		model = propagate(model, shortSample)
+		alpha, scalingFactors = scaledForwardCoeffs(model, shortSample)
+		likeli = logLikeli(scalingFactors)
+		likelies[iteration] = likeli
+	#"""
+	print 'transitionMatrix\n', model[0]
+	print 'observationProbs\n', model[1]
+	print 'initialState\n', model[2]
+	print 'loglikeli', likeli
+	#"""
+	plt.plot(likelies[1:])
+	plt.show()

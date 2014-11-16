@@ -34,9 +34,8 @@ int closest_center(PyArrayObject *point_data, PyArrayObject *centers, int cluste
     return min_index;
 }
   
-PyObject* kmeans_chunk_center(PyObject *data, PyArrayObject *centers)
+PyObject* kmeans_chunk_center(PyObject *data, PyArrayObject *centers, PyObject *data_assigns)
 {
-    char str[20];
     int cluster_size, dimension, chunk_size;
     cluster_size = *(int *)PyArray_DIMS(centers);
     dimension = PyArray_DIM(centers, 1);
@@ -61,6 +60,7 @@ PyObject* kmeans_chunk_center(PyObject *data, PyArrayObject *centers)
     {
         point_data = (PyArrayObject *)PyList_GetItem(data, i);
         closest_center_index = closest_center(point_data, centers, cluster_size, dimension);
+        PyList_SetItem(data_assigns, i, PyInt_FromLong(closest_center_index));
         (*(centers_counter + closest_center_index))++;
         for (j = 0; j < dimension; j++)
         {

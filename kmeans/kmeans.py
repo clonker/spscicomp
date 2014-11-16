@@ -64,18 +64,6 @@ class DefaultKmeans(Kmeans):
             centers = self.kmeans_iterate(centers)
             if np.array_equal(centers, old_centers):
                 break
-        """data_assigns = []
-        while True:  # TODO: obsolete once the C extension also returns the necessary assignment data (see below)
-            data = self._importer.get_data(self._chunk_size)
-            if not data:
-                break
-            else:
-                for p in data:
-                    closest_center = self.closest_center(p, centers)
-                    data_assigns.append(closest_center)
-            if not self._importer.has_more_data():
-                break
-        self._importer.rewind()"""
         if return_centers:
             if save_history:
                 return centers, self._data_assigns, history
@@ -95,8 +83,9 @@ class DefaultKmeans(Kmeans):
                 if self._c_extension is False:
                     centers_list.append(self.kmeans_chunk_center(data, centers))
                 else:
-                    centers_list.append(kmc.cal_chunk_centers(data, centers))  # TODO: append the assignment data
-                                                                               # to self._data_assigns
+                    data_assigns = [0] * len(data)
+                    centers_list.append(kmc.cal_chunk_centers(data, centers, data_assigns))
+                    self._data_assigns.extend(data_assigns)
             if not self._importer.has_more_data():
                 break
         self._importer.rewind()

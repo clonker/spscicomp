@@ -26,7 +26,7 @@ class TestKmeansTimed(unittest.TestCase):
 
 class TestCextensionTimed(unittest.TestCase):
     def setUp(self):
-        data_generator = KmeansRandomDataGenerator(10000, 100, 50)
+        data_generator = KmeansRandomDataGenerator(10000, 10, 50)
         data_generator.to_file('test_kmeans_performance.txt')
 
     def test_default_kmeans(self):

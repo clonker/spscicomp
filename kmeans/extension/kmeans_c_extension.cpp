@@ -10,16 +10,17 @@
 extern "C" {  
 #endif 
   
-PyObject* kmeans_chunk_center(PyObject *data, PyArrayObject *centers);
+PyObject* kmeans_chunk_center(PyObject *data, PyArrayObject *centers, PyObject *data_assigns);
 
-static PyObject* cal_chunk_centers (PyObject *dummy, PyObject *args)
+static PyObject* cal_chunk_centers(PyObject *dummy, PyObject *args)
 {
     PyObject *data = NULL;
     PyObject *centers = NULL;
-    if (!PyArg_ParseTuple(args, "O!O", &PyList_Type, &data, &centers))
+    PyObject *data_assigns = NULL;
+    if (!PyArg_ParseTuple(args, "O!OO!", &PyList_Type, &data, &centers, &PyList_Type, &data_assigns))
         return NULL;
     PyObject *chunk_centers = NULL;
-    chunk_centers = kmeans_chunk_center(data, (PyArrayObject*)centers);
+    chunk_centers = kmeans_chunk_center(data, (PyArrayObject*)centers, data_assigns);
     Py_INCREF(chunk_centers);
     return chunk_centers;
 }

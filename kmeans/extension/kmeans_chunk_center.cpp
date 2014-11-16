@@ -8,12 +8,17 @@
 #include "math.h"
 #include "numpy/arrayobject.h"
 
+/*Need to be complied as C files because of the Naming problem in Namespace*/
 #ifdef __cplusplus 
 extern "C" {  
 #endif 
 
+/*
+    Calculate the new centers in the received block.
+*/
 int closest_center(PyArrayObject *point_data, PyArrayObject *centers, int cluster_size, int dimension)
 {
+    /*Given the centers and one point and return which center is nearest to the point*/
     int i, j;
     double min_distance = 1E100;
     double distance;
@@ -36,6 +41,7 @@ int closest_center(PyArrayObject *point_data, PyArrayObject *centers, int cluste
   
 PyObject* kmeans_chunk_center(PyObject *data, PyArrayObject *centers, PyObject *data_assigns)
 {
+    /*Record the nearest center of each point and renew the centers with the points near one given center.*/
     int cluster_size, dimension, chunk_size;
     cluster_size = *(int *)PyArray_DIMS(centers);
     dimension = PyArray_DIM(centers, 1);
@@ -91,7 +97,8 @@ PyObject* kmeans_chunk_center(PyObject *data, PyArrayObject *centers, PyObject *
     return_new_centers = PyArray_SimpleNew(2, dims, NPY_DOUBLE);
     void *arr_data = PyArray_DATA((PyArrayObject*)return_new_centers);
     memcpy(arr_data, new_centers, PyArray_ITEMSIZE((PyArrayObject*) return_new_centers) * cluster_size * dimension);
-
+    /*need to copy the data of the malloced buffer to the PyObject 
+      since the malloced buffer will appear after the C extension is called.*/
     free(centers_counter);
     free(new_centers);
     return (PyObject*) return_new_centers;

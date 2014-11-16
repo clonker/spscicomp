@@ -23,6 +23,11 @@ class KmeansDataImporter:
 
 
 class KmeansFileDataImporter(KmeansDataImporter):
+    """
+    Import data from files. The data structure should be:
+    One point occupies on line.
+    Each point consist several dimensions with space as separator.
+    """
     def __init__(self, filename):
         super(KmeansFileDataImporter, self).__init__()
         self._fileName = filename
@@ -36,6 +41,9 @@ class KmeansFileDataImporter(KmeansDataImporter):
         self._fileLineEnum = enumerate(self._file)
 
     def get_data(self, size):
+        """
+        When get_data is called, a list of #size data is returned.
+        """
         data = []
         for i in xrange(0, size):
             line = next(self._fileLineEnum, None)
@@ -51,10 +59,16 @@ class KmeansFileDataImporter(KmeansDataImporter):
         return data
 
     def rewind(self):
+        """
+        Reset the file pointer to the beginning.
+        """
         self.init_file_input_stream()
         self._hasMoreData = True
 
     def has_more_data(self):
+        """
+        Test the pointer is at the end of the file or not.
+        """
         return self._hasMoreData
 
     def close_file(self):

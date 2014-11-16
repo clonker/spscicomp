@@ -6,6 +6,7 @@
 #include "Python.h"
 #include "numpy/arrayobject.h"
 
+/*Need to be complied as C files because of the Naming problem in Namespace*/
 #ifdef __cplusplus 
 extern "C" {  
 #endif 
@@ -14,24 +15,27 @@ PyObject* kmeans_chunk_center(PyObject *data, PyArrayObject *centers);
 
 static PyObject* cal_chunk_centers (PyObject *dummy, PyObject *args)
 {
+    /*Receive the List and Array data from C, calculate the new center and return.*/
     PyObject *data = NULL;
     PyObject *centers = NULL;
     if (!PyArg_ParseTuple(args, "O!O", &PyList_Type, &data, &centers))
         return NULL;
     PyObject *chunk_centers = NULL;
     chunk_centers = kmeans_chunk_center(data, (PyArrayObject*)centers);
-    Py_INCREF(chunk_centers);
+    Py_INCREF(chunk_centers);  /*The turned list should still exist after calling the C extension*/
     return chunk_centers;
 }
 
 static PyMethodDef kmeans_c_extensionMethods[] =
 {
+    /* Mapping between functions in C and Python*/
     {"cal_chunk_centers", cal_chunk_centers, METH_VARARGS, "Calculate the centers of one chunk"},
     {NULL, NULL}
 };
 
 void initkmeans_c_extension()
 {  
+    /*Initial the extension module*/
     import_array();
     PyObject* m;
     m = Py_InitModule("kmeans_c_extension", kmeans_c_extensionMethods);

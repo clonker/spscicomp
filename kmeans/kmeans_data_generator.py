@@ -17,7 +17,7 @@ class KmeansDataGenerator:
 
 class KmeansRandomDataGenerator(KmeansDataGenerator):
     """
-    Generate a test dataset for Kmeans algo. The centers are generated uniformly.
+    Generate a test dataset for the K-Means algorithm. The centers are generated uniformly.
     The other points are produced randomly near one of the centers with normal distribution.
     """
     def __init__(self, size, dimension, centers_count):
@@ -48,3 +48,6 @@ class KmeansRandomDataGenerator(KmeansDataGenerator):
 
     def to_file(self, filename):
         np.savetxt(filename, self._data)
+
+    def to_binary_file(self, filename):
+        np.save(filename, self._data)

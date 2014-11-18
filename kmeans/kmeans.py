@@ -32,6 +32,7 @@ class DefaultKmeans(Kmeans):
         self._c_extension = c_extension
         self._data_assigns = []
 
+    # @profile
     def calculate_centers(self, k, initial_centers=None, return_centers=False, save_history=False):
         """
         Main method of the k-means algorithm. Computes k cluster centers from the data supplied by a
@@ -72,12 +73,13 @@ class DefaultKmeans(Kmeans):
         else:
             return self._data_assigns
 
+    # @profile
     def kmeans_iterate(self, centers):
         centers_list = []
         self._data_assigns = []  # reset the list once per iteration
         while True:
             data = self._importer.get_data(self._chunk_size)
-            if not data:
+            if len(data) is 0:
                 break
             else:
                 if self._c_extension is False:

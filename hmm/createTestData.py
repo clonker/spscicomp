@@ -83,17 +83,21 @@ if __name__ == '__main__':
     observationProbs =     np.loadtxt('testdata/startUrnModelB_' + testcase + '.dat')
     initialState =         np.loadtxt('testdata/startUrnModelPi_' + testcase + '.dat')
 
-    originalTransitionMatrix =     np.loadtxt('testdata/startUrnModelA_' + testcase + '.dat')
-    originalObservationProbs =     np.loadtxt('testdata/startUrnModelB_' + testcase + '.dat')
-    originalInitialState =         np.loadtxt('testdata/startUrnModelPi_' + testcase + '.dat')
+    originalTransitionMatrix =     np.loadtxt('testdata/urnModelA_' + testcase + '.dat')
+    originalObservationProbs =     np.loadtxt('testdata/urnModelB_' + testcase + '.dat')
+    originalInitialState =         np.loadtxt('testdata/urnModelPi_' + testcase + '.dat')
     
     #print len(getUrnObservation(initialState, transitionMatrix, observationProbs, observationCount))
     
     
-    maxIterations = 1000
+    maxIterations = 100
     likelies = np.zeros(maxIterations-1)
     model = [transitionMatrix, observationProbs, initialState]
     #"""
+    print 'transitionMatrix of model\n', originalTransitionMatrix
+    print 'observationProbs of model\n', originalObservationProbs
+    print 'initialState of model\n', originalInitialState
+
     print 'transitionMatrix\n', model[0]
     print 'observationProbs\n', model[1]
     print 'initialState\n', model[2]

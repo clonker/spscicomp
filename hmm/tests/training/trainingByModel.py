@@ -76,35 +76,38 @@ def getRandomIndexByProbability(probs):
 
 
 if __name__ == '__main__':
-	testcase = '1'
+	testcase = '3'
 
-	transitionMatrix =     np.loadtxt('testdata/startUrnModelA_' + testcase + '.dat')
-	observationProbs =     np.loadtxt('testdata/startUrnModelB_' + testcase + '.dat')
-	initialState =         np.loadtxt('testdata/startUrnModelPi_' + testcase + '.dat')
+	transitionMatrix =     np.loadtxt('models/urnModelA_' + testcase + '.dat')
+	observationProbs =     np.loadtxt('models/urnModelB_' + testcase + '.dat')
+	initialState =         np.loadtxt('models/urnModelPi_' + testcase + '.dat')
 
-	originalTransitionMatrix =     np.loadtxt('testdata/startUrnModelA_' + testcase + '.dat')
-	originalObservationProbs =     np.loadtxt('testdata/startUrnModelB_' + testcase + '.dat')
-	originalInitialState =         np.loadtxt('testdata/startUrnModelPi_' + testcase + '.dat')
+	originalTransitionMatrix =     np.loadtxt('models/startUrnModelA_' + testcase + '.dat')
+	originalObservationProbs =     np.loadtxt('models/startUrnModelB_' + testcase + '.dat')
+	originalInitialState =         np.loadtxt('models/startUrnModelPi_' + testcase + '.dat')
 
-	observationCount = 1
+	observationCount = 10
 	observationLength = 100
-	maxIterations = 400
+	maxIterations = 100
 	model = (transitionMatrix, observationProbs, initialState)
-	print 'transitionMatrix\n', model[0]
-	print 'observationProbs\n', model[1]
-	print 'initialState\n', model[2]
+
+	allLikelies = []
 	for i in range(observationCount):
 		observation = getObservationFromModel(originalInitialState, 
 												originalTransitionMatrix, 
 												originalObservationProbs, 
 												observationLength)
-		print observation
 		model, likelies = hmm.optimize(model, observation, maxIterations)
 		print 'transitionMatrix\n', model[0]
 		print 'observationProbs\n', model[1]
 		print 'initialState\n', model[2]
 		print 'loglikeli', likelies[len(likelies)-1]
-
-	plt.plot(likelies[1:])
+		plt.plot((i+1)*(observationLength-1),likelies[len(likelies)-1], 'o')
+		allLikelies += likelies[1:].tolist()
+	
+	print 'transitionMatrix\n', originalTransitionMatrix
+	print 'observationProbs\n', originalObservationProbs
+	print 'initialState\n', originalInitialState
+	plt.plot(allLikelies)
 	plt.show()
 

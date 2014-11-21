@@ -1,0 +1,1 @@
+"""This package contains classes which may be of use in all parts of the project."""

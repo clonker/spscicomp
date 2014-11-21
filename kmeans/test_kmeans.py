@@ -52,6 +52,25 @@ class TestKmeansData(unittest.TestCase):
         remove(f_name)
 
 
+class TestKmeans(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def test_kmeans_equilibrium_state(self):
+        initial_centers = [np.array([0, 0, 0])]
+        importer = KmeansSimpleDataImporter([
+            np.array([1, 1, 1]), np.array([1, 1, -1]), np.array([1, -1, -1]), np.array([-1, -1, -1]),
+            np.array([-1, 1, 1]), np.array([-1, -1, 1]), np.array([-1, 1, -1]), np.array([1, -1, 1])
+        ])
+        kmeans = DefaultKmeans(importer=importer, c_extension=False)
+        centers, _ = kmeans.calculate_centers(k=1, initial_centers=initial_centers, return_centers=True)
+
+        self.assertEqual(1, len(centers), 'If k=1, there should be only one output center.')
+
+        msg = 'In an equilibrium state the resulting centers should not be different from the initial centers.'
+        self.assertTrue(np.array_equal(initial_centers[0], centers[0]), msg)
+
+
 """
     main
 """

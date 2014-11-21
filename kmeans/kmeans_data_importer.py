@@ -23,6 +23,19 @@ class KmeansDataImporter:
         raise NotImplementedError('subclasses must override has_more_data()!')
 
 
+class KmeansSimpleDataImporter(KmeansDataImporter):
+
+    def __init__(self, data):
+        super(KmeansSimpleDataImporter, self).__init__()
+        self._data = data
+
+    def has_more_data(self):
+        return False
+
+    def get_data(self, size):
+        return self._data
+
+
 class KmeansFileDataImporter(KmeansDataImporter):
     """
     Import data from text files. The data structure should be as follows:

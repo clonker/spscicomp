@@ -86,7 +86,7 @@ if __name__ == '__main__':
 	originalObservationProbs =     np.loadtxt('models/startUrnModelB_' + testcase + '.dat')
 	originalInitialState =         np.loadtxt('models/startUrnModelPi_' + testcase + '.dat')
 
-	observationCount = 10
+	observationCount = 5
 	observationLength = 100
 	maxIterations = 100
 	model = (transitionMatrix, observationProbs, initialState)
@@ -108,6 +108,8 @@ if __name__ == '__main__':
 	print 'transitionMatrix\n', originalTransitionMatrix
 	print 'observationProbs\n', originalObservationProbs
 	print 'initialState\n', originalInitialState
-	plt.plot(allLikelies)
+	plt.xlabel('number of iterations', fontsize=14)
+	plt.ylabel(r'$\ln\, P(O|\lambda) $', fontsize=16)
+	plt.plot(allLikelies, color='black')
 	plt.show()
 

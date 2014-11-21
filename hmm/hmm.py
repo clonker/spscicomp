@@ -149,6 +149,7 @@ def scaledForwardCoeffs(model, obs):
 		c[t] = 1./sum(alpha[t])
 		# rescale alpha
 		alpha[t] *= c[t]
+		print alpha[t]
 
 	return (alpha, c)
 
@@ -167,13 +168,11 @@ def scaledBackwardCoeffs(model, obs, c):
 	# Initialization for t=T:
 	beta = np.zeros((T+1,N))
 	beta[T] = c[T] # rescale betas with factors from forward calculation
-	print beta[T]
 
 	# Induction for T > t > 0:
 	for t in range(T-1,-1,-1):
 		beta[t] = np.dot(B[:,obs[t+1]], A.T)*beta[t+1]
 		beta[t] *= c[t]
-		print beta[t]
 
 	return beta
 

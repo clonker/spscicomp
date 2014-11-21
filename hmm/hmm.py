@@ -117,7 +117,7 @@ def transitionToFrom(t, i, j, alpha, beta, transitionMatrix,
 			norm += alpha[t,k] * A[k,l] * B[l, observation[t+1]] * beta[t+1,l]
 	return alpha[t,i] * A[i,j] * B[j, observation[t+1]] * beta[t+1,j] / norm
 
-def scaledForwardCoeffs(model, observation):
+def scaledForwardCoeffs(model, obs):
 	"""Generate the forward coeffcients and scaling factors.
 
 	The forward coefficients are represented as a matrix of T rows and N
@@ -127,66 +127,55 @@ def scaledForwardCoeffs(model, observation):
 	calculate the likelihood.
 
 	"""
-	A = model[0]	# transition matrix
-	B = model[1]	# observation probabilites
-	pi = model[2]	# initial state
-	T = len(observation)
-	N = len(A)
+	# get model parameter
+	A,B,pi = model[0],model[1],model[2]
+	T,N = len(obs), len(A)
+
+	# allocate memory
 	alpha = np.zeros((T,N))	# array of forward coefficients
-	c = np.zeros(T)	# scaling factors
+	c = np.zeros(T)	        # scaling factors
+	if (T == 0):
+		return (alpha,c)
 
 	# Initialization for t=0:
-	for i in range(0,N):
-		alpha[0, i] = pi[i] * B[i, observation[0]]
-	c[0] = 1./sum(alpha[0,:])
-	alpha[0,:] *= c[0]	# rescale alphas by factor c
+	alpha[0] = pi*B[:,obs[0]];
+	c[0] = 1. / np.sum(alpha[0])
+	# rescale alpha
+	alpha[0] *= c[0]
 
 	# Induction for 0 < t < T:
 	for t in range(1,T):
-		for i in range(0,N):
-			alpha[t, i] = alphaCoeff(t, i, alpha[t-1, :], A, B, observation)
-		c[t] = 1./sum(alpha[t, :])
-		alpha[t, :] *= c[t]
+		alpha[t] = np.dot(alpha[t-1],A)*B[:,obs[t]]
+		c[t] = 1./sum(alpha[t])
+		# rescale alpha
+		alpha[t] *= c[t]
 
 	return (alpha, c)
 
-def alphaCoeff(t, i, preAlpha, A, B, observation):
-	"""Calculate one single entry in the forward coefficient matrix."""
-	result = 0.
-	for j in range(0, len(A)):
-		result += preAlpha[j] * A[j, i]
-	return result*B[i, observation[t]]
-
-def scaledBackwardCoeffs(model, observation, scalingFactors):
+def scaledBackwardCoeffs(model, obs, c):
 	"""Generate the backward coefficients with the scaling factors of the
 	forward coefficients."""
-	A = model[0]	# transition matrix
-	B = model[1]	# observation probabilites
+	A  = model[0]	# transition matrix
+	B  = model[1]	# observation probabilites
 	pi = model[2]	# initial state
-	T = len(observation)
-	N = len(A)
-	beta = np.zeros((T,N))	# array of backward coefficients
-	c = scalingFactors	# scaling factors
+	T  = len(obs)-1 # max time index
+	N  = len(A)     # count states
 
-	# Initialization for t=0:
-	for i in range(0,N):
-		beta[T-1,i] = 1.
-	beta[T-1,:] *= c[T-1] # rescale betas with factors from forward calculation
+	if T < 0:
+		return []
+
+	# Initialization for t=T:
+	beta = np.zeros((T+1,N))
+	beta[T] = c[T] # rescale betas with factors from forward calculation
+	print beta[T]
 
 	# Induction for T > t > 0:
-	for t in range(T-2,-1,-1):
-		for i in range(0,N):
-			beta[t,i] = betaCoeff(t, i, beta[t+1,:], A, B, observation)
-		beta[t,:] *= c[t]
+	for t in range(T-1,-1,-1):
+		beta[t] = np.dot(B[:,obs[t+1]], A.T)*beta[t+1]
+		beta[t] *= c[t]
+		print beta[t]
 
 	return beta
-
-def betaCoeff(t, i, preBeta, A, B, observation):
-	"""Calculate one single entry in the backward coefficient matrix."""
-	result = 0.
-	for j in range(0,len(A)):
-		result += A[i,j] * B[j, observation[t+1]] * preBeta[j]
-	return result
 
 def logLikeli(scalingFactors):
 	"""Calculate the logarithm of the likelihood, simply as the sum of the

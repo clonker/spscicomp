@@ -9,7 +9,7 @@ import numpy as np
 import hmm
 
 # geforderte Genauigkeit
-eps = 1e-4;
+eps = 1e-8;
 
 
 O = np.array([1,0,1,0,0,1]);           # Observations
@@ -23,7 +23,7 @@ class SimpleKernelTests(unittest.TestCase):
 		""" check if alpha is normed """
 		alpha, c = hmm.scaledForwardCoeffs([A,B,pi], O)
 		for t in range(0, len(alpha)):
-			self.assertTrue(abs(sum(alpha[t,:])- 1) < eps);
+			self.assertTrue(abs(sum(alpha[t])- 1) < eps)
 
 	def test_scaledForwardCoeffs_alpha_is_conform(self):
 		""" check if the induction formula holds for alpha
@@ -42,6 +42,12 @@ class SimpleKernelTests(unittest.TestCase):
 		for t in range(1, len(alpha)):
 			for i in range(0, len(alpha[t])):
 				self.assertEqual(alpha[t,i]/c[t], sum(alpha[t-1,:]*A[:,i])*B[i, O[t]])
+
+	def test_scaledBackwardCoeffs_sum_normed(self):
+		""" check if beta is normed """
+		beta, c = hmm.scaledBackwardCoeffs([A,B,pi], 0);
+		for t in range(0, len(beta)):
+			self.assertTrue(abs(sum(beta[t])-1) < eps)
 
 
 if __name__ == '__main__':

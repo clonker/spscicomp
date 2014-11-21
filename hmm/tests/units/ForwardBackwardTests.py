@@ -11,24 +11,14 @@ import hmm
 # geforderte Genauigkeit
 eps = 1e-8;
 
-
 # Observation Sequence
-O = np.array([1,0,1,0,0,1]);
+sample1 = np.loadtxt('data/sample1.dat')
+O = sample1[0:100]
 
 # Initial Model
-# transfer matrix
-A = np.array([
-	[0.5, 0.5],
-	[0.5, 0.5]
-]);
-# symbol probability
-B = np.array([
-	[0.3, 0.7],
-	[1., 0.]
-]);
-# initial probability
-pi = np.array([0.5, 0.5]);
-
+A  = np.loadtxt('data/startmodelA_2.dat')
+B  = np.loadtxt('data/startmodelB_2.dat')
+pi = np.loadtxt('data/startmodelPi_2.dat')
 
 class ForwardBackwardTests(unittest.TestCase):
 
@@ -65,7 +55,7 @@ class ForwardBackwardTests(unittest.TestCase):
 			self.assertEqual(alpha[0,i]/c[0], pi[i]*B[i, O[0]])
 		for t in range(1, len(alpha)):
 			for i in range(0, len(alpha[t])):
-				self.assertEqual(alpha[t,i]/c[t], sum(alpha[t-1,:]*A[:,i])*B[i, O[t]])
+				self.assertTrue(abs(alpha[t,i]/c[t]- sum(alpha[t-1,:]*A[:,i])*B[i, O[t]]) < eps)
 
 	def test_scaledBackwardCoeffs_is_conform(self):
 		""" check for the induction formula for beta
@@ -86,7 +76,7 @@ class ForwardBackwardTests(unittest.TestCase):
 
 		for t in range(T-1, 0):
 			for i in range(0, len(beta[t])):
-				self.assertEqual(beta[t,i]/c[t], np.sum(A[i]*B[j,O[t]]*beta[t+1]))
+				self.assertTrue(abs(beta[t,i]/c[t] - np.sum(A[i]*B[j,O[t]]*beta[t+1])) < eps)
 
 if __name__ == '__main__':
 	unittest.main();

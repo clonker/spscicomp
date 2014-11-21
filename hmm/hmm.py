@@ -146,33 +146,32 @@ def scaledForwardCoeffs(model, obs):
 	# Induction for 0 < t < T:
 	for t in range(1,T):
 		alpha[t] = np.dot(alpha[t-1],A)*B[:,obs[t]]
-		c[t] = 1./sum(alpha[t])
+		c[t] = 1./np.sum(alpha[t])
 		# rescale alpha
 		alpha[t] *= c[t]
-		print alpha[t]
 
 	return (alpha, c)
 
 def scaledBackwardCoeffs(model, obs, c):
 	"""Generate the backward coefficients with the scaling factors of the
-	forward coefficients."""
-	A  = model[0]	# transition matrix
-	B  = model[1]	# observation probabilites
-	pi = model[2]	# initial state
-	T  = len(obs)-1 # max time index
-	N  = len(A)     # count states
+	forward coefficients.
 
-	if T < 0:
+	"""
+	# get model parameter
+	A,B,pi = model[0],model[1],model[2]
+	T, N = len(obs), len(A)
+
+	# allocate memory
+	beta = np.zeros((T,N))
+	if T == 0:
 		return []
 
 	# Initialization for t=T:
-	beta = np.zeros((T+1,N))
-	beta[T] = c[T] # rescale betas with factors from forward calculation
+	beta[T-1] = c[T-1] # rescale betas with factors from forward calculation
 
 	# Induction for T > t > 0:
-	for t in range(T-1,-1,-1):
-		beta[t] = np.dot(B[:,obs[t+1]], A.T)*beta[t+1]
-		beta[t] *= c[t]
+	for t in range(T-2,-1,-1):
+		beta[t] = c[t]*np.dot(B[:,obs[t+1]]*beta[t+1],A.T)
 
 	return beta
 

@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <omp.h>
 #include "Python.h"
 #include "math.h"
 #include "numpy/arrayobject.h"

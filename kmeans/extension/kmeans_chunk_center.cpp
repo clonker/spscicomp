@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <omp.h>
 #include "Python.h"
 #include "math.h"
 #include "numpy/arrayobject.h"
@@ -16,7 +16,7 @@ extern "C" {
 /*
     Calculate the new centers in the received block.
 */
-int closest_center(double point_data[], PyArrayObject *centers, int cluster_size, int dimension)
+int closest_center(PyArrayObject *data,int data_lab, PyArrayObject *centers, int cluster_size, int dimension)
 {
     /* Given the centers and one point and return which center is nearest to the point */
     int i, j;
@@ -25,16 +25,16 @@ int closest_center(double point_data[], PyArrayObject *centers, int cluster_size
     int min_index = 0;  
     for (i = 0; i < cluster_size; i++)
     {
-        distance = 0;
-        for (j = 0; j < dimension; j++)
-        {
-            distance += pow(point_data[j] - (*(double*)PyArray_GETPTR2(centers, i, j)), 2);
-        }
-        if (distance <= min_distance)
-        {
-            min_distance = distance;
-            min_index = i;
-        }
+	distance = 0;
+	for (j = 0; j < dimension; j++)
+	{
+	    distance += pow((*(double*)PyArray_GETPTR2(data, data_lab, j)) - (*(double*)PyArray_GETPTR2(centers, i, j)), 2);
+	}
+	if (distance <= min_distance)
+	{
+	    min_distance = distance;
+	    min_index = i;
+	}
     }
     return min_index;
 }
@@ -60,23 +60,18 @@ PyObject* kmeans_chunk_center(PyArrayObject *data, PyArrayObject *centers, PyObj
     for (i = 0; i < cluster_size * dimension; i++)
     {
 	    (*(new_centers + i)) = 0;
-    }
-
+    }   
     for (i = 0; i < chunk_size; i++)
-    {
-        for (j = 0; j < dimension; j++)
-        {
-            point_data[j] = (double*)PyArray_GETPTR2(data, i, j);
-        }
-        closest_center_index = closest_center((*point_data), centers, cluster_size, dimension);
-        PyList_SetItem(data_assigns, i, PyInt_FromLong(closest_center_index));
-        (*(centers_counter + closest_center_index))++;
-        for (j = 0; j < dimension; j++)
-        {
-            (*(new_centers + closest_center_index * dimension + j)) += (*point_data[j]);
-        }
+    {	  
+	closest_center_index = closest_center(data,i, centers, cluster_size, dimension);
+	PyList_SetItem(data_assigns, i, PyInt_FromLong(closest_center_index));
+	(*(centers_counter + closest_center_index))++;
+	for (j = 0; j < dimension; j++)
+	{
+	    (*(new_centers + closest_center_index * dimension + j)) += (*(double*)PyArray_GETPTR2(data, i, j));
+	}
     }
-
+    
     for (i = 0; i < cluster_size; i++)
     {
         if (*(centers_counter + i) == 0)

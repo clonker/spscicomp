@@ -51,7 +51,7 @@ class DefaultKmeans(Kmeans):
         self._importer.rewind()
         data = self._importer.get_data(self._chunk_size)
         self._dimension = data[0].shape[0]
-        if initial_centers:
+        if initial_centers is not None:
             centers = initial_centers
         else:
             centers = [data[np.random.randint(0, len(data))] for _ in xrange(k)]
@@ -63,7 +63,7 @@ class DefaultKmeans(Kmeans):
             if save_history:
                 history.append(centers)
             centers = self.kmeans_iterate(centers)
-            if np.array_equal(centers, old_centers):
+            if np.allclose(centers, old_centers, rtol=1e-5):
                 break
         if return_centers:
             if save_history:

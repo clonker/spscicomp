@@ -52,7 +52,7 @@ class DefaultKmeans(Kmeans):
         data = self._importer.get_data(self._chunk_size)
         self._dimension = data[0].shape[0]
         if initial_centers is not None:
-            centers = initial_centers
+            centers = np.asarray(initial_centers)
         else:
             centers = [data[np.random.randint(0, len(data))] for _ in xrange(k)]
             centers = np.asarray(centers)

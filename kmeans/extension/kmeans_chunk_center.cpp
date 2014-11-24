@@ -24,16 +24,16 @@ int closest_center(PyArrayObject *data,int data_lab, PyArrayObject *centers, int
     int min_index = 0;  
     for (i = 0; i < cluster_size; i++)
     {
-	distance = 0;
-	for (j = 0; j < dimension; j++)
-	{
-	    distance += pow((*(double*)PyArray_GETPTR2(data, data_lab, j)) - (*(double*)PyArray_GETPTR2(centers, i, j)), 2);
-	}
-	if (distance <= min_distance)
-	{
-	    min_distance = distance;
-	    min_index = i;
-	}
+        distance = 0;
+        for (j = 0; j < dimension; j++)
+        {
+            distance += pow((*(double*)PyArray_GETPTR2(data, data_lab, j)) - (*(double*)PyArray_GETPTR2(centers, i, j)), 2);
+        }
+        if (distance <= min_distance)
+        {
+            min_distance = distance;
+            min_index = i;
+        }
     }
     return min_index;
 }

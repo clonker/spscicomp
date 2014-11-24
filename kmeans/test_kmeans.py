@@ -53,22 +53,46 @@ class TestKmeansData(unittest.TestCase):
 
 
 class TestKmeans(unittest.TestCase):
-    def setUp(self):
-        pass
 
     def test_kmeans_equilibrium_state(self):
-        initial_centers = [np.array([0, 0, 0])]
-        importer = KmeansSimpleDataImporter([
-            np.array([1, 1, 1]), np.array([1, 1, -1]), np.array([1, -1, -1]), np.array([-1, -1, -1]),
-            np.array([-1, 1, 1]), np.array([-1, -1, 1]), np.array([-1, 1, -1]), np.array([1, -1, 1])
-        ])
-        kmeans = DefaultKmeans(importer=importer, c_extension=False)
-        centers, _ = kmeans.calculate_centers(k=1, initial_centers=initial_centers, return_centers=True)
+        initial_centers_equilibrium = [np.array([0, 0, 0])]
+        importer_equilibrium = KmeansSimpleDataImporter(np.array([
+            np.array([1, 1, 1], dtype=np.float), np.array([1, 1, -1], dtype=np.float),
+            np.array([1, -1, -1], dtype=np.float), np.array([-1, -1, -1], dtype=np.float),
+            np.array([-1, 1, 1], dtype=np.float), np.array([-1, -1, 1], dtype=np.float),
+            np.array([-1, 1, -1], dtype=np.float), np.array([1, -1, 1], dtype=np.float)
+        ]))
+        for use_c_extension in [True, False]:
+            kmeans = DefaultKmeans(importer=importer_equilibrium, c_extension=use_c_extension)
+            res, _ = kmeans.calculate_centers(
+                k=1,
+                initial_centers=initial_centers_equilibrium,
+                return_centers=True
+            )
+            self.assertEqual(1, len(res), 'If k=1, there should be only one output center.')
+            msg = 'In an equilibrium state the resulting centers should not be different from the initial centers.'
+            self.assertTrue(np.array_equal(initial_centers_equilibrium[0], res[0]), msg)
 
-        self.assertEqual(1, len(centers), 'If k=1, there should be only one output center.')
+    def test_kmeans_contraction_property(self):
+        target = np.array([1000, -1000, 1000], dtype=float)
+        for use_c_extension in [True, False]:
+            kmeans = DefaultKmeans(
+                c_extension=use_c_extension,
+                importer=KmeansSimpleDataImporter(np.array([target]))
+            )
+            res, data, history = kmeans.calculate_centers(
+                k=1,
+                return_centers=True,
+                save_history=True,
+                initial_centers=np.array([np.array([0, 0, 0])])
+            )
+            metric = EuclideanMetric()
 
-        msg = 'In an equilibrium state the resulting centers should not be different from the initial centers.'
-        self.assertTrue(np.array_equal(initial_centers[0], centers[0]), msg)
+            previous_dist = None
+            for histEntry in history:
+                if previous_dist is not None:
+                    self.assertLess(metric.dist(histEntry, target), previous_dist)
+                previous_dist = metric.dist(histEntry, target)
 
 
 """

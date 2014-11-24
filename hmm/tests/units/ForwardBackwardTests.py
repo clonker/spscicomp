@@ -17,7 +17,7 @@ O = sample1[0:100]
 
 # Initial Model
 A  = np.loadtxt('data/startmodelA_1.dat')
-B  = np.loadtxt('data/startmodelB_1.dat')
+B  = np.loadtxt('data/startmodelB_1.dat').T
 pi = np.loadtxt('data/startmodelPi_1.dat')
 
 class ForwardBackwardTests(unittest.TestCase):
@@ -25,12 +25,16 @@ class ForwardBackwardTests(unittest.TestCase):
 	def test_update_scheme(self):
 		alpha, c = hmm.scaledForwardCoeffs([A,B,pi], O)
 		beta     = hmm.scaledBackwardCoeffs([A,B,pi], O, c)
-		A1, B1, pi1 = hmm.update_scheme(A, B, pi, alpha, beta, O)
-		model, _ = hmm.propagate([A,B,pi], O)
-		print alpha
-		print beta
-		print np.sum(model[0], axis=1)
-		print model[0]
+		for k in range(0, 2):
+			A_1,B_1,pi_1 = hmm.update_scheme([A,B,pi], alpha, beta, O)
+			[A_2,B_2,pi_2],_ = hmm.propagate([A,B,pi], O)
+		print '\n----------\n'
+		print A_1
+		print A_2
+		print B_1
+		print B_2
+		print pi_1
+		print pi_2
 		self.assertTrue(True)
 
 	def test_empty_input(self):
@@ -48,7 +52,7 @@ class ForwardBackwardTests(unittest.TestCase):
 		""" check if alpha is normed """
 		alpha, _ = hmm.scaledForwardCoeffs([A,B,pi], O)
 		for t in range(0, len(alpha)):
-			self.assertTrue(abs(sum(alpha[t])- 1) < eps)
+			self.assertAlmostEqual(sum(alpha[t]), 1)
 
 	def test_scaledForwardCoeffs_is_conform(self):
 		""" check if the induction formula holds for alpha
@@ -63,10 +67,10 @@ class ForwardBackwardTests(unittest.TestCase):
 		"""
 		alpha, c = hmm.scaledForwardCoeffs([A,B,pi], O)
 		for i in range(0, len(alpha[0])):
-			self.assertEqual(alpha[0,i]/c[0], pi[i]*B[i, O[0]])
+			self.assertEqual(alpha[0,i]/c[0], pi[i]*B[O[0],i])
 		for t in range(1, len(alpha)):
 			for i in range(0, len(alpha[t])):
-				self.assertTrue(abs(alpha[t,i]/c[t]- sum(alpha[t-1,:]*A[:,i])*B[i, O[t]]) < eps)
+				self.assertTrue(abs(alpha[t,i]/c[t]- sum(alpha[t-1,:]*A[:,i])*B[O[t],i]) < eps)
 
 	def test_scaledBackwardCoeffs_is_conform(self):
 		""" check for the induction formula for beta
@@ -87,7 +91,7 @@ class ForwardBackwardTests(unittest.TestCase):
 
 		for t in range(T-1, 0):
 			for i in range(0, len(beta[t])):
-				self.assertTrue(abs(beta[t,i]/c[t] - np.sum(A[i]*B[j,O[t]]*beta[t+1])) < eps)
+				self.assertTrue(abs(beta[t,i]/c[t] - np.sum(A[i]*B[O[t],j]*beta[t+1])) < eps)
 
 if __name__ == '__main__':
 	unittest.main();

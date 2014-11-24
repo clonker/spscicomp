@@ -41,108 +41,41 @@ def optimize(model, observation, maxIterations, verbose=False):
 	"""
 	likelies = np.zeros(maxIterations-1)
 	for iteration in range(1, maxIterations):
-		model, scalingFactors = propagate(model, observation)
-		likeli = logLikeli(scalingFactors)
+		alpha, scaling = forward(model, observation)
+		beta           = backward(model, observation, scaling)
+		model          = update_model(model, alpha, beta, observation)
+		likeli         = logLikeli(scaling)
 		likelies[iteration-1] = likeli
+
 	if verbose:
 		print 'transitionMatrix\n', model[0]
 		print 'observationProbs\n', model[1]
 		print 'initialState\n', model[2]
 		print 'loglikeli', likeli
+
 	return (model, likelies)
 
-def update_scheme(A, B, pi, alpha, beta, O):
-	T = len(O)
-	K = len(B[0])
-	A_,B_,pi_ = np.zeros(A.shape), np.zeros(B.shape), np.zeros(pi.shape)
+def update_model(model, alpha, beta, O):
+	A,B,pi = model[0],model[1],model[2]
 
-	P = np.dot(alpha[0], beta[0]) # scaled P(O|lambda)
-
-	gamma = alpha * beta / P
-	gamma_sum = np.sum(gamma[0:T-1], axis=0)
-
+	gamma = alpha*beta
+	gamma = (gamma.T / np.sum(gamma, axis=1)).T
 	# update initial state
-	pi_ = alpha[0]*beta[0] / P
+	pi = alpha[0]*beta[0] / np.dot(alpha[0],beta[0])
 
 	# update transitition matrix
-	A_ = A * np.asmatrix(alpha[0:T-1]).T * (beta[1:T]*B[:,O[1:T]].T)
-	A_ /= np.sum(A_, axis=1)
+	T = len(O)
+	A *= np.dot( alpha[0:T-1].T , beta[1:T]*B[O[1:T]] )
+	A = (A.T / np.sum(A, axis=1)).T # normalize each row
 
 	# update state probabilities
-	gamma_sum += gamma[T-1]
-	for k in range(0, K):
-		B_[:,k] = np.sum( gamma  - ((O == k) * gamma.T).T, axis=0 )
-	B_ /= np.asmatrix(gamma_sum).T
+	for k in range(0, len(B)):
+		B[k] = np.sum( ((O == k) * gamma.T).T, axis=0 )
+	B /= np.sum(B, axis=0) # normalize each column
 
-	return (A_, B_, pi_)
+	return [A,B,pi]
 
-def propagate(model, observation):
-	"""Perform the update scheme once.
-
-	Use the update formulas given in the Rabiner paper. Note that this
-	function returns the scalingFactors of the 'old' model.
-
-	"""
-	transitionMatrix 	= model[0]
-	observationProbs	= model[1]
-	initialState 		= model[2]
-
-	newTransitionMatrix	= np.zeros(transitionMatrix.shape)
-	newObservationProbs	= np.zeros(observationProbs.shape)
-	newInitialState		= np.zeros(initialState.shape)
-
-	forwardCoeffs, scalingFactors = scaledForwardCoeffs(model, observation)
-	backwardCoeffs = scaledBackwardCoeffs(model, observation, scalingFactors)
-
-	for i in range(0, len(newInitialState)):
-		newInitialState[i] = transitionFrom(0, i, forwardCoeffs,
-			backwardCoeffs)
-
-	for i in range(0, len(newTransitionMatrix)):
-		for j in range(0, len(newTransitionMatrix[i])):
-			enumerator, denominator = 0., 0.
-			for t in range(0, len(observation)-1):
-				enumerator  += transitionToFrom(t, i, j, forwardCoeffs,
-					backwardCoeffs, transitionMatrix, observationProbs,
-					observation)
-				denominator += transitionFrom(t, i, forwardCoeffs,
-					backwardCoeffs)
-			newTransitionMatrix[i,j] = enumerator / denominator
-
-	for i in range(0, len(newObservationProbs)):
-		for k in range(0, len(newObservationProbs[i])):
-			enumerator, denominator = 0., 0.
-			for t in range(0, len(observation)):
-				if (observation[t] == k):
-					enumerator += transitionFrom(t, i, forwardCoeffs,
-						backwardCoeffs)
-				denominator += transitionFrom(t,i,forwardCoeffs,
-					backwardCoeffs)
-			newObservationProbs[i,k] = enumerator / denominator
-
-	newModel = (newTransitionMatrix, newObservationProbs, newInitialState)
-	return (newModel, scalingFactors)
-
-def transitionFrom(t, i, alpha, beta):
-	"""Compute the probability of being in state i at time t."""
-	norm = 0.
-	for j in range(0,len(alpha[0])):
-		norm += alpha[t,j] * beta[t,j]
-	return alpha[t,i] * beta[t,i] / norm
-
-def transitionToFrom(t, i, j, alpha, beta, transitionMatrix,
-	observationProbs, observation):
-	"""Compute the probability of being in state i at time t and going to
-	state j."""
-	A = transitionMatrix
-	B = observationProbs
-	norm = 0.
-	for k in range(0,len(A)):
-		for l in range(0,len(A)):
-			norm += alpha[t,k] * A[k,l] * B[l, observation[t+1]] * beta[t+1,l]
-	return alpha[t,i] * A[i,j] * B[j, observation[t+1]] * beta[t+1,j] / norm
-
-def scaledForwardCoeffs(model, obs):
+def forward(model, observation):
 	"""Generate the forward coeffcients and scaling factors.
 
 	The forward coefficients are represented as a matrix of T rows and N
@@ -153,8 +86,8 @@ def scaledForwardCoeffs(model, obs):
 
 	"""
 	# get model parameter
-	A,B,pi = model[0],model[1],model[2]
-	T,N = len(obs), len(A)
+	A,B,pi,O = model[0],model[1],model[2],observation
+	T,N = len(O), len(A)
 
 	# allocate memory
 	alpha = np.zeros((T,N))	# array of forward coefficients
@@ -163,28 +96,28 @@ def scaledForwardCoeffs(model, obs):
 		return (alpha,c)
 
 	# Initialization for t=0:
-	alpha[0] = pi*B[:,obs[0]];
+	alpha[0] = pi*B[O[0]];
 	c[0] = 1. / np.sum(alpha[0])
 	# rescale alpha
 	alpha[0] *= c[0]
 
 	# Induction for 0 < t < T:
 	for t in range(1,T):
-		alpha[t] = np.dot(alpha[t-1],A)*B[:,obs[t]]
+		alpha[t] = np.dot(alpha[t-1],A)*B[O[t]]
 		c[t] = 1./np.sum(alpha[t])
 		# rescale alpha
 		alpha[t] *= c[t]
 
 	return (alpha, c)
 
-def scaledBackwardCoeffs(model, obs, c):
+def backward(model, observation, scaling):
 	"""Generate the backward coefficients with the scaling factors of the
 	forward coefficients.
 
 	"""
 	# get model parameter
-	A,B,pi = model[0],model[1],model[2]
-	T, N = len(obs), len(A)
+	A,B,pi,O,c = model[0],model[1],model[2],observation,scaling
+	T, N = len(O), len(A)
 
 	# allocate memory
 	beta = np.zeros((T,N))
@@ -196,7 +129,7 @@ def scaledBackwardCoeffs(model, obs, c):
 
 	# Induction for T > t > 0:
 	for t in range(T-2,-1,-1):
-		beta[t] = c[t]*np.dot(B[:,obs[t+1]]*beta[t+1],A.T)
+		beta[t] = c[t]*np.dot(A, B[O[t+1]]*beta[t+1])
 
 	return beta
 

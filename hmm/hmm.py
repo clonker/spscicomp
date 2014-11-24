@@ -48,9 +48,9 @@ def optimize(model, observation, maxIterations, verbose=False):
 		likelies[iteration-1] = likeli
 
 	if verbose:
-		print 'transitionMatrix\n', model[0]
-		print 'observationProbs\n', model[1]
-		print 'initialState\n', model[2]
+		print 'transitionMatrix\n', np.round(model[0], 3)
+		print 'observationProbs\n', np.round(model[1], 3)
+		print 'initialState\n', np.round(model[2], 3)
 		print 'loglikeli', likeli
 
 	return (model, likelies)

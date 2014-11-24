@@ -5,16 +5,16 @@ import matplotlib.pyplot as plt
 # import hmm.py to have access to Hidden Markov Model kernel
 import hmm
 
-sample1 = np.loadtxt('testdata/sample1.dat', dtype='int')
+sample1 = np.loadtxt('data/sample1.dat', dtype='int')
 shortSample = sample1[0:100]
 
 testcase = '1'
-transitionMatrix = 	np.loadtxt('testdata/startmodelA_' + testcase + '.dat')
-observationProbs = 	np.loadtxt('testdata/startmodelB_' + testcase + '.dat').T
-initialState = 		np.loadtxt('testdata/startmodelPi_' + testcase + '.dat')
+transitionMatrix = 	np.loadtxt('data/startmodelA_' + testcase + '.dat')
+observationProbs = 	np.loadtxt('data/startmodelB_' + testcase + '.dat').T
+initialState = 		np.loadtxt('data/startmodelPi_' + testcase + '.dat')
 
 model = [transitionMatrix, observationProbs, initialState]
-model, likelies = hmm.optimize(model, shortSample, 1100, verbose=True)
+model, likelies = hmm.optimize(model, shortSample, 6000, verbose=True)
 
 plt.plot(likelies[1:], color='black')
 plt.xlabel('number of iterations', fontsize=14)

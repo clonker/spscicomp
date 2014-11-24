@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 # import hmm.py to have access to Hidden Markov Model kernel
 import hmm
 
-sample1 = np.loadtxt('testdata/sample1.dat')
+sample1 = np.loadtxt('testdata/sample1.dat', dtype='int')
 shortSample = sample1[0:100]
 
-testcase = '2'
+testcase = '1'
 transitionMatrix = 	np.loadtxt('testdata/startmodelA_' + testcase + '.dat')
-observationProbs = 	np.loadtxt('testdata/startmodelB_' + testcase + '.dat')
+observationProbs = 	np.loadtxt('testdata/startmodelB_' + testcase + '.dat').T
 initialState = 		np.loadtxt('testdata/startmodelPi_' + testcase + '.dat')
 
 model = [transitionMatrix, observationProbs, initialState]

@@ -12,15 +12,26 @@ import hmm
 eps = 1e-8;
 
 # Observation Sequence
-sample1 = np.loadtxt('data/sample1.dat')
+sample1 = np.loadtxt('data/sample1.dat', dtype='int')
 O = sample1[0:100]
 
 # Initial Model
-A  = np.loadtxt('data/startmodelA_2.dat')
-B  = np.loadtxt('data/startmodelB_2.dat')
-pi = np.loadtxt('data/startmodelPi_2.dat')
+A  = np.loadtxt('data/startmodelA_1.dat')
+B  = np.loadtxt('data/startmodelB_1.dat')
+pi = np.loadtxt('data/startmodelPi_1.dat')
 
 class ForwardBackwardTests(unittest.TestCase):
+
+	def test_update_scheme(self):
+		alpha, c = hmm.scaledForwardCoeffs([A,B,pi], O)
+		beta     = hmm.scaledBackwardCoeffs([A,B,pi], O, c)
+		A1, B1, pi1 = hmm.update_scheme(A, B, pi, alpha, beta, O)
+		model, _ = hmm.propagate([A,B,pi], O)
+		print alpha
+		print beta
+		print np.sum(model[0], axis=1)
+		print model[0]
+		self.assertTrue(True)
 
 	def test_empty_input(self):
 		""" check how the functions react for empty input.

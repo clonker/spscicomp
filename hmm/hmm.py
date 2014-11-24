@@ -51,6 +51,31 @@ def optimize(model, observation, maxIterations, verbose=False):
 		print 'loglikeli', likeli
 	return (model, likelies)
 
+def update_scheme(A, B, pi, alpha, beta, O):
+	T = len(O)
+	K = len(B[0])
+	A_,B_,pi_ = np.zeros(A.shape), np.zeros(B.shape), np.zeros(pi.shape)
+
+	P = np.dot(alpha[0], beta[0]) # scaled P(O|lambda)
+
+	gamma = alpha * beta / P
+	gamma_sum = np.sum(gamma[0:T-1], axis=0)
+
+	# update initial state
+	pi_ = alpha[0]*beta[0] / P
+
+	# update transitition matrix
+	A_ = A * np.asmatrix(alpha[0:T-1]).T * (beta[1:T]*B[:,O[1:T]].T)
+	A_ /= np.sum(A_, axis=1)
+
+	# update state probabilities
+	gamma_sum += gamma[T-1]
+	for k in range(0, K):
+		B_[:,k] = np.sum( gamma  - ((O == k) * gamma.T).T, axis=0 )
+	B_ /= np.asmatrix(gamma_sum).T
+
+	return (A_, B_, pi_)
+
 def propagate(model, observation):
 	"""Perform the update scheme once.
 

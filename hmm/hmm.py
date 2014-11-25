@@ -7,7 +7,7 @@ As proposed by L. Rabiner (see http://dx.doi.org/10.1109/5.18626 )
 
 """
 
-from hmm_ext import _forward
+from extension import hmm_ext as ext
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -34,7 +34,7 @@ def optimize(model, observation, maxIterations, verbose=False):
 		alpha, scaling = forward(model, observation)
 		beta           = backward(model, observation, scaling)
 		model          = update_model(model, alpha, beta, observation)
-		likeli         = logLikeli(scaling)
+		likeli         = -np.sum(np.log(scaling))
 		likelies[iteration-1] = likeli
 
 	if verbose:
@@ -113,9 +113,8 @@ def forward(model, observation):
 	if (T == 0):
 		return (alpha,c)
 
-	(a,b) = _forward(alpha, c, A, B, pi, observation)
+	return ext.forward(alpha, c, A, B, pi, observation)
 
-	return (a,b)
 """
 	# Initialization for t=0:
 	alpha[0] = pi*B[O[0]];
@@ -146,6 +145,8 @@ def backward(model, observation, scaling):
 	if T == 0:
 		return []
 
+	return ext.backward(beta, scaling, A, B, pi, observation)
+"""
 	# Initialization for t=T:
 	beta[T-1] = c[T-1] # rescale betas with factors from forward calculation
 
@@ -154,11 +155,5 @@ def backward(model, observation, scaling):
 		beta[t] = c[t]*np.dot(A, B[O[t+1]]*beta[t+1])
 
 	return beta
+"""
 
-def logLikeli(scalingFactors):
-	"""Calculate the logarithm of the likelihood, simply as the sum of the
-	logarithmized scaling factors."""
-	result = 0.
-	for i in range(0,len(scalingFactors)):
-		result += np.log(scalingFactors[i])
-	return -1. * result

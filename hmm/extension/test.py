@@ -1,4 +1,4 @@
-from hmm_ext import _forward
+from hmm_ext import forward
 import numpy as np
 
 A = np.array([[2./3., 1./3.],[1./3., 2./3.]])
@@ -14,6 +14,6 @@ scale = np.zeros(T, dtype='double')
 
 print alpha,scale
 
-_forward(alpha, scale, A, B, pi, obs)
+forward(alpha, scale, A, B, pi, obs)
 
 print alpha,scale

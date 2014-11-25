@@ -2,6 +2,7 @@
 #include <numpy/arrayobject.h>
 
 #define ALPHA(i,j) *(double*)(PyArray_GETPTR2(alpha, i, j))
+#define BETA(i,j) *(double*)(PyArray_GETPTR2(beta, i, j))
 #define A(i,j) *(double*)(PyArray_GETPTR2(a, i, j))
 #define B(k,i) *(double*)(PyArray_GETPTR2(b, k, i))
 #define PI(i) *(double*)(PyArray_GETPTR1(pi, i))
@@ -11,6 +12,8 @@
 static char forward_doc[]
  = "This function calculates the forward coefficients in the hmm kernel.";
 
+static char backward_doc[]
+ = "This function calculates the backward coefficients in the hmm kernel.";
 /***
  * forward(alpha, scale, A, B, pi, obs)
  * This function calculates the forward coefficients in the hmm kernel.
@@ -42,7 +45,6 @@ forward(PyObject *self, PyObject *args) {
 	)) {
 		return NULL;
 	}
-	Py_INCREF(alpha); Py_INCREF(scale);
 	// prepare looping
 	npy_intp T = PyArray_DIM(alpha, 0);
 	npy_intp N = PyArray_DIM(alpha, 1);
@@ -66,7 +68,7 @@ forward(PyObject *self, PyObject *args) {
 		// do the recursion O(N^2)
 		for (i = 0; i < N; i++) {
 			for (j = 0; j < N; j++)
-				ALPHA(t,i) += ALPHA(t-1,j)*A(i,j);
+				ALPHA(t,i) += ALPHA(t-1,j)*A(j,i);
 			ALPHA(t,i) *= B(O(t),i);
 			scaling += ALPHA(t,i);
 		}
@@ -78,15 +80,53 @@ forward(PyObject *self, PyObject *args) {
 	}
 
 	PyObject *result = Py_BuildValue("(O,O)", alpha, scale);
-	Py_DECREF(alpha); Py_DECREF(scale);
 	return result;
 }
+
+static PyObject *
+backward(PyObject *self, PyObject *args) {
+	// get arguments from python
+	PyArrayObject *beta, *scale, *a, *b, *pi, *obs;
+	if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!",
+				&PyArray_Type, &beta,
+				&PyArray_Type, &scale,
+				&PyArray_Type, &a,
+				&PyArray_Type, &b,
+				&PyArray_Type, &pi,
+				&PyArray_Type, &obs
+	)) {
+		return NULL;
+	}
+	// prepare looping
+	npy_intp T = PyArray_DIM(beta, 0);
+	npy_intp N = PyArray_DIM(beta, 1);
+	npy_intp i,j,t; // loop indices
+
+	// set initial values
+	for (i = 0; i < N; i++) {
+		BETA(T-1,i) = SCALING(T-1);
+	}
+
+	// the computation. O(T * N^2)
+	for (t = T-2; t >= 0; t--) {
+		for (i = 0; i < N; i++) {
+			for (j = 0; j < N; j++)
+				BETA(t,i) += A(i,j)*B(O(t+1),j)*BETA(t+1,j)*SCALING(t);
+		}
+	}
+
+	Py_INCREF(beta);
+	return (PyObject*)beta;
+}
+
+
 
 /***
  * structure to describe our methods to python.
  */
 static PyMethodDef HmmMethods[] = {
-	{"_forward", forward, METH_VARARGS, forward_doc},
+	{"forward", forward, METH_VARARGS, forward_doc},
+	{"backward", backward, METH_VARARGS, backward_doc},
 	{NULL, NULL, 0, NULL}
 };
 

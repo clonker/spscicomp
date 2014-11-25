@@ -14,6 +14,9 @@ static char forward_doc[]
 
 static char backward_doc[]
  = "This function calculates the backward coefficients in the hmm kernel.";
+
+static char update_model_doc[]
+ = "Updates a given model.";
 /***
  * forward(alpha, scale, A, B, pi, obs)
  * This function calculates the forward coefficients in the hmm kernel.
@@ -119,6 +122,75 @@ backward(PyObject *self, PyObject *args) {
 	return (PyObject*)beta;
 }
 
+static PyObject *
+update_model(PyObject *self, PyObject *args) {
+	// get arguments from python
+	PyArrayObject *a, *b, *alpha, *beta, *pi, *obs;
+	if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!",
+				&PyArray_Type, &a,
+				&PyArray_Type, &b,
+				&PyArray_Type, &pi,
+				&PyArray_Type, &alpha,
+				&PyArray_Type, &beta,
+				&PyArray_Type, &obs
+	)) {
+		return NULL;
+	}
+	// prepare looping
+	npy_intp T = PyArray_DIM(beta, 0);
+	npy_intp N = PyArray_DIM(beta, 1);
+	npy_intp K = PyArray_DIM(b, 0);
+	npy_intp i,j,t,k; // loop indices
+	double sum = 0;
+
+	// new initial distribution
+	for (i = 0; i < N; i++) {
+		PI(i) = ALPHA(0,i)*BETA(0,i);
+		sum  += PI(i);
+	}
+	// normalize pi
+	for (i = 0; i < N; i++)
+		PI(i) /= sum;
+
+	// compute new transition matrix A
+	for (i = 0; i < N; i++) {
+		sum = 0;
+		for (j = 0; j < N; j++) {
+			double aij = A(i,j);
+			A(i,j) = 0;
+			for (t = 0; t < T-1; t++)
+				A(i,j) += ALPHA(t,i)*aij*B(O(t+1),j)*BETA(t+1,j);
+			sum += A(i,j);
+		}
+		// normalize each row
+		for (j = 0; j < N; j++)
+			A(i,j) /= sum;
+	}
+
+	double *gamma = (double*)calloc(T, sizeof(double));
+	for (t = 0; t < T; t++)
+		for (i = 0; i < N; i++)
+			gamma[t] += ALPHA(t,i)*BETA(t,i);
+
+	// compute new observation probability distribution B
+	sum = 0;
+	for (i = 0; i < N; i++) {
+		sum = 0;
+		for (k = 0; k < K; k++) {
+			B(k,i) = 0;
+			for (t = 0; t < T; t++) {
+				if (O(t) == k)
+					B(k,i) += ALPHA(t,i)*BETA(t,i) / gamma[t];
+			}
+			sum += B(k,i);
+		}
+		for (k = 0; k < K; k++)
+			B(k,i) /= sum;
+	}
+	free(gamma);
+	PyObject *result = Py_BuildValue("(O,O,O)", a, b, pi);
+	return result;
+}
 
 
 /***
@@ -127,6 +199,7 @@ backward(PyObject *self, PyObject *args) {
 static PyMethodDef HmmMethods[] = {
 	{"forward", forward, METH_VARARGS, forward_doc},
 	{"backward", backward, METH_VARARGS, backward_doc},
+	{"update_model", update_model, METH_VARARGS, update_model_doc},
 	{NULL, NULL, 0, NULL}
 };
 

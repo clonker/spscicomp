@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 import numpy as np
 from extension import kmeans_c_extension as kmc
+from cuda import kmeans_c_extension_cuda as kmc_cuda
 
 from kmeans_metric import EuclideanMetric
 
@@ -24,13 +25,14 @@ class DefaultKmeans(Kmeans):
     calculate_centers method to compute k cluster centers.
     """
 
-    def __init__(self, metric=EuclideanMetric(), importer=None, chunk_size=1000, max_steps=100, c_extension=False):
+    def __init__(self, metric=EuclideanMetric(), importer=None, chunk_size=1000, max_steps=100, c_extension=False,cuda=False):
         super(DefaultKmeans, self).__init__(metric, importer)
         self._max_steps = max_steps
         self._chunk_size = chunk_size
         self._dimension = None
         self._c_extension = c_extension
         self._data_assigns = []
+        self._cuda = cuda
 
     # @profile
     def calculate_centers(self, k, initial_centers=None, return_centers=False, save_history=False):
@@ -86,7 +88,10 @@ class DefaultKmeans(Kmeans):
                     centers_list.append(self.kmeans_chunk_center(data, centers))
                 else:
                     data_assigns = [0] * len(data)
-                    centers_list.append(kmc.cal_chunk_centers(data, centers, data_assigns))
+                    if self._cuda is False:
+                        centers_list.append(kmc.cal_chunk_centers(data, centers, data_assigns))
+                    else:
+                        centers_list.append(kmc_cuda.cal_chunk_centers(data, centers, data_assigns))
                     self._data_assigns.extend(data_assigns)
             if not self._importer.has_more_data():
                 break

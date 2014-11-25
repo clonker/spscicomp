@@ -7,22 +7,11 @@ As proposed by L. Rabiner (see http://dx.doi.org/10.1109/5.18626 )
 
 """
 
-# TODO chris documentation Pydoc
-# TODO chris split 'kernel' from exampleruns
-# TODO tobias add ending criterion
-# TODO honglei how to construct initial condition
-# TODO maikel automatized TESTS
-
-# TODO multiple observations
-# TODO parallelize over different observation sequences
-# TODO do in C
-
 import numpy as np
 import matplotlib.pyplot as plt
 
 def optimize(model, observation, maxIterations, verbose=False):
-	"""
-	Optimize the given model.
+	"""Optimize the given model.
 
 	Use the Hidden Markov Model algorithm to optimize the given
 	model for 'maxIterations' times. Return the optimized model
@@ -55,13 +44,39 @@ def optimize(model, observation, maxIterations, verbose=False):
 
 	return (model, likelies)
 
-def update_model(model, alpha, beta, O):
-	A,B,pi = model[0],model[1],model[2]
+def update_model(model, alpha, beta, observation):
+	"""Update a model based on given forward/backward coefficients.
 
-	gamma = alpha*beta
-	gamma = (gamma.T / np.sum(gamma, axis=1)).T
+	This is a non-parallel version of updating a given model with only one
+	given observation sequence `observation'. Also this method does not
+	calculate the forward coefficients `alpha' nor the backward coefficients
+	`beta'. The applied formula holds for scaled or non-scaled coefficients.
+	Calculate `alpha' and `beta' with methods like `forward' and `backward'.
+
+	There are some preassumtion when using this function.
+
+	1) The initial `model' is given as an array of the form [A,B,pi].
+	N is the number of hidden states. K the number different observations.
+	   - `A' is a NxN-matrix of transition probabilities between states
+	   - `B' is a KxN-matrix of observation probabilities per state
+	   - `pi' is an one-dimensional array length N of the initial state
+	     probability distribution
+	2) There are some restrictions for `alpha', `beta' and `observation'
+	Let T be the amount of observations, s.t. len(observation) = T
+	   - `alpha' is a TxN-matrix
+	   - `beta' is a TxN-matrix
+	   - `observation' is an one-dimensional array of length T and takes a
+	     maximum of K different symbols
+	3) It returns a model of the form [A,B,pi].
+	"""
+	# get abbreviations
+	A,B,pi,O = model[0],model[1],model[2],observation
+
+	# this is used for pi and B
+	gamma = alpha*beta # gamma(t,i) = alpha(t,i)*beta(t,i)
+	gamma = (gamma.T / np.sum(gamma, axis=1)).T # normalize each row [ sum_i gamma(t,i) ]
 	# update initial state
-	pi = alpha[0]*beta[0] / np.dot(alpha[0],beta[0])
+	pi = gamma[0]
 
 	# update transitition matrix
 	T = len(O)
@@ -70,7 +85,7 @@ def update_model(model, alpha, beta, O):
 
 	# update state probabilities
 	for k in range(0, len(B)):
-		B[k] = np.sum( ((O == k) * gamma.T).T, axis=0 )
+		B[k] = np.sum( ((O == k) * gamma.T).T, axis=0 ) # TODO this possibly adds alot (T-many) zeros
 	B /= np.sum(B, axis=0) # normalize each column
 
 	return [A,B,pi]

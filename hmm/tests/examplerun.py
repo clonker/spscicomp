@@ -14,7 +14,7 @@ observationProbs = 	np.loadtxt('data/startmodelB_' + testcase + '.dat').T
 initialState = 		np.loadtxt('data/startmodelPi_' + testcase + '.dat')
 
 model = [transitionMatrix, observationProbs, initialState]
-model, likelies = hmm.optimize(model, shortSample, 6000, verbose=True)
+model, likelies = hmm.optimize(model, shortSample, 1100, verbose=True)
 
 plt.plot(likelies[1:], color='black')
 plt.xlabel('number of iterations', fontsize=14)

@@ -52,7 +52,7 @@ class HiddenMarkovModel:
 			current = random_by_dist(A[current])
 		return obs
 
-	@profile
+#	@profile
 	def optimize(self, observation, maxIter):
 		"""Optimize the given model.
 

@@ -7,6 +7,7 @@ As proposed by L. Rabiner (see http://dx.doi.org/10.1109/5.18626 )
 
 """
 
+from hmm_ext import _forward
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -68,13 +69,14 @@ def update_model(model, alpha, beta, observation):
 	   - `observation' is an one-dimensional array of length T and takes a
 	     maximum of K different symbols
 	3) It returns a model of the form [A,B,pi].
+
 	"""
 	# get abbreviations
 	A,B,pi,O = model[0],model[1],model[2],observation
 
 	# this is used for pi and B
 	gamma = alpha*beta # gamma(t,i) = alpha(t,i)*beta(t,i)
-	gamma = (gamma.T / np.sum(gamma, axis=1)).T # normalize each row [ sum_i gamma(t,i) ]
+	gamma = (gamma.T / np.sum(gamma, axis=1)).T # normalize each row
 	# update initial state
 	pi = gamma[0]
 
@@ -85,7 +87,8 @@ def update_model(model, alpha, beta, observation):
 
 	# update state probabilities
 	for k in range(0, len(B)):
-		B[k] = np.sum( ((O == k) * gamma.T).T, axis=0 ) # TODO this possibly adds alot (T-many) zeros
+		# TODO this possibly adds alot (T-many) zeros
+		B[k] = np.sum( ((O == k) * gamma.T).T, axis=0 )
 	B /= np.sum(B, axis=0) # normalize each column
 
 	return [A,B,pi]
@@ -96,8 +99,8 @@ def forward(model, observation):
 	The forward coefficients are represented as a matrix of T rows and N
 	columns, where T is the observation length and N is the number of hidden
 	states. All forward coefficients in one row are normalized to 1. The
-	factors to normalize them are saved in a vector c and are later needed to
-	calculate the likelihood.
+	factors to normalize them are saved in a vector c and are later needed
+	to calculate the likelihood.
 
 	"""
 	# get model parameter
@@ -105,11 +108,15 @@ def forward(model, observation):
 	T,N = len(O), len(A)
 
 	# allocate memory
-	alpha = np.zeros((T,N))	# array of forward coefficients
-	c = np.zeros(T)	        # scaling factors
+	alpha = np.zeros((T,N), dtype='double') # array of forward coefficients
+	c = np.zeros(T, dtype='double')         # scaling factors
 	if (T == 0):
 		return (alpha,c)
 
+	(a,b) = _forward(alpha, c, A, B, pi, observation)
+
+	return (a,b)
+"""
 	# Initialization for t=0:
 	alpha[0] = pi*B[O[0]];
 	c[0] = 1. / np.sum(alpha[0])
@@ -122,8 +129,8 @@ def forward(model, observation):
 		c[t] = 1./np.sum(alpha[t])
 		# rescale alpha
 		alpha[t] *= c[t]
-
 	return (alpha, c)
+"""
 
 def backward(model, observation, scaling):
 	"""Generate the backward coefficients with the scaling factors of the

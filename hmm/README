@@ -1,0 +1,15 @@
+Dont forget to add hmm.py into your PYTHONPATH. For Linux add to your .bashrc following line
+
+export SPSCICOMP=<your spscicomp path>
+export PYTHONPATH=$SPSCICOMP/hmm
+
+TODO list
+
+- More unit tests. Just test everything. Every little test is an addition!
+- Prepare for integration tests with other modules.
+- Maybe some benchmark tests and prepare next seminar presentation with some comparisons.
+- Analyze source code for cost effiency. See line_profiler but also count operations too!
+- Documentation. Is always guuud ~~
+- Handle multiple oberservations without storing matrices after each calculation
+	-> Parallelize
+- C portations for forward and backward algorithm

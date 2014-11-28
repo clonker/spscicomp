@@ -12,6 +12,7 @@ all:
 	- Prepare for integration tests with other modules
 chris:
 	- Validation tests (trainingByModel and think of more)
+	- Implement similarity of models (given in Rabiner paper)
 	- Unit tests
 maikel:
 	- Benchmarking/lineprofiler

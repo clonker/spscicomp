@@ -5,11 +5,20 @@ export PYTHONPATH=$SPSCICOMP/hmm
 
 TODO list
 
-- More unit tests. Just test everything. Every little test is an addition!
-- Prepare for integration tests with other modules.
-- Maybe some benchmark tests and prepare next seminar presentation with some comparisons.
-- Analyze source code for cost effiency. See line_profiler but also count operations too!
-- Documentation. Is always guuud ~~
-- Handle multiple oberservations without storing matrices after each calculation
-	-> Parallelize
-- C portations for forward and backward algorithm
+all:
+	- C portations forward/backward algorithm
+	- How to handle multiple obs. sequences without storing 
+	  every matrix / parallelizing
+	- Prepare for integration tests with other modules
+chris:
+	- Validation tests (trainingByModel and think of more)
+	- Unit tests
+maikel:
+	- Benchmarking/lineprofiler
+honglei:
+	- How to construct initial conditions from scratch only given the
+	  observation sequence
+	(- Check the docstrings for consistency with PEP-257, and if
+	   they're informative)
+tobias:
+	- Ending criterion

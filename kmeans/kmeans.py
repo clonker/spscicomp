@@ -21,11 +21,12 @@ class Kmeans:
 
 class DefaultKmeans(Kmeans):
     """
-    Default implementation of the k-means algorithm. Once supplied with an KmeansDataImporter object, use the
+    Default implementation of the k-means algorithm. Once supplied with an CommonDataImporter object, use the
     calculate_centers method to compute k cluster centers.
     """
 
-    def __init__(self, metric=EuclideanMetric(), importer=None, chunk_size=1000, max_steps=100, c_extension=False,cuda=False):
+    def __init__(self, metric=EuclideanMetric(), importer=None, chunk_size=1000, max_steps=100, c_extension=False,
+                 cuda=False):
         super(DefaultKmeans, self).__init__(metric, importer)
         self._max_steps = max_steps
         self._chunk_size = chunk_size
@@ -38,7 +39,7 @@ class DefaultKmeans(Kmeans):
     def calculate_centers(self, k, initial_centers=None, return_centers=False, save_history=False):
         """
         Main method of the k-means algorithm. Computes k cluster centers from the data supplied by a
-        KmeansDataImporter object.
+        CommonDataImporter object.
         :param k: Number of cluster centers to compute.
         :param initial_centers: Array of cluster centers to start the iteration with. If omitted, random data points
         from the first chunk of data are used.

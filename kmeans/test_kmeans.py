@@ -1,7 +1,7 @@
 import unittest
 
 from kmeans_metric import *
-from kmeans_data_importer import *
+from common.common_data_importer import *
 from kmeans_data_generator import *
 from kmeans_plot import *
 from os import remove
@@ -36,7 +36,7 @@ class TestKmeansData(unittest.TestCase):
         f_name = 'unittest_data.txt'
         data_generator = KmeansRandomDataGenerator(1234, 2, 3)
         data_generator.to_file(f_name)
-        importer = KmeansFileDataImporter(filename=f_name)
+        importer = CommonFileDataImporter(filename=f_name)
         line_count = sum(1 for _ in open(f_name))
         for i in xrange(5):
             curr_line_count = 0
@@ -56,7 +56,7 @@ class TestKmeans(unittest.TestCase):
 
     def test_kmeans_equilibrium_state(self):
         initial_centers_equilibrium = [np.array([0, 0, 0])]
-        importer_equilibrium = KmeansSimpleDataImporter(np.array([
+        importer_equilibrium = CommonSimpleDataImporter(np.array([
             np.array([1, 1, 1], dtype=np.float), np.array([1, 1, -1], dtype=np.float),
             np.array([1, -1, -1], dtype=np.float), np.array([-1, -1, -1], dtype=np.float),
             np.array([-1, 1, 1], dtype=np.float), np.array([-1, -1, 1], dtype=np.float),
@@ -78,7 +78,7 @@ class TestKmeans(unittest.TestCase):
         for use_c_extension in [True, False]:
             kmeans = DefaultKmeans(
                 c_extension=use_c_extension,
-                importer=KmeansSimpleDataImporter(np.array([target]))
+                importer=CommonSimpleDataImporter(np.array([target]))
             )
             res, data, history = kmeans.calculate_centers(
                 k=1,

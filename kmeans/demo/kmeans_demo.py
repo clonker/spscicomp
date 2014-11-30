@@ -1,5 +1,5 @@
 from kmeans import DefaultKmeans
-from kmeans_data_importer import *
+from common.common_data_importer import *
 from kmeans_plot import *
 
 
@@ -24,7 +24,7 @@ colors = cm.rainbow(np.linspace(0, 1, k))
 
 data_file = "demo/data.txt"
 
-importer = KmeansFileDataImporter(filename=data_file)
+importer = CommonFileDataImporter(filename=data_file)
 
 kmeans = DefaultKmeans(importer=importer)
 

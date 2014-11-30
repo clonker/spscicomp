@@ -19,18 +19,27 @@ extern "C" {
 */
 
 
-#define THREAD_NUM   512
-#define BLOCK_NUM   128
-#define DATA_SIZE  THREAD_NUM*BLOCK_NUM
+#define THREAD_NUM   128
 
-__global__ void chunk_centers_sum_cuda(double *cu_data,double *cu_centers, int* cu_centers_counter, double* cu_new_centers, int* cu_data_assigns, int* cluster_size,int *dimension)
+__global__ void chunk_centers_sum_cuda(double *cu_data,double *cu_centers, int* cu_centers_counter, double* cu_new_centers,
+                                        int* cu_data_assigns, int* cluster_size,int *dimension,int *chunk_size)
+/*
+    cu_data            : a chunk of points, which are given pointwise.
+    cu_centers         : current centers.
+    cu_centers_counter : to count how many points are nearest to a given center, count blockwise.
+    cu_new_centers     : to calculate the sum of the points which are nearest to a given center, add blockwise.
+    cu_data_assigns    : the index of the center which is nearest to a given point.
+    cluster_size       : how many clusters are there.
+    dimension          : dimension of the points.
+    chunk_size         : how many points in the chunk.
+*/
 {
-    const int tid = threadIdx.x;
-    const int bid = blockIdx.x;
-    int i,j,k;
-
-    for(k = bid * THREAD_NUM + tid; k < DATA_SIZE; k+= BLOCK_NUM * THREAD_NUM)
+    int k = threadIdx.x+blockIdx.x * blockDim.x;
+    int bid = blockIdx.x;
+    int i,j;
+    while (k< (*chunk_size))
     {
+        /*Calculate the index of the center which is nearest to a given point.*/
         double min_distance = 1E100;
         double distance;
         *(cu_data_assigns+k)=0;
@@ -48,11 +57,11 @@ __global__ void chunk_centers_sum_cuda(double *cu_data,double *cu_centers, int* 
             }
         }
         __syncthreads();
-
-        if(tid == 0)
+        /*add up cu_centers_counter and cu_new_centers  in each block,
+         in order to avoid IO problem when two kernels try to write one data*/
+        if(threadIdx.x == 0)
         {
-            *(cu_centers_counter+bid)=0;
-            for (i=0 ; i<THREAD_NUM; i++)
+            for (i=0 ; i<THREAD_NUM && (k+i)<(*chunk_size); i++)
             {
                 *(cu_centers_counter+bid*(*cluster_size)+*(cu_data_assigns+bid*THREAD_NUM+i))+=1;
                 for (j = 0; j < *dimension; j++)
@@ -60,9 +69,11 @@ __global__ void chunk_centers_sum_cuda(double *cu_data,double *cu_centers, int* 
                     *(cu_new_centers +bid*(*cluster_size)*(*dimension) +(*(cu_data_assigns+bid*THREAD_NUM+i))* (*dimension) + j) += *(cu_data+(bid*THREAD_NUM+i)*(*dimension)+j);
                 }
             }
-           // printf("%d %d %d\n", *(cu_centers_counter+bid*(*cluster_size)),*(cu_centers_counter+bid*(*cluster_size)+1),*(cu_centers_counter+bid*(*cluster_size)+2));
+           //printf("\n%d\n",bid);
+           //printf("%d %d %d\n", *(cu_centers_counter+bid*(*cluster_size)),*(cu_centers_counter+bid*(*cluster_size)+1),*(cu_centers_counter+bid*(*cluster_size)+2));
 
         }
+        k+=blockDim.x * gridDim.x;
     }
 }
 
@@ -74,6 +85,9 @@ PyObject* kmeans_chunk_center_cuda(PyArrayObject *data, PyArrayObject *centers, 
     cluster_size = *(int *)PyArray_DIMS(centers);
     dimension = PyArray_DIM(centers, 1);
     chunk_size = *(int *)PyArray_DIMS(data);
+    int BLOCK_NUM = (chunk_size + 127 ) / 128;
+    if (BLOCK_NUM > 128) BLOCK_NUM = 128;
+    /*GPU has number limitation of paralleled threads, to improve efficiency*/
     int *centers_counter = (int *)malloc(sizeof(int) * BLOCK_NUM* cluster_size);
     double *new_centers = (double *)malloc(sizeof(double)* BLOCK_NUM * cluster_size * dimension);
     int* p_data_assigns= (int *)malloc(sizeof(int) * chunk_size);
@@ -94,8 +108,9 @@ PyObject* kmeans_chunk_center_cuda(PyArrayObject *data, PyArrayObject *centers, 
     double* p_centers=(double *)PyArray_DATA(centers);
 
     double* cu_data, *cu_centers, *cu_new_centers;
-    int* cu_centers_counter, *cu_cluster_size, *cu_dimension, *cu_data_assigns;
+    int* cu_centers_counter, *cu_cluster_size, *cu_dimension, *cu_data_assigns,*cu_chunk_size;
 
+    /*malloc memory to graphic card and copy data from memory to G-memory*/
     cudaMalloc((void**) &cu_data, sizeof(double) * chunk_size * dimension);
     cudaMalloc((void**) &cu_centers, sizeof(double) * cluster_size * dimension);
     cudaMalloc((void**) &cu_centers_counter, sizeof(int) * BLOCK_NUM * cluster_size);
@@ -103,6 +118,7 @@ PyObject* kmeans_chunk_center_cuda(PyArrayObject *data, PyArrayObject *centers, 
     cudaMalloc((void**) &cu_data_assigns, sizeof(int) * chunk_size );
     cudaMalloc((void**) &cu_cluster_size, sizeof(int) *1);
     cudaMalloc((void**) &cu_dimension, sizeof(int) *1);
+    cudaMalloc((void**) &cu_chunk_size, sizeof(int) *1);
 
     cudaMemcpy(cu_data, p_data, sizeof(double) * chunk_size * dimension, cudaMemcpyHostToDevice);
     cudaMemcpy(cu_centers, p_centers, sizeof(double) * cluster_size * dimension, cudaMemcpyHostToDevice);
@@ -111,14 +127,26 @@ PyObject* kmeans_chunk_center_cuda(PyArrayObject *data, PyArrayObject *centers, 
     cudaMemcpy(cu_data_assigns, p_data_assigns, sizeof(int) *chunk_size , cudaMemcpyHostToDevice);
     cudaMemcpy(cu_cluster_size, &cluster_size, sizeof(int) * 1, cudaMemcpyHostToDevice);
     cudaMemcpy(cu_dimension, &dimension, sizeof(int) * 1, cudaMemcpyHostToDevice);
+    cudaMemcpy(cu_chunk_size, &chunk_size, sizeof(int) * 1, cudaMemcpyHostToDevice);
 
+    /*Caculate parallelly wich BLOCK_NUM blocks in one grid and THREAD_NUM threads in one block*/
+    chunk_centers_sum_cuda<<<BLOCK_NUM, THREAD_NUM>>>(cu_data,cu_centers,cu_centers_counter,cu_new_centers,cu_data_assigns,cu_cluster_size,cu_dimension,cu_chunk_size);
 
-    chunk_centers_sum_cuda<<<BLOCK_NUM, THREAD_NUM>>>(cu_data,cu_centers,cu_centers_counter,cu_new_centers,cu_data_assigns,cu_cluster_size,cu_dimension);
-
+    /*Capy back the results and free G-memory*/
     cudaMemcpy(centers_counter, cu_centers_counter,sizeof(int) * BLOCK_NUM *cluster_size, cudaMemcpyDeviceToHost);
     cudaMemcpy(new_centers, cu_new_centers, sizeof(double) * BLOCK_NUM* cluster_size * dimension, cudaMemcpyDeviceToHost);
     cudaMemcpy(p_data_assigns, cu_data_assigns, sizeof(int) * chunk_size  , cudaMemcpyDeviceToHost);
 
+    cudaFree(cu_data);
+    cudaFree(cu_centers);
+    cudaFree(cu_centers_counter);
+    cudaFree(cu_new_centers);
+    cudaFree(cu_data_assigns);
+    cudaFree(cu_cluster_size);
+    cudaFree(cu_dimension);
+    cudaFree(cu_chunk_size);
+
+    /*Since we add blockwise, here we need to get the general results.*/
     for (i=0; i<BLOCK_NUM ;i++)
     {
         for (j=0;j<cluster_size; j++)
@@ -135,13 +163,6 @@ PyObject* kmeans_chunk_center_cuda(PyArrayObject *data, PyArrayObject *centers, 
         }
     }
 
-    cudaFree(cu_data);
-    cudaFree(cu_centers);
-    cudaFree(cu_centers_counter);
-    cudaFree(cu_new_centers);
-    cudaFree(cu_data_assigns);
-    cudaFree(cu_cluster_size);
-    cudaFree(cu_dimension);
 
 
     for (i = 0; i < cluster_size; i++)

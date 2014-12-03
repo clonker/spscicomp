@@ -167,6 +167,7 @@ update_model(PyObject *self, PyObject *args) {
 			A(i,j) /= sum;
 	}
 
+	// TODO maybe compute gamma[t] in place and not before
 	double *gamma = (double*)calloc(T, sizeof(double));
 	for (t = 0; t < T; t++)
 		for (i = 0; i < N; i++)

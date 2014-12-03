@@ -6,7 +6,6 @@ export PYTHONPATH=$SPSCICOMP/hmm
 TODO list
 
 all:
-	- C portations forward/backward algorithm
 	- How to handle multiple obs. sequences without storing 
 	  every matrix / parallelizing
 	- Prepare for integration tests with other modules

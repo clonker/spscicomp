@@ -11,6 +11,7 @@ Algorithms as proposed by L. Rabiner (see http://dx.doi.org/10.1109/5.18626 )
 from extension import hmm_ext as ext
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 class HiddenMarkovModel:
 	"""HiddenMarkovModel
@@ -42,6 +43,12 @@ class HiddenMarkovModel:
 		"""Returns [A,B,pi]."""
 		return [self.A,self.B,self.pi]
 
+	def printModel(self):
+		"""Print A, B and pi."""
+		print np.round(self.A, 3)
+		print np.round(self.B, 3)
+		print np.round(self.pi, 3)
+
 	def randomSequence(self, n):
 		"""Creates a random Sequence of length n on base of this model."""
 		A,B,pi = self.A,self.B.T,self.pi
@@ -53,31 +60,60 @@ class HiddenMarkovModel:
 		return obs
 
 #	@profile
-	def optimize(self, observation, maxIter):
+	def optimize(self, observation, epsilon, maxIter, verbose=False):
 		"""Optimize the given model.
 
 		Use the Hidden Markov Model algorithm to optimize the given
-		model for 'maxIterations' times. Return the optimized model
-		and an array of the likelihoods recorded along the process.
+		model. The procedure ends if the likelihood stabilizes up to
+		a given constant 'epsilon' OR the maximum number of iterations
+		'maxIter' is reached. 
+		Return the optimized model and an array of the likelihoods 
+		recorded along the process.
 
 		The model is a tupel containing the following quantities:
 		model = (transitionMatrix, observationProbs, initialState)
 
 		:observation: sequence of observed states
+		:epsilon:     desired stability as ending criterion
 		:maxIter:     number how often the model is updated
+		:verbose:     print additional information one the fly
 
-		returns an array of logarithmized likelihoods during optimization.
+		Return an array of logarithmized likelihoods during optimization.
 
 		"""
 		A,B,pi = self.A.copy(), self.B.copy(), self.pi.copy()
 		likelies = np.zeros(maxIter)
-		for i in range(0, maxIter):
+		T = float(len(observation))
+		N = float(len(A))
+		#epsilon *= T * np.log(N)
+		i = 0
+		# make sure that the loop is entered the first time
+		oldLike = 0.
+		newLike = 10. * T * np.log(N)
+		if (verbose):
+			print 'Epsilon:', epsilon
+			print 'Iteration:', i, '/', maxIter
+			print 'LogLikelihood:', newLike
+			print 'Difference Likelihood:', abs(oldLike - newLike)
+		while ( (abs(oldLike - newLike) > epsilon) and (i < maxIter) ):
+			if (verbose):
+				sys.stdout.write(3 * "\033[F") # delete last 3 lines
+				print 'Iteration:', i, '/', maxIter
+				print 'LogLikelihood:', newLike
+				print 'Difference Likelihood:', abs(oldLike - newLike)
 			alpha, scaling = forward(A, B, pi, observation)
 			beta           = backward(A, B, pi, observation, scaling)
 			A,B,pi         = update_model(A, B, pi, alpha, beta, observation)
 			likelies[i]    = -np.sum(np.log(scaling))
-
-		return (A,B,pi,likelies)
+			newLike        = likelies[i]
+			if (i!=0):
+				oldLike    = likelies[i-1]
+			else:
+				oldLike    = 0.
+			i += 1
+		print 'Terminated after ', i, ' iterations'
+		self.A, self.B, self.pi = A.copy(), B.copy(), pi.copy()
+		return (A,B,pi,likelies[0:i])
 
 
 # @profile
@@ -135,3 +171,28 @@ def random_by_dist(distribution):
 		else:
 			x -= distribution[n];
 
+def compare(model1, model2, obsLength):
+	"""Quantify the similarity of two models, based on an observation 
+	sequence of model2."""
+	A1  = model1.A.copy()
+	A2  = model2.A.copy()
+	B1  = model1.B.copy()
+	B2  = model2.B.copy()
+	pi1 = model1.pi.copy()
+	pi2 = model2.pi.copy()
+	observation = model2.randomSequence(obsLength)
+	_, scaling1 = forward(A1, B1, pi1, observation)
+	_, scaling2 = forward(A2, B2, pi2, observation)
+	result = -np.sum(np.log(scaling1)) + np.sum(np.log(scaling2))
+	return result / float(obsLength)
+
+def similarity(model1, model2, obsLength):
+	"""Give a symmetric realisation of the similarity.
+
+	Average the unsymmetric similarities compare(model1, model2)
+	and compare(model2, model1).
+
+	"""
+	com1 = compare(model1, model2, obsLength)
+	com2 = compare(model2, model1, obsLength)
+	return 0.5*(com1 + com2)

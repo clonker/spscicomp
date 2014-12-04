@@ -6,12 +6,13 @@ export PYTHONPATH=$SPSCICOMP/hmm
 TODO list
 
 all:
+	- When doing traininByModel with 10x10 matrix there is an allocating error
+		it returns NaNs
 	- How to handle multiple obs. sequences without storing 
 	  every matrix / parallelizing
 	- Prepare for integration tests with other modules
 chris:
 	- Validation tests (trainingByModel and think of more)
-	- Implement similarity of models (given in Rabiner paper)
 	- Unit tests
 maikel:
 	- Benchmarking/lineprofiler
@@ -21,4 +22,3 @@ honglei:
 	(- Check the docstrings for consistency with PEP-257, and if
 	   they're informative)
 tobias:
-	- Ending criterion

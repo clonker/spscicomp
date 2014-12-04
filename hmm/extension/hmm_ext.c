@@ -8,6 +8,7 @@
 #define PI(i) *(double*)(PyArray_GETPTR1(pi, i))
 #define O(i) *(int*)(PyArray_GETPTR1(obs,i))
 #define SCALING(i) *(double*)(PyArray_GETPTR1(scale,i))
+#define GAMMA(i) *(double*)(PyArray_GETPTR1(gamma,i))
 
 static char forward_doc[]
  = "This function calculates the forward coefficients in the hmm kernel.";
@@ -125,13 +126,14 @@ backward(PyObject *self, PyObject *args) {
 static PyObject *
 update_model(PyObject *self, PyObject *args) {
 	// get arguments from python
-	PyArrayObject *a, *b, *alpha, *beta, *pi, *obs;
-	if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!",
+	PyArrayObject *a, *b, *alpha, *beta, *gamma, *pi, *obs;
+	if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!",
 				&PyArray_Type, &a,
 				&PyArray_Type, &b,
 				&PyArray_Type, &pi,
 				&PyArray_Type, &alpha,
 				&PyArray_Type, &beta,
+				&PyArray_Type, &gamma,
 				&PyArray_Type, &obs
 	)) {
 		return NULL;
@@ -168,10 +170,12 @@ update_model(PyObject *self, PyObject *args) {
 	}
 
 	// TODO maybe compute gamma[t] in place and not before
-	double *gamma = (double*)calloc(T, sizeof(double));
-	for (t = 0; t < T; t++)
+	// double *gamma = (double*)calloc(T, sizeof(double));
+	for (t = 0; t < T; t++) {
+		GAMMA(t) = 0.;
 		for (i = 0; i < N; i++)
-			gamma[t] += ALPHA(t,i)*BETA(t,i);
+			GAMMA(t) += ALPHA(t,i)*BETA(t,i);
+	}
 
 	// compute new observation probability distribution B
 	sum = 0;
@@ -181,14 +185,14 @@ update_model(PyObject *self, PyObject *args) {
 			B(k,i) = 0;
 			for (t = 0; t < T; t++) {
 				if (O(t) == k)
-					B(k,i) += ALPHA(t,i)*BETA(t,i) / gamma[t];
+					B(k,i) += ALPHA(t,i)*BETA(t,i) / GAMMA(t);
 			}
 			sum += B(k,i);
 		}
 		for (k = 0; k < K; k++)
 			B(k,i) /= sum;
 	}
-	free(gamma);
+	//free(gamma);
 	PyObject *result = Py_BuildValue("(O,O,O)", a, b, pi);
 	return result;
 }

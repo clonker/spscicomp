@@ -129,7 +129,8 @@ def update_model(A, B, pi, alpha, beta, obs):
 	There are some preassumtion when using this function.
 
 	"""
-	return ext.update_model(A, B, pi, alpha, beta, obs)
+	gamma = np.zeros(len(obs), dtype='double')
+	return ext.update_model(A, B, pi, alpha, beta, gamma, obs)
 
 # @profile
 def forward(A, B, pi, observation):

@@ -1,0 +1,19 @@
+# instructions to generate data for a toy model (for testing)
+
+1) Define a transition matrix P (metastable, i.e. should have elements close to 1 on the diagonal)
+2) Generate a discrete trajectory (Markov chain) s(t) using P
+3) Define an output probability distribution for each state i of P, e.g. a Gaussian with mean mu_i
+   and covariance matrix C_i
+4) For each time t, generate an output x(t) ~ G(mu_s(t), C_s(t))
+5) Define a rotation matrix and translation vector to rotate the low-dimensional x(t) into a high-
+   dimensional space Omega. We get X(t)
+6) Add Gaussian noise to all dimensions of Omega
+
+
+Reconstruction:
+I) Use TICA to find the relevant subspace of slow processes (should essentially invert the rotation
+   matrix above)
+II) Use k-means to discretize the data (must separate the two Gaussian distributions in order to
+    work well)
+III) Use HMM with 2 hidden states. You should be able to recover the transition matrix
+

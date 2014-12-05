@@ -1,0 +1,6 @@
+1) download data from 
+	https://www.dropbox.com/sh/78wub3aq54xvwtl/AADGXjQ84btJROw4mci0rViXa?dl=0
+2) install mdtraj to read/write md data
+	(sudo) pip install mdtraj
+3) look into the notebook to get an idea how to handle the data
+	md_data.ipynb	

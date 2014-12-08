@@ -8,9 +8,9 @@ import Tica_EigenDecomp as ticaEDecomp
 class TicaPrinComp:
     """Naive class for computing principle components(PCs)."""
 
-    def __init__(self, i_data):
+    def __init__(self, i_data, i_addEpsilon = 1e-16):
 
-        if None is not i_data and 0 < i_data.shape[0]:
+        if  i_data is not None and 0 < i_data.shape[0]:
 
             self.m_data             = np.asmatrix(i_data, dtype=np.float32)
             self.m_dataMeanFree     = np.array([])
@@ -18,8 +18,8 @@ class TicaPrinComp:
             self.m_pcNorm           = np.array([])
             self.m_covMat           = matlib.repmat(0.0, self.m_data.shape[1], self.m_data.shape[1])
             self.m_eigenDecomp      = ticaEDecomp.TicaEigenDecomp(None)
-            self.m_additveEpsilon   = 1e-4
-
+            self.m_addEpsilon       = i_addEpsilon
+            
         else:
 
             self.m_data             = np.array([])
@@ -28,7 +28,7 @@ class TicaPrinComp:
             self.m_pcNorm           = np.array([])
             self.m_covMat           = np.array([])
             self.m_eigenDecomp      = ticaEDecomp.TicaEigenDecomp(None)
-            self.m_additveEpsilon   = 1e-4
+            self.m_addEpsilon       = i_addEpsilon
 
 
     # ---------------------------------------------------------------------------------------------#
@@ -48,92 +48,133 @@ class TicaPrinComp:
         if 0 < self.m_dataMeanFree.shape[0]:
 
             normFactor = 1 / (self.m_dataMeanFree.shape[0] - 1)
-
-            # toDo: performant computation of covariance matrix
-            #
-            for i in range(self.m_dataMeanFree.shape[1]):
-
-                for k in range(self.m_dataMeanFree.shape[1]):
-
-                    col1 = self.m_dataMeanFree[:, i]
-                    col2 = self.m_dataMeanFree[:, k]
-                    self.m_covMat[i, k] = normFactor * ( col1.getT() * col2 )
-
+            self.m_covMat = self.m_dataMeanFree.T * self.m_dataMeanFree
+            self.m_covMat = normFactor * self.m_covMat
 
     #---------------------------------------------------------------------------------------------#
-    def computePC(self):
+    def computePC(self, i_amountOfTotalVariance = 1.0):
 
         self.m_dataMeanFree = self.makeDataMeanFree(self.m_data)
         self.computeCovariance()
-        self.m_eigenDecomp.setMatrix(self.m_covMat)
-        self.m_eigenDecomp.computeEigenDecomp()
+        self.m_eigenDecomp.computeEigenDecomp(self.m_covMat)
 
-        self.m_pc = self.m_dataMeanFree * self.m_eigenDecomp.m_eigenVecReal
+        dc = self.m_eigenDecomp.m_eigenVecReal.shape[1]
+        if 1 > i_amountOfTotalVariance:
+
+            dc = self.calcNumbOfDomComps(i_amountOfTotalVariance)
+
+        self.m_pc = self.m_dataMeanFree * self.m_eigenDecomp.m_eigenVecReal[:, 0:dc]
 
     #---------------------------------------------------------------------------------------------#
     def normalizPC(self):
 
-        normEigenVal = 1 / np.sqrt(self.m_eigenDecomp.m_eigenValReal+self.m_additveEpsilon)
+        normEigenVal = 1.0 / np.sqrt(self.m_eigenDecomp.m_eigenValReal+self.m_addEpsilon)
         self.m_pcNorm = self.m_pc * np.diag(normEigenVal)
 
+    #---------------------------------------------------------------------------------------------#
+    def getNormalizedPCs(self):
+
+        if self.m_pcNorm is not None and 0 < self.m_pcNorm.shape[0]:
+
+            return self.m_pcNorm
+
+        else:
+
+            return self.m_pc
+
+    #---------------------------------------------------------------------------------------------#
+    def getPCs(self):
+
+        return self.m_pc
+
+    #---------------------------------------------------------------------------------------------#
+    def calcNumbOfDomComps(self, i_amountOfTotalVariance):
+        
+        totalVariance = np.sum(self.m_eigenDecomp.m_eigenValReal)
+        sumEigVal = 0
+        for i, e in enumerate(self.m_eigenDecomp.m_eigenValReal):
+
+            sumEigVal += e
+            if sumEigVal/totalVariance >= i_amountOfTotalVariance:
+
+                return i+1
 
 
-# ###################################################################################################
+
+####################################################################################################
 
 class TicaPrinCompTimeLagged(TicaPrinComp):
     """Naive class for computing principle components(PCs)."""
 
-    def __init__(self, i_pcInstant, i_pcTimeLag):
+    def __init__(self, i_data, i_timeLag = 1):
 
-        if None is not i_pcInstant and None is not i_pcTimeLag:
+        super().__init__(None)
+        if i_data is not None:
 
-            super().__init__(None)
+            if 0 < i_data.shape[0]:
 
-            if 0 < i_pcInstant.shape[0] and 0 < i_pcTimeLag.shape[0]:
-
-                self.m_pcTimelag        = i_pcTimeLag
-                self.m_pcInstant        = i_pcInstant
-                self.m_covMatTimeLag    = matlib.repmat(0.0, self.m_pcTimelag.shape[1], self.m_pcTimelag.shape[1])
-                self.m_ic               = matlib.repmat(0.0, self.m_pcTimelag.shape[0], self.m_pcTimelag.shape[1])
-                self.m_covMatTimeLagSym = matlib.repmat(0.0, self.m_pcTimelag.shape[1], self.m_pcTimelag.shape[1])
-                #self.m_eigenDecompTL    = ticaEDecomp.TicaEigenDecomp(None)
+                self.m_timeLag          = i_timeLag
+                self.m_data             = i_data
+                self.m_covMatTimeLag    = matlib.repmat(0.0, self.m_data.shape[1], self.m_data.shape[1])
+                self.m_pcTimeLag        = matlib.repmat(0.0, self.m_data.shape[1], self.m_data.shape[1])
+                self.m_covMatTimeLagSym = matlib.repmat(0.0, self.m_data.shape[1], self.m_data.shape[1])
 
         else:
 
-            self.m_dataTL           = np.array([])
-            self.m_dataTLMeanFree   = np.array([])
+            self.m_timeLag          = i_timeLag
+            self.m_data             = np.array([])
             self.m_covMatTimeLag    = np.array([])
-            self.m_pcTimelag        = np.array([])
-            self.m_pcInstant        = np.array([])
+            self.m_pcTimeLag        = np.array([])
             self.m_covMatTimeLagSym = np.array([])
-            #self.m_eigenDecompTL    = ticaEDecomp.TicaEigenDecomp(None)
 
 
     #---------------------------------------------------------------------------------------------#
     def computeCovariance(self):
 
-        normFactor = 1 / (self.m_pcTimelag.shape[0] - 1)
+        if 0 < self.m_data.shape[0]:
 
-        # toDo: performant computation of covariance matrix
-        #
-        for i in range(self.m_pcTimelag.shape[1]):
+            m = self.m_data.shape[0]
+            normFactor = 1 / (m - self.m_timeLag - 1)
+            self.m_covMatTimeLag = self.m_data[0:m-self.m_timeLag].T * self.m_data[self.m_timeLag:m]
+            self.m_covMatTimeLag = normFactor * self.m_covMatTimeLag
 
-            for k in range(self.m_pcTimelag.shape[1]):
-                col1 = self.m_pcTimelag[:, i]
-                col2 = self.m_pcInstant[:, k]
-                self.m_covMatTimeLag[i, k] = normFactor * ( col1.getT() * col2 )
-
-     #---------------------------------------------------------------------------------------------#
+    #---------------------------------------------------------------------------------------------#
     def symmetrizeCovariance(self):
 
         self.m_covMatTimeLagSym = 0.5 * ( self.m_covMatTimeLag + self.m_covMatTimeLag.transpose() )
 
     #---------------------------------------------------------------------------------------------#
-    def computePC(self):
+    def setTimeLag(self, i_timeLag):
+
+        self.m_timeLag = i_timeLag
+
+    #---------------------------------------------------------------------------------------------#
+    def computePC(self, i_amountOfTotalVariance = 1):
 
         self.computeCovariance()
         self.symmetrizeCovariance()
-        self.m_eigenDecomp.setMatrix(self.m_covMatTimeLagSym)
-        self.m_eigenDecomp.computeEigenDecomp()
+        self.m_eigenDecomp.computeEigenDecomp(self.m_covMatTimeLagSym)
 
-        self.m_ic = self.m_pcInstant * self.m_eigenDecomp.m_eigenVecReal
+        dc = self.m_eigenDecomp.m_eigenVecReal.shape[1]
+        if 1 > i_amountOfTotalVariance:
+
+            dc = self.calcNumbOfDomComps(i_amountOfTotalVariance)
+
+        self.m_pcTimeLag = self.m_data * self.m_eigenDecomp.m_eigenVecReal[:,0:dc]
+
+    #---------------------------------------------------------------------------------------------#
+    def getPCsTimeLag(self):
+
+        return self.m_pcTimeLag
+
+    #---------------------------------------------------------------------------------------------#
+    def setData(self, i_data):
+
+        self.m_data = i_data
+
+
+
+
+
+                
+

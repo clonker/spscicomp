@@ -8,13 +8,13 @@ class TicaEigenDecomp:
 
     def __init__(self, i_matrix):
 
-        if None == i_matrix:
+        if i_matrix is None:
 
-            self.m_matrix        = []
-            self.m_eigenVec      = []
-            self.m_eigenVal      = []
-            self.m_eigenVecReal  = []
-            self.m_eigenValReal  = []
+            self.m_matrix        = np.array([])
+            self.m_eigenVec      = np.array([])
+            self.m_eigenVal      = np.array([])
+            self.m_eigenVecReal  = np.array([])
+            self.m_eigenValReal  = np.array([])
 
         elif 0 < i_matrix.shape[0] and 0 < i_matrix.shape[1]:
 
@@ -29,11 +29,6 @@ class TicaEigenDecomp:
             print("Check matrix dimension!")
 
     #---------------------------------------------------------------------------------------------#
-    def setMatrix(self, i_matrix):
-
-        self.m_matrix = np.asmatrix(i_matrix, dtype=np.float32)
-
-    #---------------------------------------------------------------------------------------------#
     def reorderingEigenV(self):
         """ Reordering of eigenvalues and corresponding eigenvectors by the largest eigenvalue.
             Ordering only for real eigenvalues."""
@@ -43,8 +38,9 @@ class TicaEigenDecomp:
         self.m_eigenVecReal = self.m_eigenVec[:, reOrdIndex[::-1]]
 
     #---------------------------------------------------------------------------------------------#
-    def computeEigenDecomp(self):
+    def computeEigenDecomp(self, i_matrix):
 
+        self.m_matrix = np.asmatrix(i_matrix, dtype=np.float32)
         self.m_eigenVal, self.m_eigenVec = lina.eig(self.m_matrix)
 
         if not any( 1e-15 < self.m_eigenVal.imag ):

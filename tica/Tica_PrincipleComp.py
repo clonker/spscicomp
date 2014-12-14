@@ -34,20 +34,18 @@ class TicaPrinComp:
     # ---------------------------------------------------------------------------------------------#
     def makeDataMeanFree(self, i_data):
 
-        o_dataMeanFree = i_data
+        o_dataMeanFree = matlib.repmat(0.0, i_data.shape[0], i_data.shape[1])
 
-        for i in range(i_data.shape[1]):
+        o_dataMeanFree = i_data - np.mean(i_data, dtype=np.float32, axis=0)
 
-            o_dataMeanFree[:, i] = i_data[:, i] - np.mean(i_data[:, i], dtype=np.float32)
-
-        return np.asmatrix(o_dataMeanFree, dtype=np.float32)
+        return o_dataMeanFree
 
     #---------------------------------------------------------------------------------------------#
     def computeCovariance(self):
 
         if 0 < self.m_dataMeanFree.shape[0]:
 
-            normFactor = 1 / (self.m_dataMeanFree.shape[0] - 1)
+            normFactor = 1.0 / (self.m_dataMeanFree.shape[0] - 1)
             self.m_covMat = self.m_dataMeanFree.T * self.m_dataMeanFree
             self.m_covMat = normFactor * self.m_covMat
 
@@ -68,8 +66,8 @@ class TicaPrinComp:
     #---------------------------------------------------------------------------------------------#
     def normalizPC(self):
 
-        normEigenVal = 1.0 / np.sqrt(self.m_eigenDecomp.m_eigenValReal+self.m_addEpsilon)
-        self.m_pcNorm = self.m_pc * np.diag(normEigenVal)
+        lamb = 1.0 / np.sqrt(self.m_eigenDecomp.m_eigenValReal+self.m_addEpsilon)
+        self.m_pcNorm = self.m_pc * np.diag(lamb)
 
     #---------------------------------------------------------------------------------------------#
     def getNormalizedPCs(self):
@@ -80,7 +78,7 @@ class TicaPrinComp:
 
         else:
 
-            return self.m_pc
+            return print("There are no normalized Priciple Components")
 
     #---------------------------------------------------------------------------------------------#
     def getPCs(self):
@@ -108,13 +106,12 @@ class TicaPrinCompTimeLagged(TicaPrinComp):
 
     def __init__(self, i_data, i_timeLag = 1):
 
-        super().__init__(None)
+        super().__init__(i_data = i_data)
         if i_data is not None:
 
             if 0 < i_data.shape[0]:
 
                 self.m_timeLag          = i_timeLag
-                self.m_data             = i_data
                 self.m_covMatTimeLag    = matlib.repmat(0.0, self.m_data.shape[1], self.m_data.shape[1])
                 self.m_pcTimeLag        = matlib.repmat(0.0, self.m_data.shape[1], self.m_data.shape[1])
                 self.m_covMatTimeLagSym = matlib.repmat(0.0, self.m_data.shape[1], self.m_data.shape[1])
@@ -122,11 +119,9 @@ class TicaPrinCompTimeLagged(TicaPrinComp):
         else:
 
             self.m_timeLag          = i_timeLag
-            self.m_data             = np.array([])
             self.m_covMatTimeLag    = np.array([])
             self.m_pcTimeLag        = np.array([])
             self.m_covMatTimeLagSym = np.array([])
-
 
     #---------------------------------------------------------------------------------------------#
     def computeCovariance(self):
@@ -134,9 +129,9 @@ class TicaPrinCompTimeLagged(TicaPrinComp):
         if 0 < self.m_data.shape[0]:
 
             m = self.m_data.shape[0]
-            normFactor = 1 / (m - self.m_timeLag - 1)
-            self.m_covMatTimeLag = self.m_data[0:m-self.m_timeLag].T * self.m_data[self.m_timeLag:m]
-            self.m_covMatTimeLag = normFactor * self.m_covMatTimeLag
+            normFactor = 1.0 / (m - self.m_timeLag - 1)
+            self.m_covMatTimeLag = self.m_data[0:m-self.m_timeLag, :].T * self.m_data[self.m_timeLag:m, :]
+            self.m_covMatTimeLag *= normFactor
 
     #---------------------------------------------------------------------------------------------#
     def symmetrizeCovariance(self):
@@ -151,6 +146,7 @@ class TicaPrinCompTimeLagged(TicaPrinComp):
     #---------------------------------------------------------------------------------------------#
     def computePC(self, i_amountOfTotalVariance = 1):
 
+        # self.m_data = self.makeDataMeanFree(self.m_data)
         self.computeCovariance()
         self.symmetrizeCovariance()
         self.m_eigenDecomp.computeEigenDecomp(self.m_covMatTimeLagSym)
@@ -160,7 +156,7 @@ class TicaPrinCompTimeLagged(TicaPrinComp):
 
             dc = self.calcNumbOfDomComps(i_amountOfTotalVariance)
 
-        self.m_pcTimeLag = self.m_data * self.m_eigenDecomp.m_eigenVecReal[:,0:dc]
+        self.m_pcTimeLag = self.m_data * self.m_eigenDecomp.m_eigenVecReal[:, 0:dc]
 
     #---------------------------------------------------------------------------------------------#
     def getPCsTimeLag(self):

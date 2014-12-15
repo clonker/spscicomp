@@ -1,9 +1,9 @@
 import unittest
 
-from kmeans_metric import *
 from common.common_data_importer import *
 from kmeans_data_generator import *
 from kmeans_plot import *
+from extension.c_kmeans import *
 from os import remove
 
 
@@ -63,7 +63,10 @@ class TestKmeans(unittest.TestCase):
             np.array([-1, 1, -1], dtype=np.float), np.array([1, -1, 1], dtype=np.float)
         ]))
         for use_c_extension in [True, False]:
-            kmeans = DefaultKmeans(importer=importer_equilibrium, c_extension=use_c_extension)
+            if use_c_extension:
+                kmeans = CKmeans(importer=importer_equilibrium)
+            else:
+                kmeans = DefaultKmeans(importer=importer_equilibrium)
             res, _ = kmeans.calculate_centers(
                 k=1,
                 initial_centers=initial_centers_equilibrium,
@@ -76,10 +79,10 @@ class TestKmeans(unittest.TestCase):
     def test_kmeans_contraction_property(self):
         target = np.array([1000, -1000, 1000], dtype=float)
         for use_c_extension in [True, False]:
-            kmeans = DefaultKmeans(
-                c_extension=use_c_extension,
-                importer=CommonSimpleDataImporter(np.array([target]))
-            )
+            if use_c_extension:
+                kmeans = CKmeans(importer=CommonSimpleDataImporter(np.array([target])))
+            else:
+                kmeans = DefaultKmeans(importer=CommonSimpleDataImporter(np.array([target])))
             res, data, history = kmeans.calculate_centers(
                 k=1,
                 return_centers=True,

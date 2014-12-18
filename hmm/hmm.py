@@ -51,15 +51,15 @@ class HiddenMarkovModel:
 
 	def randomSequence(self, n):
 		"""Creates a random Sequence of length n on base of this model."""
-		A,B,pi = self.A,self.B.T,self.pi
+		A,B,pi = self.A,self.B,self.pi
 		obs = np.empty(n, dtype='int')
 		current = random_by_dist(pi)
 		for i in range(n):
-			obs[i]  = random_by_dist(B[current])
+			obs[i]  = random_by_dist(B[:,current])
 			current = random_by_dist(A[current])
 		return obs
 
-#	@profile
+# 	@profile
 	def optimize(self, observation, epsilon, maxIter, verbose=False):
 		"""Optimize the given model.
 
@@ -129,7 +129,7 @@ def update_model(A, B, pi, alpha, beta, obs):
 	There are some preassumtion when using this function.
 
 	"""
-	gamma = np.zeros(len(obs), dtype='double')
+	gamma = np.zeros(len(obs), dtype=np.float64)
 	return ext.update_model(A, B, pi, alpha, beta, gamma, obs)
 
 # @profile
@@ -145,8 +145,8 @@ def forward(A, B, pi, observation):
 	"""
 	# allocate memory
 	T,N = len(observation),len(A)
-	alpha = np.zeros((T,N), dtype='double') # array of forward coefficients
-	scaling = np.zeros(T, dtype='double')              # scaling factors
+	alpha = np.zeros((T,N), dtype=np.float64) # array of forward coefficients
+	scaling = np.zeros(T, dtype=np.float64)              # scaling factors
 	if (T == 0):
 		return (alpha,scaling)
 
@@ -167,10 +167,12 @@ def backward(A, B, pi, observation, scaling):
 def random_by_dist(distribution):
 	x = np.random.random();
 	for n in range(len(distribution)):
-		if x < distribution[n]:
+		if x < (distribution[n]):
 			return n;
 		else:
 			x -= distribution[n];
+	#print 'Reached exceptional state in random_by_dist()'
+	return n
 
 def compare(model1, model2, obsLength):
 	"""Quantify the similarity of two models, based on an observation 

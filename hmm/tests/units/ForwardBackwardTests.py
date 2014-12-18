@@ -24,7 +24,7 @@ class ForwardBackwardTests(unittest.TestCase):
 
 	def test_scaledForwardCoeffs_is_normed(self):
 		""" check if alpha is normed """
-		alpha, _ = forward(model, observation)
+		alpha, _ = forward(A, B, pi, observation)
 		for t in range(0, len(alpha)):
 			self.assertAlmostEqual(sum(alpha[t]), 1)
 
@@ -39,7 +39,7 @@ class ForwardBackwardTests(unittest.TestCase):
 
 		alpha is scaled by its sum. So it is taken into consideration.
 		"""
-		alpha, c = forward(model, observation)
+		alpha, c = forward(A, B, pi, observation)
 		O = observation
 		for i in range(0, len(alpha[0])):
 			self.assertEqual(alpha[0,i]/c[0], pi[i]*B[O[0],i])
@@ -58,8 +58,8 @@ class ForwardBackwardTests(unittest.TestCase):
 
 		beta is scaled by its sum. This is taken into consideration.
 		"""
-		_, c = forward(model, observation)
-		beta = backward(model, observation, c)
+		_, c = forward(A, B, pi, observation)
+		beta = backward(A, B, pi, observation, c)
 		O, T = observation, len(observation) - 1
 		for i in range(0, len(beta[T])):
 			self.assertEqual(beta[T,i], c[T])

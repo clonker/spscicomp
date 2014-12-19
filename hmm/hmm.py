@@ -45,9 +45,9 @@ class HiddenMarkovModel:
 
 	def printModel(self):
 		"""Print A, B and pi."""
-		print np.round(self.A, 3)
-		print np.round(self.B, 3)
-		print np.round(self.pi, 3)
+		print 'A\n', np.round(self.A, 3)
+		print 'B\n', np.round(self.B, 3)
+		print 'pi\n', np.round(self.pi, 3)
 
 	def randomSequence(self, n):
 		"""Creates a random Sequence of length n on base of this model."""
@@ -85,17 +85,16 @@ class HiddenMarkovModel:
 		likelies = np.zeros(maxIter)
 		T = float(len(observation))
 		N = float(len(A))
-		#epsilon *= T * np.log(N)
 		i = 0
 		# make sure that the loop is entered the first time
 		oldLike = 0.
-		newLike = 10. * T * np.log(N)
+		newLike = 10.
 		if (verbose):
 			print 'Epsilon:', epsilon
 			print 'Iteration:', i, '/', maxIter
 			print 'LogLikelihood:', newLike
 			print 'Difference Likelihood:', abs(oldLike - newLike)
-		while ( (abs(oldLike - newLike) > epsilon) and (i < maxIter) ):
+		while ( (i < maxIter) and (abs(oldLike - newLike) > epsilon) ):
 			if (verbose):
 				sys.stdout.write(3 * "\033[F") # delete last 3 lines
 				print 'Iteration:', i, '/', maxIter

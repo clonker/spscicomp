@@ -2,7 +2,6 @@ import unittest
 
 from common.common_data_importer import *
 from kmeans_data_generator import *
-from kmeans_plot import *
 from extension.c_kmeans import *
 from os import remove
 
@@ -125,34 +124,31 @@ class TestKmeans(unittest.TestCase):
             [106067/50000, 40827/100000, -5773/10000],
         ]
         importer_permutahedron = CommonSimpleDataImporter(np.asarray(points, dtype=float))
-        for k in [3, 4, 5, 6, 7]:
-            for use_c_extension in [True, False]:
-                if use_c_extension:
-                    kmeans = CKmeans(importer=importer_permutahedron)
-                else:
-                    kmeans = DefaultKmeans(importer=importer_permutahedron)
-                res, data, history = kmeans.calculate_centers(
-                    k=k,
-                    return_centers=True,
-                    save_history=True,
-                )
-                metric = EuclideanMetric()
+        for use_c_extension in [True, False]:
+            if use_c_extension:
+                kmeans = CKmeans(importer=importer_permutahedron)
+            else:
+                kmeans = DefaultKmeans(importer=importer_permutahedron)
+            res, data, history = kmeans.calculate_centers(
+                k=1,
+                return_centers=True
+            )
 
-                for histEntry in history:
-                    self.assertGreaterEqual(metric.dist(np.array([-11785060650000, -6804069750000, -4811167325000], dtype=float), histEntry) + 25000531219381 , 0)
-                    self.assertGreaterEqual(metric.dist(np.array([-1767759097500, 1020624896250, 721685304875], dtype=float), histEntry) + 3749956484003 , 0)
-                    self.assertGreaterEqual(metric.dist(np.array([-70710363900000, -40824418500000, 57734973820000], dtype=float), histEntry) + 199998509082907 , 0)
-                    self.assertGreaterEqual(metric.dist(np.array([70710363900000, 40824418500000, -57734973820000], dtype=float), histEntry) + 199998705841169 , 0)
-                    self.assertGreaterEqual(metric.dist(np.array([70710363900000, -40824995850000, -28867412195000], dtype=float), histEntry) + 149999651832937 , 0)
-                    self.assertGreaterEqual(metric.dist(np.array([-35355181950000, 20412497925000, -28867282787500], dtype=float), histEntry) + 100001120662259 , 0)
-                    self.assertGreaterEqual(metric.dist(np.array([23570121300000, 13608139500000, 9622334650000], dtype=float), histEntry) + 49998241292257 , 0)
-                    self.assertGreaterEqual(metric.dist(np.array([0, 577350000, -204125000], dtype=float), histEntry) + 1060651231 , 0)
-                    self.assertGreaterEqual(metric.dist(np.array([35355181950000, -20412497925000, 28867282787500], dtype=float), histEntry) + 99997486799779 , 0)
-                    self.assertGreaterEqual(metric.dist(np.array([0, 72168750, 51030625], dtype=float), histEntry) + 176771554 , 0)
-                    self.assertGreaterEqual(metric.dist(np.array([0, -288675000, 102062500], dtype=float), histEntry) + 530329843 , 0)
-                    self.assertGreaterEqual(metric.dist(np.array([0, 0, 250], dtype=float), histEntry) + 433 , 0)
-                    self.assertGreaterEqual(metric.dist(np.array([0, -144337500, -102061250], dtype=float), histEntry) + 353560531 , 0)
-                    self.assertGreaterEqual(metric.dist(np.array([0, 0, -10000], dtype=float), histEntry) + 17321, 0)
+            # Check hyperplane inequalities. If they are all fulfilled, the center lies within the convex hull.
+            self.assertGreaterEqual(np.inner(np.array([-11785060650000, -6804069750000, -4811167325000], dtype=float), res) + 25000531219381, 0)
+            self.assertGreaterEqual(np.inner(np.array([-1767759097500, 1020624896250, 721685304875], dtype=float), res) + 3749956484003, 0)
+            self.assertGreaterEqual(np.inner(np.array([-70710363900000, -40824418500000, 57734973820000], dtype=float), res) + 199998509082907, 0)
+            self.assertGreaterEqual(np.inner(np.array([70710363900000, 40824418500000, -57734973820000], dtype=float), res) + 199998705841169, 0)
+            self.assertGreaterEqual(np.inner(np.array([70710363900000, -40824995850000, -28867412195000], dtype=float), res) + 149999651832937, 0)
+            self.assertGreaterEqual(np.inner(np.array([-35355181950000, 20412497925000, -28867282787500], dtype=float), res) + 100001120662259, 0)
+            self.assertGreaterEqual(np.inner(np.array([23570121300000, 13608139500000, 9622334650000], dtype=float), res) + 49998241292257, 0)
+            self.assertGreaterEqual(np.inner(np.array([0, 577350000, -204125000], dtype=float), res) + 1060651231, 0)
+            self.assertGreaterEqual(np.inner(np.array([35355181950000, -20412497925000, 28867282787500], dtype=float), res) + 99997486799779, 0)
+            self.assertGreaterEqual(np.inner(np.array([0, 72168750, 51030625], dtype=float), res) + 176771554, 0)
+            self.assertGreaterEqual(np.inner(np.array([0, -288675000, 102062500], dtype=float), res) + 530329843, 0)
+            self.assertGreaterEqual(np.inner(np.array([0, 0, 250], dtype=float), res) + 433, 0)
+            self.assertGreaterEqual(np.inner(np.array([0, -144337500, -102061250], dtype=float), res) + 353560531, 0)
+            self.assertGreaterEqual(np.inner(np.array([0, 0, -10000], dtype=float), res) + 17321, 0)
 
 
 """

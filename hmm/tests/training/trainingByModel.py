@@ -7,7 +7,10 @@ pi = np.loadtxt('models/startmodelPi_1.dat')
 
 hmmStart = HiddenMarkovModel(len(A), len(B), A, B, pi)
 
-obs = hmmStart.randomSequence(2000000)
+
+print 'Generating observation sequence. Using Model'
+hmmStart.printModel()
+obs = hmmStart.randomSequence(200000)
 
 A = np.array([
 	[0.5, 0.2, 0.3],
@@ -21,16 +24,17 @@ B = np.array([
 pi = pi.copy()
 
 hmmTrain = HiddenMarkovModel(len(A), len(B), A, B, pi)
-simBefore = similarity(hmmStart, hmmTrain, 1000000)
-A,B,pi,likeli = hmmTrain.optimize(obs,0.5, 500, verbose=True)
-simAfter = similarity(hmmStart, hmmTrain, 1000000)
+print 'Starting model training. Initial model:'
+hmmTrain.printModel()
 
-print 'model which generated the obs.'
-hmmStart.printModel()
+# simBefore = similarity(hmmStart, hmmTrain, 1000000)
+A,B,pi,likeli = hmmTrain.optimize(obs,1e-4, 20000, verbose=True)
+# simAfter = similarity(hmmStart, hmmTrain, 1000000)
+
 print 'trained model:'
 hmmTrain.printModel()
-print 'Similarity Before Optimizing:', simBefore
-print 'Similarity After  Optimizing:', simAfter 
+#print 'Similarity Before Optimizing:', simBefore
+#print 'Similarity After  Optimizing:', simAfter 
 
-plt.plot(likeli, color='black')
-plt.show()
+#plt.plot(likeli, color='black')
+#plt.show()

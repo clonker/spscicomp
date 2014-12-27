@@ -8,7 +8,7 @@
 #define PI(i) *(double*)(PyArray_GETPTR1(pi, i))
 #define O(i) *(int*)(PyArray_GETPTR1(obs,i))
 #define SCALING(i) *(double*)(PyArray_GETPTR1(scale,i))
-#define GAMMA(i) *(double*)(PyArray_GETPTR1(gamma,i))
+#define GAMMA(t,i) (gamma[t*N+i])
 
 static char forward_doc[]
  = "This function calculates the forward coefficients in the hmm kernel.";
@@ -126,14 +126,13 @@ backward(PyObject *self, PyObject *args) {
 static PyObject *
 update_model(PyObject *self, PyObject *args) {
 	// get arguments from python
-	PyArrayObject *a, *b, *alpha, *beta, *gamma, *pi, *obs;
-	if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!",
+	PyArrayObject *a, *b, *alpha, *beta, *pi, *obs;
+	if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!",
 				&PyArray_Type, &a,
 				&PyArray_Type, &b,
 				&PyArray_Type, &pi,
 				&PyArray_Type, &alpha,
 				&PyArray_Type, &beta,
-				&PyArray_Type, &gamma,
 				&PyArray_Type, &obs
 	)) {
 		return NULL;
@@ -145,54 +144,70 @@ update_model(PyObject *self, PyObject *args) {
 	npy_intp i,j,t,k; // loop indices
 	double sum = 0;
 
-	// new initial distribution
-	for (i = 0; i < N; i++) {
-		PI(i) = ALPHA(0,i)*BETA(0,i);
-		sum  += PI(i);
+	// compute xi
+	double *xi   = (double*) calloc(N*N,sizeof(double));
+	double *xi_t = (double*) malloc(N*N*sizeof(double));
+	for (t = 0; t < T-1; t++) {
+		// calculate xi to time t
+		sum = 0;
+		for (i = 0; i < N; i++)
+			for (j = 0; j < N; j++) {
+				xi_t[i*N+j] = ALPHA(t,i)*A(i,j)*B(O(t+1),j)*BETA(t+1,j);
+				sum += xi_t[i*N+j];
+			}
+		// normalize xi to time t and to global sum of xi
+		for (i = 0; i < N; i++) 
+			for (j = 0; j < N; j++) {
+				xi_t[i*N+j] /= sum;
+				xi[i*N+j] += xi_t[i*N+j];
+			}
 	}
-	// normalize pi
-	for (i = 0; i < N; i++)
-		PI(i) /= sum;
+	free(xi_t);
 
-	// compute new transition matrix A
+	double *gamma = (double*)calloc(T*N, sizeof(double));
+	for (t = 0; t < T; t++) {
+		sum = 0;
+		for (i = 0; i < N; i++) {
+			GAMMA(t,i) = ALPHA(t,i)*BETA(t,i);
+			sum += GAMMA(t,i);
+		}
+		for (i = 0; i < N; i++)
+			GAMMA(t,i) /= sum;
+	}
+
+	for (i = 0; i < N; i++)
+		PI(i) = GAMMA(0,i);
+
+	// compute new transition matrix A.
+	// a_ij = sum_t=1..T-1 xi_t(i,j) / sum_t=1..T-1 gamma_t(i)  
 	for (i = 0; i < N; i++) {
 		sum = 0;
 		for (j = 0; j < N; j++) {
-			double aij = A(i,j);
-			A(i,j) = 0;
-			for (t = 0; t < T-1; t++)
-				A(i,j) += ALPHA(t,i)*aij*B(O(t+1),j)*BETA(t+1,j);
-			sum += A(i,j);
+			A(i,j) = xi[i*N+j];
+			sum += xi[i*N+j];
 		}
-		// normalize each row
-		for (j = 0; j < N; j++)
+		for (j = 0; j < N; j++) {
 			A(i,j) /= sum;
+		}
 	}
-
-	// TODO maybe compute gamma[t] in place and not before
-	// double *gamma = (double*)calloc(T, sizeof(double));
-	for (t = 0; t < T; t++) {
-		GAMMA(t) = 0.;
-		for (i = 0; i < N; i++)
-			GAMMA(t) += ALPHA(t,i)*BETA(t,i);
-	}
+	free(xi);
 
 	// compute new observation probability distribution B
-	sum = 0;
 	for (i = 0; i < N; i++) {
 		sum = 0;
 		for (k = 0; k < K; k++) {
 			B(k,i) = 0;
 			for (t = 0; t < T; t++) {
 				if (O(t) == k)
-					B(k,i) += ALPHA(t,i)*BETA(t,i) / GAMMA(t);
+					B(k,i) += GAMMA(t, i);
 			}
 			sum += B(k,i);
 		}
 		for (k = 0; k < K; k++)
 			B(k,i) /= sum;
 	}
-	//free(gamma);
+
+	free(gamma);
 	PyObject *result = Py_BuildValue("(O,O,O)", a, b, pi);
 	return result;
 }

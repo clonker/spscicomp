@@ -1,6 +1,7 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
+#define XI(t,i,j) *(double*)(PyArray_GETPTR3(xi, t, i, j))
 #define ALPHA(i,j) *(double*)(PyArray_GETPTR2(alpha, i, j))
 #define BETA(i,j) *(double*)(PyArray_GETPTR2(beta, i, j))
 #define A(i,j) *(double*)(PyArray_GETPTR2(a, i, j))
@@ -8,7 +9,7 @@
 #define PI(i) *(double*)(PyArray_GETPTR1(pi, i))
 #define O(i) *(int*)(PyArray_GETPTR1(obs,i))
 #define SCALING(i) *(double*)(PyArray_GETPTR1(scale,i))
-#define GAMMA(t,i) (gamma[t*N+i])
+#define GAMMA(t,i) *(double*)(PyArray_GETPTR2(gamma, t, i))
 
 static char forward_doc[]
  = "This function calculates the forward coefficients in the hmm kernel.";
@@ -53,34 +54,31 @@ forward(PyObject *self, PyObject *args) {
 	npy_intp T = PyArray_DIM(alpha, 0);
 	npy_intp N = PyArray_DIM(alpha, 1);
 	npy_intp i,j,t; // loop indices
-
+	double sum = 0.0;
 	// set initial values
-	double scaling = 0;
+	SCALING(0) = 0.0;
 	for (i = 0; i < N; i++) {
-		ALPHA(0,i) = PI(i)*B(O(0),i);
-		scaling   += ALPHA(0,i);
+		ALPHA(0,i) = PI(i)*B(i,O(i));
+		SCALING(0) += ALPHA(0,i);
 	}
 	// set proper scaling now
-	SCALING(0) = 1 / scaling;
 	for (i = 0; i < N; i++) {
-		ALPHA(0,i) *= SCALING(0);
+		ALPHA(0,i) /= SCALING(0);
 	}
 
 	// the computation. O(T * (N^2 + N))
-	for (t = 1; t < T; t++) {
-		scaling = 0;
-		// do the recursion O(N^2)
+	for (t = 0; t+1 < T; t++) {
+		SCALING(t+1) = 0;
 		for (i = 0; i < N; i++) {
+			sum = 0.0;
 			for (j = 0; j < N; j++)
-				ALPHA(t,i) += ALPHA(t-1,j)*A(j,i);
-			ALPHA(t,i) *= B(O(t),i);
-			scaling += ALPHA(t,i);
+				sum += ALPHA(t,j)*A(j,i);
+			ALPHA(t+1,i) = sum * B(i,O(t+1));
+			SCALING(t+1) += ALPHA(t+1,i);
 		}
 		// set proper scaling now O(N)
-		SCALING(t) = 1 / scaling;
-		for (i = 0; i < N; i++) {
-			ALPHA(t,i) *= SCALING(t);
-		}
+		for (i = 0; i < N; i++)
+			ALPHA(t+1,i) /= SCALING(t+1);
 	}
 
 	PyObject *result = Py_BuildValue("(O,O)", alpha, scale);
@@ -105,17 +103,20 @@ backward(PyObject *self, PyObject *args) {
 	npy_intp T = PyArray_DIM(beta, 0);
 	npy_intp N = PyArray_DIM(beta, 1);
 	npy_intp i,j,t; // loop indices
-
+	double sum;
+	
 	// set initial values
 	for (i = 0; i < N; i++) {
-		BETA(T-1,i) = SCALING(T-1);
+		BETA(T-1,i) = 1.0 / SCALING(T-1);
 	}
 
 	// the computation. O(T * N^2)
 	for (t = T-2; t >= 0; t--) {
 		for (i = 0; i < N; i++) {
+			sum = 0.0;
 			for (j = 0; j < N; j++)
-				BETA(t,i) += A(i,j)*B(O(t+1),j)*BETA(t+1,j)*SCALING(t);
+				sum += A(i,j)*B(j,O(t+1))*BETA(t+1,j);
+			BETA(t, i) = sum / SCALING(t);
 		}
 	}
 
@@ -126,14 +127,16 @@ backward(PyObject *self, PyObject *args) {
 static PyObject *
 update_model(PyObject *self, PyObject *args) {
 	// get arguments from python
-	PyArrayObject *a, *b, *alpha, *beta, *pi, *obs;
-	if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!",
+	PyArrayObject *a, *b, *alpha, *beta, *pi, *obs, *gamma, *xi;
+	if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!O!",
 				&PyArray_Type, &a,
 				&PyArray_Type, &b,
 				&PyArray_Type, &pi,
 				&PyArray_Type, &alpha,
 				&PyArray_Type, &beta,
-				&PyArray_Type, &obs
+				&PyArray_Type, &obs,
+				&PyArray_Type, &gamma,
+				&PyArray_Type, &xi
 	)) {
 		return NULL;
 	}
@@ -142,31 +145,24 @@ update_model(PyObject *self, PyObject *args) {
 	npy_intp N = PyArray_DIM(beta, 1);
 	npy_intp K = PyArray_DIM(b, 0);
 	npy_intp i,j,t,k; // loop indices
-	double sum = 0;
+	double sum, gamma_sum, xi_sum, numeratorB;
 
-	// compute xi
-	double *xi   = (double*) calloc(N*N,sizeof(double));
-	double *xi_t = (double*) malloc(N*N*sizeof(double));
-	for (t = 0; t < T-1; t++) {
-		// calculate xi to time t
-		sum = 0;
+	/* compute xi */
+	for (t = 0; t+1 < T; t++) {
+		sum = 0.0;
 		for (i = 0; i < N; i++)
-			for (j = 0; j < N; j++) {
-				xi_t[i*N+j] = ALPHA(t,i)*A(i,j)*B(O(t+1),j)*BETA(t+1,j);
-				sum += xi_t[i*N+j];
+			for(j = 0; j < N; j++) {
+				XI(t,i,j) = ALPHA(t,i)*BETA(t+1,j)*A(i,j)*B(j,O(t+1));
+				sum += XI(t,i,j); 
 			}
-		// normalize xi to time t and to global sum of xi
-		for (i = 0; i < N; i++) 
-			for (j = 0; j < N; j++) {
-				xi_t[i*N+j] /= sum;
-				xi[i*N+j] += xi_t[i*N+j];
-			}
+		for (i = 0; i < N; i++)
+			for (j = 0; j < N; j++)
+				XI(t,i,j) /= sum;
 	}
-	free(xi_t);
 
-	double *gamma = (double*)calloc(T*N, sizeof(double));
+	/* compute gamma */
 	for (t = 0; t < T; t++) {
-		sum = 0;
+		sum = 0.0;
 		for (i = 0; i < N; i++) {
 			GAMMA(t,i) = ALPHA(t,i)*BETA(t,i);
 			sum += GAMMA(t,i);
@@ -175,39 +171,30 @@ update_model(PyObject *self, PyObject *args) {
 			GAMMA(t,i) /= sum;
 	}
 
+	// perform update now...
 	for (i = 0; i < N; i++)
 		PI(i) = GAMMA(0,i);
 
-	// compute new transition matrix A.
-	// a_ij = sum_t=1..T-1 xi_t(i,j) / sum_t=1..T-1 gamma_t(i)  
 	for (i = 0; i < N; i++) {
-		sum = 0;
+		gamma_sum = 0.0;
+		for (t = 0; t+1 < T; t++)
+			gamma_sum += GAMMA(t,i);
 		for (j = 0; j < N; j++) {
-			A(i,j) = xi[i*N+j];
-			sum += xi[i*N+j];
+			xi_sum = 0.0;
+			for (t = 0; t+1 < T; t++)
+				xi_sum += XI(t,i,j);
+			A(i,j) = xi_sum / gamma_sum;
 		}
-		for (j = 0; j < N; j++) {
-			A(i,j) /= sum;
-		}
-	}
-	free(xi);
-
-	// compute new observation probability distribution B
-	for (i = 0; i < N; i++) {
-		sum = 0;
-		for (k = 0; k < K; k++) {
-			B(k,i) = 0;
-			for (t = 0; t < T; t++) {
+		gamma_sum += GAMMA(T-1,i);
+		for (k = 0; k < K; ++k) {
+			numeratorB = 0.0;
+			for (t = 0; t < T; ++t)
 				if (O(t) == k)
-					B(k,i) += GAMMA(t, i);
-			}
-			sum += B(k,i);
+					numeratorB += GAMMA(t,i);
+			B(i,k) = numeratorB / gamma_sum;
 		}
-		for (k = 0; k < K; k++)
-			B(k,i) /= sum;
 	}
 
-	free(gamma);
 	PyObject *result = Py_BuildValue("(O,O,O)", a, b, pi);
 	return result;
 }

@@ -32,7 +32,7 @@ class HiddenMarkovModel:
 		"""The constructor checks if all sizes are matching and so on."""
 		self.N  = N
 		self.K  = K
-		if (A.shape == (N,N)) and (B.shape == (K,N)) and (pi.shape == (N,)):
+		if (A.shape == (N,N)) and (B.shape == (N,K)) and (pi.shape == (N,)):
 			self.A  = A.copy()
 			self.B  = B.copy()
 			self.pi = pi.copy()
@@ -55,7 +55,7 @@ class HiddenMarkovModel:
 		obs = np.empty(n, dtype='int')
 		current = random_by_dist(pi)
 		for i in range(n):
-			obs[i]  = random_by_dist(B[:,current])
+                        obs[i]  = random_by_dist(B[current,:])
 			current = random_by_dist(A[current])
 		return obs
 
@@ -81,10 +81,16 @@ class HiddenMarkovModel:
 		Return an array of logarithmized likelihoods during optimization.
 
 		"""
-		A,B,pi = self.A.copy(), self.B.copy(), self.pi.copy()
-		likelies = np.zeros(maxIter)
+		A,B,pi  = self.A.copy(), self.B.copy(), self.pi.copy()
 		T = float(len(observation))
 		N = float(len(A))
+                gamma   = np.zeros((T,N), dtype=np.float64)
+                xi      = np.zeros((T,N,N), dtype=np.float64)
+                alpha   = np.zeros((T,N), dtype=np.float64) # array of forward coefficients
+                beta    = np.zeros((T,N), dtype=np.float64) # array of forward coefficients
+                scaling = np.zeros(T, dtype=np.float64)              # scaling factors
+
+		likelies = np.zeros(maxIter)
 		i = 0
 		# make sure that the loop is entered the first time
 		oldLike = 0.
@@ -100,9 +106,11 @@ class HiddenMarkovModel:
 				print 'Iteration:', i, '/', maxIter
 				print 'LogLikelihood:', newLike
 				print 'Difference Likelihood:', abs(oldLike - newLike)
-			alpha, scaling = forward(A, B, pi, observation)
-			beta           = backward(A, B, pi, observation, scaling)
-			A,B,pi         = update_model(A, B, pi, alpha, beta, observation)
+
+                        forward(A, B, pi, observation, alpha, scaling)
+			backward(A, B, pi, observation, scaling, beta)
+			update_model(A, B, pi, alpha, beta, observation, gamma, xi)
+
 			likelies[i]    = -np.sum(np.log(scaling))
 			newLike        = likelies[i]
 			if (i!=0):
@@ -116,7 +124,7 @@ class HiddenMarkovModel:
 
 
 # @profile
-def update_model(A, B, pi, alpha, beta, obs):
+def update_model(A, B, pi, alpha, beta, obs, gamma, xi):
 	"""Update a model based on given forward/backward coefficients.
 
 	This is a non-parallel version of updating a given model with only one
@@ -128,10 +136,10 @@ def update_model(A, B, pi, alpha, beta, obs):
 	There are some preassumtion when using this function.
 
 	"""
-	return ext.update_model(A, B, pi, alpha, beta, obs)
+	return ext.update_model(A, B, pi, alpha, beta, obs, gamma, xi)
 
 # @profile
-def forward(A, B, pi, observation):
+def forward(A, B, pi, observation, alpha, scaling):
 	"""Generate the forward coeffcients and scaling factors.
 
 	The forward coefficients are represented as a matrix of T rows and N
@@ -141,25 +149,19 @@ def forward(A, B, pi, observation):
 	to calculate the likelihood.
 
 	"""
-	# allocate memory
-	T,N = len(observation),len(A)
-	alpha = np.zeros((T,N), dtype=np.float64) # array of forward coefficients
-	scaling = np.zeros(T, dtype=np.float64)              # scaling factors
+	T = len(observation)
 	if (T == 0):
 		return (alpha,scaling)
-
 	return ext.forward(alpha, scaling, A, B, pi, observation)
 
 
 # @profile
-def backward(A, B, pi, observation, scaling):
+def backward(A, B, pi, observation, scaling, beta):
 	"""Generate the backward coefficients with the scaling factors of the forward coefficients."""
 	# allocate memory
-	T,N = len(observation),len(A)
-	beta = np.zeros((T,N))
+	T = len(observation)
 	if T == 0:
 		return []
-
 	return ext.backward(beta, scaling, A, B, pi, observation)
 
 def random_by_dist(distribution):

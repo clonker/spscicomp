@@ -55,12 +55,12 @@ class HiddenMarkovModel:
 		obs = np.empty(n, dtype='int')
 		current = random_by_dist(pi)
 		for i in range(n):
-                        obs[i]  = random_by_dist(B[current,:])
+			obs[i]  = random_by_dist(B[current,:])
 			current = random_by_dist(A[current])
 		return obs
 
-# 	@profile
-	def optimize(self, observation, epsilon, maxIter, verbose=False):
+#	@profile
+	def BaumWelch(self, observation, epsilon, maxIter, verbose=False):
 		"""Optimize the given model.
 
 		Use the Hidden Markov Model algorithm to optimize the given
@@ -81,14 +81,13 @@ class HiddenMarkovModel:
 		Return an array of logarithmized likelihoods during optimization.
 
 		"""
-		A,B,pi  = self.A.copy(), self.B.copy(), self.pi.copy()
-		T = float(len(observation))
-		N = float(len(A))
-                gamma   = np.zeros((T,N), dtype=np.float64)
-                xi      = np.zeros((T,N,N), dtype=np.float64)
-                alpha   = np.zeros((T,N), dtype=np.float64) # array of forward coefficients
-                beta    = np.zeros((T,N), dtype=np.float64) # array of forward coefficients
-                scaling = np.zeros(T, dtype=np.float64)              # scaling factors
+		T = len(observation)
+		N = len(self.A)
+		gamma   = np.zeros((T,N), dtype=np.double)
+		xi      = np.zeros((T-1,N,N), dtype=np.double)
+		alpha   = np.zeros((T,N), dtype=np.double)
+		beta    = np.zeros((T,N), dtype=np.double)
+		scaling = np.zeros(T, dtype=np.float64)
 
 		likelies = np.zeros(maxIter)
 		i = 0
@@ -100,6 +99,7 @@ class HiddenMarkovModel:
 			print 'Iteration:', i, '/', maxIter
 			print 'LogLikelihood:', newLike
 			print 'Difference Likelihood:', abs(oldLike - newLike)
+		A,B,pi = self.A.copy(), self.B.copy(), self.pi.copy()
 		while ( (i < maxIter) and (abs(oldLike - newLike) > epsilon) ):
 			if (verbose):
 				sys.stdout.write(3 * "\033[F") # delete last 3 lines
@@ -107,20 +107,21 @@ class HiddenMarkovModel:
 				print 'LogLikelihood:', newLike
 				print 'Difference Likelihood:', abs(oldLike - newLike)
 
-                        forward(A, B, pi, observation, alpha, scaling)
-			backward(A, B, pi, observation, scaling, beta)
-			update_model(A, B, pi, alpha, beta, observation, gamma, xi)
+			likelies[i] = ext.forward(alpha, scaling, A, B, pi, observation)
+			ext.backward(beta, scaling, A, B, pi, observation)
+			ext.compute_gamma(alpha, beta, gamma)
+			ext.compute_xi(A, B, pi, observation, alpha, beta, xi)	
+			ext.update(A, B, pi, observation, gamma, xi)
 
-			likelies[i]    = -np.sum(np.log(scaling))
 			newLike        = likelies[i]
 			if (i!=0):
 				oldLike    = likelies[i-1]
 			else:
 				oldLike    = 0.
 			i += 1
+		self.A,self.B,self.pi = A,B,pi
 		print 'Terminated after ', i, ' iterations'
-		self.A, self.B, self.pi = A.copy(), B.copy(), pi.copy()
-		return (A,B,pi,likelies[0:i])
+		return likelies[0:i]
 
 
 # @profile
@@ -136,7 +137,7 @@ def update_model(A, B, pi, alpha, beta, obs, gamma, xi):
 	There are some preassumtion when using this function.
 
 	"""
-	return ext.update_model(A, B, pi, alpha, beta, obs, gamma, xi)
+	return ext.update(A, B, pi, alpha, beta, obs, gamma, xi)
 
 # @profile
 def forward(A, B, pi, observation, alpha, scaling):
@@ -149,19 +150,12 @@ def forward(A, B, pi, observation, alpha, scaling):
 	to calculate the likelihood.
 
 	"""
-	T = len(observation)
-	if (T == 0):
-		return (alpha,scaling)
 	return ext.forward(alpha, scaling, A, B, pi, observation)
 
 
 # @profile
 def backward(A, B, pi, observation, scaling, beta):
 	"""Generate the backward coefficients with the scaling factors of the forward coefficients."""
-	# allocate memory
-	T = len(observation)
-	if T == 0:
-		return []
 	return ext.backward(beta, scaling, A, B, pi, observation)
 
 def random_by_dist(distribution):
@@ -183,9 +177,13 @@ def compare(model1, model2, obsLength):
 	B2  = model2.B.copy()
 	pi1 = model1.pi.copy()
 	pi2 = model2.pi.copy()
+	alpha1 = np.zeros((obsLength, len(A1)), dtype=np.float64)
+	alpha2 = np.zeros((obsLength, len(A2)), dtype=np.float64)
+	scaling1 = np.zeros(obsLength, dtype=np.float64)
+	scaling2 = np.zeros(obsLength, dtype=np.float64)
 	observation = model2.randomSequence(obsLength)
-	_, scaling1 = forward(A1, B1, pi1, observation)
-	_, scaling2 = forward(A2, B2, pi2, observation)
+	forward(A1, B1, pi1, observation, alpha1, scaling1)
+	forward(A2, B2, pi2, observation, alpha2, scaling2)
 	result = -np.sum(np.log(scaling1)) + np.sum(np.log(scaling2))
 	return result / float(obsLength)
 
@@ -199,3 +197,4 @@ def similarity(model1, model2, obsLength):
 	com1 = compare(model1, model2, obsLength)
 	com2 = compare(model2, model1, obsLength)
 	return 0.5*(com1 + com2)
+

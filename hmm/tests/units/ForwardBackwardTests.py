@@ -10,21 +10,28 @@ from hmm import *
 
 
 # Observation Sequence
-sample1 = np.loadtxt('../data/sample1.dat', dtype='int')
-observation = sample1[0:100]
+O = np.loadtxt('../data/t1.33333.dat', dtype='int')
 
 # Initial Model
-A  = np.loadtxt('../data/startmodelA_1.dat')
-B  = np.loadtxt('../data/startmodelB_1.dat').T
-pi = np.loadtxt('../data/startmodelPi_1.dat')
+A  = np.loadtxt('../data/test_A.hmm')
+B  = np.loadtxt('../data/test_B.hmm')
+pi = np.loadtxt('../data/test_pi.hmm')
 
-model = [A,B,pi]
+T = len(O)
+N = len(A)
+
+alpha = np.zeros((T,N), dtype=np.double)
+beta  = np.zeros((T,N), dtype=np.double)
+scale = np.zeros((T), dtype=np.double)
+
+forward(A, B, pi, O, alpha, scale)
+backward(A, B, pi, O, beta, scale)
+
 
 class ForwardBackwardTests(unittest.TestCase):
 
 	def test_scaledForwardCoeffs_is_normed(self):
 		""" check if alpha is normed """
-		alpha, _ = forward(A, B, pi, observation)
 		for t in range(0, len(alpha)):
 			self.assertAlmostEqual(sum(alpha[t]), 1)
 
@@ -39,13 +46,11 @@ class ForwardBackwardTests(unittest.TestCase):
 
 		alpha is scaled by its sum. So it is taken into consideration.
 		"""
-		alpha, c = forward(A, B, pi, observation)
-		O = observation
 		for i in range(0, len(alpha[0])):
-			self.assertEqual(alpha[0,i]/c[0], pi[i]*B[O[0],i])
+			self.assertEqual(alpha[0,i]*scale[0], pi[i]*B[i,O[0]])
 		for t in range(1, len(alpha)):
 			for i in range(0, len(alpha[t])):
-				self.assertAlmostEqual(alpha[t,i], c[t]*sum(alpha[t-1,:]*A[:,i])*B[O[t],i])
+				self.assertAlmostEqual(alpha[t,i]*scale[t], sum(alpha[t-1,:]*A[:,i])*B[i,O[t]])
 
 	def test_scaledBackwardCoeffs_is_conform(self):
 		""" check for the induction formula for beta
@@ -58,15 +63,12 @@ class ForwardBackwardTests(unittest.TestCase):
 
 		beta is scaled by its sum. This is taken into consideration.
 		"""
-		_, c = forward(A, B, pi, observation)
-		beta = backward(A, B, pi, observation, c)
-		O, T = observation, len(observation) - 1
-		for i in range(0, len(beta[T])):
-			self.assertEqual(beta[T,i], c[T])
+		for i in range(0, len(beta[T-1])):
+			self.assertEqual(beta[T-1,i]*scale[T-1], 1)
 
-		for t in range(T-1, -1, -1):
+		for t in range(T-2, -1, -1):
 			for i in range(0, len(beta[t])):
-				self.assertAlmostEqual(beta[t,i], c[t]*sum(A[i,:]*B[O[t+1],:]*beta[t+1,:]))
+				self.assertAlmostEqual(beta[t,i]*scale[t], sum(A[i,:]*B[:,O[t+1]]*beta[t+1,:]))
 
 if __name__ == '__main__':
 	unittest.main();

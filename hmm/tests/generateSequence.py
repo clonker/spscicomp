@@ -1,13 +1,11 @@
-from hmm import *
-import matplotlib.pyplot as plt
+from PySimpleHMM import *
 
 A = np.loadtxt('data/t1_A.hmm')
 B = np.loadtxt('data/t1_B.hmm')
 pi = np.loadtxt('data/t1_pi.hmm')
 
-hmmStart = HiddenMarkovModel(len(A), len(B[0]), A, B, pi)
+hmm = PySimpleHMM(len(A), len(B[0]), A, B, pi)
+obs = hmm.randomSequence(100000)
 
-obs = hmmStart.randomSequence(33333)
-
-for i in range(len(obs)):
-	print obs[i]
+for o in obs:
+	print o

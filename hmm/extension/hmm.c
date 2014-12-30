@@ -20,9 +20,9 @@ double forward(
 		alpha[i]  = pi[i] * B[i*M+O[0]];
 		scale[0] += alpha[i];
 	}
-	for (i = 0; i < N; i++) {
+	if (scale[0] != 0)
+	for (i = 0; i < N; i++)
 		alpha[i] /= scale[0];
-	}
 	for (t = 0; t < T-1; t++) {
 		scale[t+1] = 0.0;
 		for (j = 0; j < N; j++) {
@@ -33,6 +33,7 @@ double forward(
 			alpha[(t+1)*N+j] = sum * B[j*M+O[t+1]];
 			scale[t+1] += alpha[(t+1)*N+j];
 		}
+		if (scale[t+1] != 0)
 		for (j = 0; j < N; j++)
 			alpha[(t+1)*N+j] /= scale[t+1];
 	}
@@ -56,13 +57,19 @@ int backward(
 	double sum;
 
 	for (i = 0; i < N; i++)
-		beta[(T-1)*N+i] = 1.0 / scale[T-1];
+		if (scale[T-1] != 0)
+			beta[(T-1)*N+i] = 1.0 / scale[T-1];
+		else
+			beta[(T-1)*N+1] = 1.0;
 	for (t = T-2; t >= 0; t--)
 		for (i = 0; i < N; i++) {
 			sum = 0.0;
 			for (j = 0; j < N; j++)
 				sum += A[i*N+j]*B[j*M+O[t+1]]*beta[(t+1)*N+j];
-			beta[t*N+i] = sum / scale[t];
+			if (scale[t] != 0)
+				beta[t*N+i] = sum / scale[t];
+			else
+				beta[t*N+i] = sum;
 		}
 	return EXIT_SUCCESS;
 }
@@ -105,8 +112,7 @@ int computeXi(
 		sum = 0.0;
 		for (i = 0; i < N; i++)
 			for (j = 0; j < N; j++) {
-				xi[t*N*N + i*N + j] =
-						alpha[t*N+i]*beta[(t+1)*N+j]*A[i*N+j]*B[j*M+O[t+1]];
+				xi[t*N*N + i*N + j] = alpha[t*N+i]*beta[(t+1)*N+j]*A[i*N+j]*B[j*M+O[t+1]];
 				sum += xi[t*N*N + i*N + j];
 			}
 		for (i = 0; i < N; i++)

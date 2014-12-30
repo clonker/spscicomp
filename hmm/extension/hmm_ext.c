@@ -23,12 +23,12 @@ py_forward(PyObject *self, PyObject *args)
 {
 	PyArrayObject *pAlpha, *pScale, *pA, *pB, *pPi, *pO;
 	if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!",
-			&PyArray_Type, &pAlpha,
-			&PyArray_Type, &pScale,
 			&PyArray_Type, &pA,
 			&PyArray_Type, &pB,
 			&PyArray_Type, &pPi,
-			&PyArray_Type, &pO)) {
+			&PyArray_Type, &pO,
+			&PyArray_Type, &pAlpha,
+			&PyArray_Type, &pScale)) {
 		return NULL;
 	}
 	int T = PyArray_DIM(pO, 0);
@@ -49,12 +49,12 @@ py_backward(PyObject *self, PyObject *args)
 {
 	PyArrayObject *pA, *pB, *pPi, *pO, *pScale, *pBeta;
 	if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!",
-			&PyArray_Type, &pBeta,
-			&PyArray_Type, &pScale,
 			&PyArray_Type, &pA,
 			&PyArray_Type, &pB,
 			&PyArray_Type, &pPi,
-			&PyArray_Type, &pO)) {
+			&PyArray_Type, &pO,
+			&PyArray_Type, &pBeta,
+			&PyArray_Type, &pScale)) {
 		return NULL;
 	}
 	int T = PyArray_DIM(pO, 0);
@@ -67,7 +67,8 @@ py_backward(PyObject *self, PyObject *args)
 	double *beta = (double*)PyArray_DATA(pBeta);
 	const double *scale = (double*)PyArray_DATA(pScale);
 	backward(A, B, pi, O, N, M, T, beta, scale);
-	return Py_BuildValue("O", pBeta);
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 static PyObject *
@@ -86,7 +87,8 @@ py_gamma(PyObject *self, PyObject *args)
 	const double *beta  = (double*)PyArray_DATA(pBeta);
 	double *gamma = (double*)PyArray_DATA(pGamma);
 	computeGamma(alpha, beta, T, N, gamma);
-	return Py_BuildValue("O", pGamma);
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 static PyObject *
@@ -115,7 +117,8 @@ py_xi(PyObject *self, PyObject *args)
 	const double *alpha = (double*)PyArray_DATA(pAlpha);
 	double *xi    = (double*)PyArray_DATA(pXi);
 	computeXi(A, B, pi, O, N, M, T, alpha, beta, xi);
-	return Py_BuildValue("O", pXi);
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 
@@ -143,7 +146,8 @@ py_update(PyObject *self, PyObject *args)
 	const double *gamma = (double*)PyArray_DATA(pGamma);
 	const double *xi    = (double*)PyArray_DATA(pXi);
 	update(A, B, pi, O, N, M, T, gamma, xi);
-	return Py_BuildValue("(O,O,O)", pA, pB, pPi);
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 /***

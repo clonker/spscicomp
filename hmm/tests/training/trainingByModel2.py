@@ -13,7 +13,7 @@ B = B.copy()
 pi = pi.copy()
 hmmTrain = HiddenMarkovModel(len(A), len(B[0]), A, B, pi)
 # simBefore = similarity(hmmStart, hmmTrain, 1000000)
-hmmTrain.BaumWelch(obs, 0.5, 1, verbose=True)
+hmmTrain.BaumWelch(obs, 1e-3, 100, verbose=True)
 # simAfter = similarity(hmmStart, hmmTrain, 1000000)
 
 print 'model which generated the obs.'

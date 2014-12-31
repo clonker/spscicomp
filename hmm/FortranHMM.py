@@ -19,5 +19,14 @@ class FortranHMM(PySimpleHMM):
 	def computeXi(self, obs, alpha, beta):
 		return ext.computexi(self.A, self.B, obs, alpha, beta)
 		
+	def computeNominatorA(self, obs, alpha, beta):
+		return ext.computenoma(self.A, self.B, obs, alpha, beta)
+		
+	def computeDenominatorA(self, gamma):
+		return ext.computedenoma(gamma)
+		
+	def computeNominatorB(self, obs, gamma):
+		return ext.computenomb(obs, gamma, len(self.B[0]))
+		
 	def update(self, obs, gamma, xi):
 		self.A, self.B, self.pi = ext.update(obs, gamma, xi, len(self.B[0]))

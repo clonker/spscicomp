@@ -75,6 +75,91 @@ class PySimpleHMM(object):
 					xi[t,i,j] /= sum
 		return xi
 		
+	def computeNominatorA(self, obs, alpha, beta):
+		T, N = len(obs), self.N
+		xi = np.zeros((N,N), dtype=np.double)
+		xi_t = np.zeros((N,N), dtype=np.double)
+		for t in range(T-1):
+			sum = 0.0
+			for i in range(N):
+				for j in range(N):
+					xi_t[i,j] = alpha[t,i]*self.A[i,j]*self.B[j,obs[t+1]]*beta[t+1,j]
+					sum += xi_t[i,j]
+			for i in range(N):
+				for j in range(N):
+					xi[i,j] += xi_t[i,j] / sum
+		return xi
+		
+	def computeDenominatorA(self, gamma):
+		denom = np.zeros((self.N), dtype=np.double)
+		for t in range(len(gamma)-1):
+			for i in range(self.N):
+				denom[i] += gamma[t,i]
+		return denom
+	
+	def computeNominatorB(self, obs, gamma):
+		B = np.zeros_like(self.B)
+		for i in range(self.N):
+			for k in range(self.M):
+				for t in range(len(obs)):
+					if (obs[t] == k):
+						B[i,k] += gamma[t,i]
+		return B
+		
+	def process_obs(self, obs):
+		T = len(obs)
+		weight, alpha = self.forward(obs)
+		beta = self.backward(obs)
+		gamma = self.computeGamma(alpha, beta)
+		nomA = self.computeNominatorA(obs, alpha, beta)
+		denomA = self.computeDenominatorA(gamma)
+		nomB = self.computeNominatorB(obs, gamma)
+		denomB = denomA + gamma[T-1]
+		return weight, nomA, denomA, nomB, denomB
+
+	@profile
+	def BaumWelch_multiple(self, obss, accuracy, maxiter):
+		K, N, M = len(obss), self.N, self.M
+		nomsA = np.zeros((K,N,N), dtype=np.double)
+		denomsA = np.zeros((K,N), dtype=np.double)
+		nomsB = np.zeros((K,N,M), dtype=np.double)
+		denomsB = np.zeros((K,N), dtype=np.double)
+		weights = np.zeros(K, dtype=np.double)
+		
+		old_eps = 0.0
+		it = 0
+		new_eps = accuracy+1
+
+		while (abs(new_eps - old_eps) > accuracy and it < maxiter):
+			for k in range(K):
+				weights[k], nomsA[k], denomsA[k], nomsB[k], denomsB[k] = self.process_obs(obss[k])
+				
+			for i in range(N):
+				nomA = np.zeros(N, dtype=np.double)
+				denomA = 0.0
+				for k in range(K):
+					nomA += weights[k] * nomsA[k,i,:]
+					denomA += weights[k] * denomsA[k,i]
+				self.A[i,:] = nomA / denomA
+			for i in range(N):
+				nomB = np.zeros(M, dtype=np.double)
+				denomB = 0.0
+				for k in range(K):
+					nomB += weights[k] * nomsB[k, i, :]
+					denomB += weights[k] * denomsB[k, i]
+				self.B[i,:] = nomB / denomB
+
+			if (it == 0):
+				old_eps = 0
+			else:
+				old_eps = new_eps
+			new_eps = np.sum(weights)
+			it += 1
+
+		return new_eps, it
+			
+			
+		
 	def update(self, obs, gamma, xi):
 		T,N,M = len(obs),self.N,self.M
 		for i in range(N):
@@ -127,4 +212,3 @@ class PySimpleHMM(object):
 			obs[i]  = utilities.random_by_dist(self.B[current,:])
 			current = utilities.random_by_dist(self.A[current])
 		return obs
-

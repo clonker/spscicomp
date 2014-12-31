@@ -131,6 +131,73 @@ Cf2py intent(out) xi
       ENDDO
       END
 
+      SUBROUTINE COMPUTENOMA(A,B,O,ALPHA,BETA,NOMA,T,N,M)
+      INTEGER T, N, M, I, J, S
+      REAL*8 A(N,N), B(N,M), ALPHA(T,N), BETA(T,N)
+      REAL*8 NOMA(N,N), TMP(N,N)
+      INTEGER O(T)
+      REAL*8 SUM
+Cf2py intent(in) n
+Cf2py intent(in) m
+Cf2py intent(in) t
+Cf2py intent(in) o
+Cf2py intent(in) alpha
+Cf2py intent(in) beta
+Cf2py intent(in) a
+Cf2py intent(in) b
+Cf2py intent(out) noma
+      DO S = 1, T-1
+      	SUM = 0.0D0
+      	DO J = 1, N
+      		DO I = 1, N
+      			TMP(I,J) = ALPHA(S,I)*A(I,J)*B(J,O(S+1)+1)*BETA(S+1,J)
+      			SUM = SUM + TMP(I,J)
+      		ENDDO
+      	ENDDO
+      	DO J = 1, N
+      		DO I = 1, N
+      			NOMA(I,J) = NOMA(I,J) + TMP(I,J) / SUM
+      		ENDDO
+      	ENDDO
+      ENDDO
+      END
+
+      SUBROUTINE COMPUTEDENOMA(GAMMA,DENOMA,T,N)
+      INTEGER T, N, I, S
+      REAL*8 GAMMA(T,N), DENOMA(N)
+Cf2py intent(in) n
+Cf2py intent(in) t
+Cf2py intent(in) gamma
+Cf2py intent(out) denoma
+      DO I = 1, N
+      	DENOMA(I) = 0.0D0
+      	DO S = 1, T-1
+      		DENOMA(I) = DENOMA(I) + GAMMA(S,I)
+      	ENDDO
+      ENDDO
+      END
+
+      SUBROUTINE COMPUTENOMB(O,GAMMA,NOMB,T,N,M)
+      INTEGER T, N, M, S, I, K
+      REAL*8 O(T), GAMMA(T, N)
+      REAL*8 NOMB(N, M)
+Cf2py intent(in) n
+Cf2py intent(in) m
+Cf2py intent(in) t
+Cf2py intent(in) gamma
+Cf2py intent(in) o
+Cf2py intent(out) nomb
+      DO I = 1, N
+      	DO K = 1, M
+      		NOMB(I,K) = 0.0D0
+      		DO S = 1, T
+      			IF (O(S) == K-1) THEN
+      				NOMB(I,K) = NOMB(I,K) + GAMMA(S,I)
+      			ENDIF
+      		ENDDO
+      	ENDDO
+      ENDDO
+      END
 
       subroutine update(A,B,pi,O,gamma,xi,T,N,M)
       integer T, N, M, s, i, j, k

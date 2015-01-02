@@ -20,11 +20,17 @@ static PyObject* cal_chunk_centers(PyObject *dummy, PyObject *args)
     PyArrayObject *data = NULL;
     PyObject *centers = NULL;
     PyObject *data_assigns = NULL;
-    if (!PyArg_ParseTuple(args, "O!OO!", &PyArray_Type, &data, &centers, &PyList_Type, &data_assigns))
+    if (!PyArg_ParseTuple(args, "O!OO!", &PyArray_Type, &data, &centers, &PyList_Type, &data_assigns)){
+        PyErr_SetString(PyExc_TypeError, "Python Arguments parse error!");
         return NULL;
+    }
+
     PyObject *chunk_centers = NULL;
     //printf("CUDA_Module called!");
     chunk_centers = kmeans_chunk_center_cuda(data, (PyArrayObject*)centers, data_assigns);
+    if (chunk_centers == NULL){
+        return NULL;
+    }
     Py_INCREF(chunk_centers);  /* The returned list should still exist after calling the C extension */
     return chunk_centers;
 }

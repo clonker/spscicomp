@@ -8,9 +8,9 @@
 #include "numpy/arrayobject.h"
 
 /* Needs to be compiled as C files because of the Naming problem in Namespace */
-#ifdef __cplusplus 
-extern "C" {  
-#endif 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
     Calculate the new centers in the received block.
@@ -21,7 +21,7 @@ int closest_center(PyArrayObject *data,int data_lab, PyArrayObject *centers, int
     int i, j;
     double min_distance = 1E100;
     double distance;
-    int min_index = 0;  
+    int min_index = 0;
     for (i = 0; i < cluster_size; i++)
     {
         distance = 0;
@@ -37,7 +37,7 @@ int closest_center(PyArrayObject *data,int data_lab, PyArrayObject *centers, int
     }
     return min_index;
 }
-  
+
 PyObject* kmeans_chunk_center(PyArrayObject *data, PyArrayObject *centers, PyObject *data_assigns)
 {
     /* Record the nearest center of each point and renew the centers with the points near one given center. */
@@ -45,11 +45,24 @@ PyObject* kmeans_chunk_center(PyArrayObject *data, PyArrayObject *centers, PyObj
     cluster_size = *(int *)PyArray_DIMS(centers);
     dimension = PyArray_DIM(centers, 1);
     chunk_size = *(int *)PyArray_DIMS(data);
-    int *centers_counter = (int *)malloc(sizeof(int) * cluster_size);
-    double *new_centers = (double *)malloc(sizeof(double) * cluster_size * dimension);
+
+    if (cluster_size<1 || dimension<1 || chunk_size<1 ){
+        PyErr_SetString(PyExc_ValueError, "Paramenters size error");
+        return NULL;
+    }
+
+    int *centers_counter;
+    double *new_centers;
     int i, j;
     int closest_center_index;
-    double* point_data[dimension];
+
+    centers_counter = (int *)malloc(sizeof(int) * cluster_size);
+    new_centers = (double *)malloc(sizeof(double) * cluster_size * dimension);
+
+    if (centers_counter == NULL || new_centers == NULL){
+        PyErr_SetString(PyExc_MemoryError, "Memory malloc error");
+        return NULL;
+    }
 
     for (i = 0; i < cluster_size; i++)
     {
@@ -59,9 +72,9 @@ PyObject* kmeans_chunk_center(PyArrayObject *data, PyArrayObject *centers, PyObj
     for (i = 0; i < cluster_size * dimension; i++)
     {
 	    (*(new_centers + i)) = 0;
-    }   
+    }
     for (i = 0; i < chunk_size; i++)
-    {	  
+    {
 	closest_center_index = closest_center(data,i, centers, cluster_size, dimension);
 	PyList_SetItem(data_assigns, i, PyInt_FromLong(closest_center_index));
 	(*(centers_counter + closest_center_index))++;
@@ -70,7 +83,7 @@ PyObject* kmeans_chunk_center(PyArrayObject *data, PyArrayObject *centers, PyObj
 	    (*(new_centers + closest_center_index * dimension + j)) += (*(double*)PyArray_GETPTR2(data, i, j));
 	}
     }
-    
+
     for (i = 0; i < cluster_size; i++)
     {
         if (*(centers_counter + i) == 0)
@@ -92,6 +105,10 @@ PyObject* kmeans_chunk_center(PyArrayObject *data, PyArrayObject *centers, PyObj
     PyObject* return_new_centers;
     npy_intp dims[2] = {cluster_size, dimension};
     return_new_centers = PyArray_SimpleNew(2, dims, NPY_DOUBLE);
+    if (return_new_centers == NULL){
+        PyErr_SetString(PyExc_MemoryError, "Error occurs when creating a new PyArray");
+        return NULL;
+    }
     void *arr_data = PyArray_DATA((PyArrayObject*)return_new_centers);
     memcpy(arr_data, new_centers, PyArray_ITEMSIZE((PyArrayObject*) return_new_centers) * cluster_size * dimension);
     /* Need to copy the data of the malloced buffer to the PyObject
@@ -101,6 +118,6 @@ PyObject* kmeans_chunk_center(PyArrayObject *data, PyArrayObject *centers, PyObj
     return (PyObject*) return_new_centers;
 }
 
-#ifdef __cplusplus  
-} 
-#endif 
+#ifdef __cplusplus
+}
+#endif

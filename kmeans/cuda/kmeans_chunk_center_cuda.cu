@@ -81,16 +81,48 @@ __global__ void chunk_centers_sum_cuda(double *cu_data,double *cu_centers, int* 
 PyObject* kmeans_chunk_center_cuda(PyArrayObject *data, PyArrayObject *centers, PyObject *data_assigns)
 {
     /* Record the nearest center of each point and renew the centers with the points near one given center. */
+
+    int device_count;
+    cudaError_t device_error;
+    device_error = cudaGetDeviceCount(&device_count);
+    if (device_error != cudaSuccess){
+        if (device_error ==  cudaErrorNoDevice){
+            PyErr_SetString(PyExc_Exception, "No available device detected");
+            return NULL;
+        }
+        if (device_error ==   cudaErrorInsufficientDriver){
+            PyErr_SetString(PyExc_Exception, "Compute compacity is not enough");
+            return NULL;
+        }
+    }
+    if (device_count >1){
+        PyErr_SetString(PyExc_Exception, "Only 1 device is supported currently");
+        return NULL;
+    }
+
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, 0);
+
     int cluster_size, dimension, chunk_size;
     cluster_size = *(int *)PyArray_DIMS(centers);
     dimension = PyArray_DIM(centers, 1);
     chunk_size = *(int *)PyArray_DIMS(data);
+    if (cluster_size<1 || dimension<1 || chunk_size<1){
+        PyErr_SetString(PyExc_ValueError, "Paramenters size error");
+        return NULL;
+    }
+
     int BLOCK_NUM = (chunk_size + 127 ) / 128;
-    if (BLOCK_NUM > 128) BLOCK_NUM = 128;
+    if (BLOCK_NUM > prop.maxThreadsPerMultiProcessor * prop.multiProcessorCount / 128 ) BLOCK_NUM = prop.maxThreadsPerMultiProcessor * prop.multiProcessorCount / 128 ;
     /*GPU has number limitation of paralleled threads, to improve efficiency*/
-    int *centers_counter = (int *)malloc(sizeof(int) * BLOCK_NUM* cluster_size);
+
+    int *centers_counter = (int *)malloc(sizeof(int) * BLOCK_NUM* cluster_size*1E100);
     double *new_centers = (double *)malloc(sizeof(double)* BLOCK_NUM * cluster_size * dimension);
     int* p_data_assigns= (int *)malloc(sizeof(int) * chunk_size);
+    if (centers_counter == NULL || new_centers == NULL || p_data_assigns == NULL){
+        PyErr_SetString(PyExc_MemoryError, "RAM Malloc Error");
+        return NULL;
+    }
 
     int i, j, k;
 
@@ -111,40 +143,54 @@ PyObject* kmeans_chunk_center_cuda(PyArrayObject *data, PyArrayObject *centers, 
     int* cu_centers_counter, *cu_cluster_size, *cu_dimension, *cu_data_assigns,*cu_chunk_size;
 
     /*malloc memory to graphic card and copy data from memory to G-memory*/
-    cudaMalloc((void**) &cu_data, sizeof(double) * chunk_size * dimension);
-    cudaMalloc((void**) &cu_centers, sizeof(double) * cluster_size * dimension);
-    cudaMalloc((void**) &cu_centers_counter, sizeof(int) * BLOCK_NUM * cluster_size);
-    cudaMalloc((void**) &cu_new_centers, sizeof(double) * BLOCK_NUM * cluster_size * dimension);
-    cudaMalloc((void**) &cu_data_assigns, sizeof(int) * chunk_size );
-    cudaMalloc((void**) &cu_cluster_size, sizeof(int) *1);
-    cudaMalloc((void**) &cu_dimension, sizeof(int) *1);
-    cudaMalloc((void**) &cu_chunk_size, sizeof(int) *1);
+    if (cudaMalloc((void**) &cu_data, sizeof(double) * chunk_size * dimension)
+        || cudaMalloc((void**) &cu_centers, sizeof(double) * cluster_size * dimension)
+        || cudaMalloc((void**) &cu_centers_counter, sizeof(int) * BLOCK_NUM * cluster_size)
+        || cudaMalloc((void**) &cu_new_centers, sizeof(double) * BLOCK_NUM * cluster_size * dimension)
+        || cudaMalloc((void**) &cu_data_assigns, sizeof(int) * chunk_size )
+        || cudaMalloc((void**) &cu_cluster_size, sizeof(int) *1)
+        || cudaMalloc((void**) &cu_dimension, sizeof(int) *1)
+        || cudaMalloc((void**) &cu_chunk_size, sizeof(int) *1)){
+        PyErr_SetString(PyExc_MemoryError, "CUDA RAM malloc error");
+        return NULL;
+    }
 
-    cudaMemcpy(cu_data, p_data, sizeof(double) * chunk_size * dimension, cudaMemcpyHostToDevice);
-    cudaMemcpy(cu_centers, p_centers, sizeof(double) * cluster_size * dimension, cudaMemcpyHostToDevice);
-    cudaMemcpy(cu_centers_counter, centers_counter, sizeof(int)* BLOCK_NUM * cluster_size,cudaMemcpyHostToDevice);
-    cudaMemcpy(cu_new_centers, new_centers, sizeof(double) * BLOCK_NUM * cluster_size * dimension, cudaMemcpyHostToDevice);
-    cudaMemcpy(cu_data_assigns, p_data_assigns, sizeof(int) *chunk_size , cudaMemcpyHostToDevice);
-    cudaMemcpy(cu_cluster_size, &cluster_size, sizeof(int) * 1, cudaMemcpyHostToDevice);
-    cudaMemcpy(cu_dimension, &dimension, sizeof(int) * 1, cudaMemcpyHostToDevice);
-    cudaMemcpy(cu_chunk_size, &chunk_size, sizeof(int) * 1, cudaMemcpyHostToDevice);
+    if (cudaMemcpy(cu_data, p_data, sizeof(double) * chunk_size * dimension, cudaMemcpyHostToDevice)
+        || cudaMemcpy(cu_centers, p_centers, sizeof(double) * cluster_size * dimension, cudaMemcpyHostToDevice)
+        || cudaMemcpy(cu_centers_counter, centers_counter, sizeof(int)* BLOCK_NUM * cluster_size,cudaMemcpyHostToDevice)
+        || cudaMemcpy(cu_new_centers, new_centers, sizeof(double) * BLOCK_NUM * cluster_size * dimension, cudaMemcpyHostToDevice)
+        || cudaMemcpy(cu_data_assigns, p_data_assigns, sizeof(int) *chunk_size , cudaMemcpyHostToDevice)
+        || cudaMemcpy(cu_cluster_size, &cluster_size, sizeof(int) * 1, cudaMemcpyHostToDevice)
+        || cudaMemcpy(cu_dimension, &dimension, sizeof(int) * 1, cudaMemcpyHostToDevice)
+        || cudaMemcpy(cu_chunk_size, &chunk_size, sizeof(int) * 1, cudaMemcpyHostToDevice)){
+        PyErr_SetString(PyExc_MemoryError, "Memory copy error, from host to device");
+        return NULL;
+    }
+
+
 
     /*Caculate parallelly wich BLOCK_NUM blocks in one grid and THREAD_NUM threads in one block*/
     chunk_centers_sum_cuda<<<BLOCK_NUM, THREAD_NUM>>>(cu_data,cu_centers,cu_centers_counter,cu_new_centers,cu_data_assigns,cu_cluster_size,cu_dimension,cu_chunk_size);
 
     /*Capy back the results and free G-memory*/
-    cudaMemcpy(centers_counter, cu_centers_counter,sizeof(int) * BLOCK_NUM *cluster_size, cudaMemcpyDeviceToHost);
-    cudaMemcpy(new_centers, cu_new_centers, sizeof(double) * BLOCK_NUM* cluster_size * dimension, cudaMemcpyDeviceToHost);
-    cudaMemcpy(p_data_assigns, cu_data_assigns, sizeof(int) * chunk_size  , cudaMemcpyDeviceToHost);
+    if (cudaMemcpy(centers_counter, cu_centers_counter,sizeof(int) * BLOCK_NUM *cluster_size, cudaMemcpyDeviceToHost)
+        || cudaMemcpy(new_centers, cu_new_centers, sizeof(double) * BLOCK_NUM* cluster_size * dimension, cudaMemcpyDeviceToHost)
+        || cudaMemcpy(p_data_assigns, cu_data_assigns, sizeof(int) * chunk_size  , cudaMemcpyDeviceToHost)){
+        PyErr_SetString(PyExc_MemoryError, "Memory copy error, from device to host");
+        return NULL;
+    }
 
-    cudaFree(cu_data);
-    cudaFree(cu_centers);
-    cudaFree(cu_centers_counter);
-    cudaFree(cu_new_centers);
-    cudaFree(cu_data_assigns);
-    cudaFree(cu_cluster_size);
-    cudaFree(cu_dimension);
-    cudaFree(cu_chunk_size);
+    if (cudaFree(cu_data)
+        || cudaFree(cu_centers)
+        || cudaFree(cu_centers_counter)
+        || cudaFree(cu_new_centers)
+        || cudaFree(cu_data_assigns)
+        || cudaFree(cu_cluster_size)
+        || cudaFree(cu_dimension)
+        || cudaFree(cu_chunk_size)){
+        PyErr_SetString(PyExc_MemoryError, "CUDA free memory error");
+        return NULL;
+    }
 
     /*Since we add blockwise, here we need to get the general results.*/
     for (i=0; i<BLOCK_NUM ;i++)
@@ -192,6 +238,10 @@ PyObject* kmeans_chunk_center_cuda(PyArrayObject *data, PyArrayObject *centers, 
     PyObject* return_new_centers;
     npy_intp dims[2] = {cluster_size, dimension};
     return_new_centers = PyArray_SimpleNew(2, dims, NPY_DOUBLE);
+    if (return_new_centers == NULL){
+        PyErr_SetString(PyExc_MemoryError, "Error occurs when creating a new PyArray");
+        return NULL;
+    }
     void *arr_data = PyArray_DATA((PyArrayObject*)return_new_centers);
     memcpy(arr_data, new_centers, PyArray_ITEMSIZE((PyArrayObject*) return_new_centers) * cluster_size * dimension);
     /* Need to copy the data of the malloced buffer to the PyObject

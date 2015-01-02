@@ -27,6 +27,9 @@ static PyObject* cal_chunk_centers(PyObject *dummy, PyObject *args)
     }
     PyObject *chunk_centers = NULL;
     chunk_centers = kmeans_chunk_center(data, (PyArrayObject*)centers, data_assigns);
+    if (chunk_centers == NULL){
+        return NULL;
+    }
     Py_INCREF(chunk_centers);  /* The returned list should still exist after calling the C extension */
     return chunk_centers;
 }

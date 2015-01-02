@@ -47,7 +47,7 @@ PyObject* kmeans_chunk_center(PyArrayObject *data, PyArrayObject *centers, PyObj
     chunk_size = *(int *)PyArray_DIMS(data);
 
     if (cluster_size<1 || dimension<1 || chunk_size<1 ){
-        PyErr_SetString(PyExc_TypeError, "Paramenters size error");
+        PyErr_SetString(PyExc_ValueError, "Paramenters size error");
         return NULL;
     }
 
@@ -55,14 +55,12 @@ PyObject* kmeans_chunk_center(PyArrayObject *data, PyArrayObject *centers, PyObj
     double *new_centers;
     int i, j;
     int closest_center_index;
-    double* point_data[dimension];
 
     centers_counter = (int *)malloc(sizeof(int) * cluster_size);
     new_centers = (double *)malloc(sizeof(double) * cluster_size * dimension);
 
     if (centers_counter == NULL || new_centers == NULL){
-        PyErr_SetString(PyExc_TypeError, "Memory malloc error");
-        PyErr_NoMemory();
+        PyErr_SetString(PyExc_MemoryError, "Memory malloc error");
         return NULL;
     }
 
@@ -108,7 +106,7 @@ PyObject* kmeans_chunk_center(PyArrayObject *data, PyArrayObject *centers, PyObj
     npy_intp dims[2] = {cluster_size, dimension};
     return_new_centers = PyArray_SimpleNew(2, dims, NPY_DOUBLE);
     if (return_new_centers == NULL){
-        PyErr_SetString(PyExc_TypeError, "Error occurs when creating a new PyArray");
+        PyErr_SetString(PyExc_MemoryError, "Error occurs when creating a new PyArray");
         return NULL;
     }
     void *arr_data = PyArray_DATA((PyArrayObject*)return_new_centers);

@@ -131,6 +131,43 @@ Cf2py intent(out) xi
       ENDDO
       END
 
+      SUBROUTINE UPDATEMULT(A,B,WS,NOMSA,DENOMSA,NOMSB,DENOMSB,K,N,M)
+      INTEGER K, N, M, i, j, l
+      REAL*8 WS(K)
+      REAL*8 NOMSA(K,N,N), DENOMSA(K,N)
+      REAL*8 NOMSB(K,N,M), DENOMSB(K,N)
+      REAL*8 A(N,N), B(N,M)
+      REAL*8 NOMA(N,N), DENOMA, NOMB(N,M), DENOMB
+Cf2py intent(out) a
+Cf2py intent(out) b
+      DO I = 1, N
+      	DO J = 1, N
+      		NOMA(I,J) = 0.0D0
+      	ENDDO
+      	DO J = 1, M
+      		NOMB(I,J) = 0.0D0
+      	ENDDO
+      	DENOMA = 0.0D0
+      	DENOMB = 0.0D0
+      	DO L = 1, K
+      		DO J = 1, N
+      			NOMA(I,J) = NOMA(I,J) + WS(L)*NOMSA(L,I,J)
+      		ENDDO
+      		DO J = 1, M
+      			NOMB(I,J) = NOMB(I,J) + WS(L)*NOMSB(L,I,J)
+      		ENDDO
+      		DENOMA = DENOMA + WS(L)*DENOMSA(L,I)
+      		DENOMB = DENOMB + WS(L)*DENOMSB(L,I)
+      	ENDDO
+      	DO J = 1, N
+      		A(I,J) = NOMA(I,J) / DENOMA
+      	ENDDO
+      	DO J = 1, M
+      		B(I,J) = NOMB(I,J) / DENOMB
+      	ENDDO
+      ENDDO
+      END
+
       SUBROUTINE COMPUTENOMA(A,B,O,ALPHA,BETA,NOMA,T,N,M)
       INTEGER T, N, M, I, J, S
       REAL*8 A(N,N), B(N,M), ALPHA(T,N), BETA(T,N)

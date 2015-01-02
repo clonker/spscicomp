@@ -1,10 +1,5 @@
 """ Python Hidden Markov Model kernel
 
-A simple HMM implementation in pure python using numpy arrays but no fancy
-vectorization or any other language bindings. This can be used for small models
-and observation sequences. This class serves as demonstration what functions
-any HMM class of this package should have.
-
 Algorithms as proposed by L. Rabiner (see http://dx.doi.org/10.1109/5.18626 )
 
 """
@@ -14,16 +9,17 @@ import utilities
 
 
 class PySimpleHMM(object):
-	def __init__(self, N, M, A, B, pi):
+	def __init__(self, N, M, A, B, pi, dtype=np.float64):
 		self.N = N
 		self.M = M
-		self.A = A.copy()
-		self.B = B.copy()
-		self.pi = pi.copy()
+		self.dtype = dtype
+		self.A = np.asarray(A.copy(), dtype=self.dtype)
+		self.B = np.asarray(B.copy(), dtype=self.dtype)
+		self.pi = np.asarray(pi.copy(), dtype=self.dtype)
 
 	def forward(self, obs):
 		T, N = len(obs), self.N
-		alpha = np.zeros((T,N), dtype=np.float64)
+		alpha = np.zeros((T,N), dtype=self.dtype)
 		for i in range(N):
 			alpha[0,i] = self.pi[i]*self.B[i,obs[0]]
 		for t in range(T-1):
@@ -39,7 +35,7 @@ class PySimpleHMM(object):
 
 	def backward(self, obs):
 		T, N = len(obs), self.N
-		beta = np.zeros((T,N), dtype=np.float64)
+		beta = np.zeros((T,N), dtype=self.dtype)
 		for i in range(N):
 			beta[T-1,i] = 1
 		for t in range(T-2, -1, -1):
@@ -51,7 +47,7 @@ class PySimpleHMM(object):
 
 	def computeGamma(self, alpha, beta):
 		T, N = len(alpha), self.N
-		gamma = np.zeros((T,N), dtype=np.float64)
+		gamma = np.zeros((T,N), dtype=self.dtype)
 		for t in range(T):
 			sum = 0.0
 			for i in range(N):
@@ -63,7 +59,7 @@ class PySimpleHMM(object):
 		
 	def computeXi(self, obs, alpha, beta):
 		T, N = len(obs), self.N
-		xi = np.zeros((T-1,N,N), dtype=np.float64)
+		xi = np.zeros((T-1,N,N), dtype=self.dtype)
 		for t in range(T-1):
 			sum = 0.0
 			for i in range(N):
@@ -77,8 +73,8 @@ class PySimpleHMM(object):
 		
 	def computeNominatorA(self, obs, alpha, beta):
 		T, N = len(obs), self.N
-		xi = np.zeros((N,N), dtype=np.double)
-		xi_t = np.zeros((N,N), dtype=np.double)
+		xi = np.zeros((N,N), dtype=self.dtype)
+		xi_t = np.zeros((N,N), dtype=self.dtype)
 		for t in range(T-1):
 			sum = 0.0
 			for i in range(N):
@@ -91,7 +87,7 @@ class PySimpleHMM(object):
 		return xi
 		
 	def computeDenominatorA(self, gamma):
-		denom = np.zeros((self.N), dtype=np.double)
+		denom = np.zeros((self.N), dtype=self.dtype)
 		for t in range(len(gamma)-1):
 			for i in range(self.N):
 				denom[i] += gamma[t,i]
@@ -117,14 +113,31 @@ class PySimpleHMM(object):
 		denomB = denomA + gamma[T-1]
 		return weight, nomA, denomA, nomB, denomB
 
-	@profile
+	def update_multiple(self, weights, nomsA, denomsA, nomsB, denomsB):
+		K, N, M = len(weights), self.N, self.M
+		for i in range(N):
+			nomA = np.zeros(N, dtype=self.dtype)
+			denomA = 0.0
+			for k in range(K):
+				nomA += weights[k] * nomsA[k,i,:]
+				denomA += weights[k] * denomsA[k,i]
+			self.A[i,:] = nomA / denomA
+		for i in range(N):
+			nomB = np.zeros(M, dtype=self.dtype)
+			denomB = 0.0
+			for k in range(K):
+				nomB += weights[k] * nomsB[k, i, :]
+				denomB += weights[k] * denomsB[k, i]
+			self.B[i,:] = nomB / denomB
+
+#	@profile
 	def BaumWelch_multiple(self, obss, accuracy, maxiter):
 		K, N, M = len(obss), self.N, self.M
-		nomsA = np.zeros((K,N,N), dtype=np.double)
-		denomsA = np.zeros((K,N), dtype=np.double)
-		nomsB = np.zeros((K,N,M), dtype=np.double)
-		denomsB = np.zeros((K,N), dtype=np.double)
-		weights = np.zeros(K, dtype=np.double)
+		nomsA = np.zeros((K,N,N), dtype=self.dtype)
+		denomsA = np.zeros((K,N), dtype=self.dtype)
+		nomsB = np.zeros((K,N,M), dtype=self.dtype)
+		denomsB = np.zeros((K,N), dtype=self.dtype)
+		weights = np.zeros(K, dtype=self.dtype)
 		
 		old_eps = 0.0
 		it = 0
@@ -133,21 +146,8 @@ class PySimpleHMM(object):
 		while (abs(new_eps - old_eps) > accuracy and it < maxiter):
 			for k in range(K):
 				weights[k], nomsA[k], denomsA[k], nomsB[k], denomsB[k] = self.process_obs(obss[k])
-				
-			for i in range(N):
-				nomA = np.zeros(N, dtype=np.double)
-				denomA = 0.0
-				for k in range(K):
-					nomA += weights[k] * nomsA[k,i,:]
-					denomA += weights[k] * denomsA[k,i]
-				self.A[i,:] = nomA / denomA
-			for i in range(N):
-				nomB = np.zeros(M, dtype=np.double)
-				denomB = 0.0
-				for k in range(K):
-					nomB += weights[k] * nomsB[k, i, :]
-					denomB += weights[k] * denomsB[k, i]
-				self.B[i,:] = nomB / denomB
+
+			self.update_multiple(weights, nomsA, denomsA, nomsB, denomsB)
 
 			if (it == 0):
 				old_eps = 0

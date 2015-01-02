@@ -3,17 +3,17 @@
 #include <stdlib.h>
 #include <math.h>
 
-double forward(
-		double *alpha,
-		double *scale,
-		const double *A,
-		const double *B,
-		const double *pi,
+float forward32(
+		float *alpha,
+		float *scale,
+		const float *A,
+		const float *B,
+		const float *pi,
 		const long *O,
 		int N, int M, int T)
 {
 	int i, j, t;
-	double sum, logprob;
+	float sum, logprob;
 
 	scale[0] = 0.0;
 	for (i = 0; i < N; i++) {
@@ -38,25 +38,25 @@ double forward(
 			alpha[(t+1)*N+j] /= scale[t+1];
 	}
 	// calculate likelihood
-	logprob = 0.0;
+	logprob = 0.0f;
 	for (t = 0; t < T; t++)
 		logprob += log(scale[t]);
 	return logprob;
 }
 
-void compute_nomA(
-		double *nomA,
-		const double *A,
-		const double *B,
+void compute_nomA32(
+		float *nomA,
+		const float *A,
+		const float *B,
 		const long *O,
-		const double *alpha,
-		const double *beta,
+		const float *alpha,
+		const float *beta,
 		int N, int M, int T)
 {
 	int i, j, t;
-	double sum, *tmp;
+	float sum, *tmp;
 	
-	tmp = (double*) malloc(N*N * sizeof(double));
+	tmp = (float*) malloc(N*N * sizeof(float));
 	for (t = 0; t < T-1; t++) {
 		sum = 0.0;
 		for (i = 0; i < N; i++)
@@ -70,9 +70,9 @@ void compute_nomA(
 	}
 }
 
-void compute_denomA(
-		double *denomA,
-		const double *gamma,
+void compute_denomA32(
+		float *denomA,
+		const float *gamma,
 		int T, int N)
 {
 	int i, t;
@@ -83,9 +83,9 @@ void compute_denomA(
 	}
 }
 
-void compute_nomB(
-		double *nomB,
-		const double *gamma,
+void compute_nomB32(
+		float *nomB,
+		const float *gamma,
 		const long *O,
 		int N, int M, int T)
 {
@@ -99,16 +99,16 @@ void compute_nomB(
 		}
 }
 
-void backward(
-		double *beta,
-		const double *A,
-		const double *B,
+void backward32(
+		float *beta,
+		const float *A,
+		const float *B,
 		const long *O,
-		const double *scale,
+		const float *scale,
 		int N, int M, int T)
 {
 	int i, j, t;
-	double sum;
+	float sum;
 
 	for (i = 0; i < N; i++)
 		if (scale[T-1] != 0)
@@ -127,14 +127,14 @@ void backward(
 		}
 }
 
-void computeGamma(
-		double *gamma,
-		const double *alpha,
-		const double *beta,
+void computeGamma32(
+		float *gamma,
+		const float *alpha,
+		const float *beta,
 		int T, int N)
 {
 	int i, t;
-	double sum;
+	float sum;
 
 	for (t = 0; t < T; t++) {
 		sum = 0.0;
@@ -147,17 +147,17 @@ void computeGamma(
 	}
 }
 
-void computeXi(
-		double *xi,
-		const double *A,
-		const double *B,
+void computeXi32(
+		float *xi,
+		const float *A,
+		const float *B,
 		const long *O,
-		const double *alpha,
-		const double *beta,
+		const float *alpha,
+		const float *beta,
 		int N, int M, int T)
 {
 	int i, j, t;
-	double sum;
+	float sum;
 
 	for (t = 0; t < T-1; t++) {
 		sum = 0.0;
@@ -172,23 +172,23 @@ void computeXi(
 	}
 }
 
-void update_multiple(
-		double *A,
-		double *B,
-		const double *weights,
-		const double *nomsA,
-		const double *denomsA,
-		const double *nomsB,
-		const double *denomsB,
+void update_multiple32(
+		float *A,
+		float *B,
+		const float *weights,
+		const float *nomsA,
+		const float *denomsA,
+		const float *nomsB,
+		const float *denomsB,
 		int N, int M, int K)
 {
 	printf("test\n");
 	int i, j, k;
-	double *nomA = (double*) calloc(N*N,sizeof(double));
-	double *nomB = (double*) calloc(N*M,sizeof(double));
+	float *nomA = (float*) calloc(N*N,sizeof(float));
+	float *nomB = (float*) calloc(N*M,sizeof(float));
 	for (i = 0; i < N; i++) {
-		double denomA = 0.0;
-		double denomB = 0.0;
+		float denomA = 0.0;
+		float denomB = 0.0;
 		for (k = 0; k < K; k++) {
 			for (j = 0; j < N; j++)
 				nomA[i*N + j] += weights[k]*nomsA[k*N*N + i*N + j];
@@ -208,17 +208,17 @@ void update_multiple(
 	printf("test\n");
 }
 
-void update(
-		double *A,
-		double *B,
-		double *pi,
+void update32(
+		float *A,
+		float *B,
+		float *pi,
 		const long *O,
-		const double *gamma,
-		const double *xi,
+		const float *gamma,
+		const float *xi,
 		int N, int M, int T)
 {
 	int i, j, k, t;
-	double gamma_sum, sum;
+	float gamma_sum, sum;
 
 	/* UPDATE INITIAL CONDITION */
 	for (i = 0; i < N; i++)

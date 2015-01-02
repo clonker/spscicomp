@@ -1,12 +1,41 @@
 import numpy as np
 from PySimpleHMM import *
-from pathos.multiprocessing import ProcessingPool as Pool
+import multiprocessing
+
+class Thread(multiprocessing.Process):
+
+	def __init__(self, task_queue, result_queue):
+		multiprocessing.Process.__init__(self)
+		self.task_queue = task_queue
+		self.result_queue = result_queue
+
+	def run(self):
+		proc_name = self.name
+		while True:
+			next_task = self.task_queue.get()
+			if next_task is None:
+				# Poison pill means shutdown
+				self.task_queue.task_done()
+				break
+#			print '%s: %s' % (proc_name, next_task)
+			answer = next_task()
+			self.task_queue.task_done()
+			self.result_queue.put(answer)
+
+class Task(object):
+	def __init__(self, hmm, ob):
+		self.hmm = hmm
+		self.ob = ob
+	def __call__(self):
+		return self.hmm.process_obs(self.ob)
+	def __str__(self):
+		return 'observation length %d' % len(self.ob)
 
 class ParallelHMM(PySimpleHMM):
 	def __init__(self, N, M, A, B, pi):
 		super(ParallelHMM, self).__init__(N, M, A, B, pi)
 
-	@profile
+#	@profile
 	def BaumWelch_multiple(self, obss, accuracy, maxiter):
 		K, N, M = len(obss), self.N, self.M
 		nomsA = np.zeros((K,N,N), dtype=np.double)
@@ -14,10 +43,14 @@ class ParallelHMM(PySimpleHMM):
 		nomsB = np.zeros((K,N,M), dtype=np.double)
 		denomsB = np.zeros((K,N), dtype=np.double)
 		weights = np.zeros(K, dtype=np.double)
-		
+
 		# creating Thread pool here
-		# TODO have to determine best number of threads
-		pool = Pool(8)
+		num_threads = multiprocessing.cpu_count()
+		tasks = multiprocessing.JoinableQueue()
+		results = multiprocessing.Queue()
+		pool = [ Thread(tasks, results) for i in xrange(num_threads) ]
+		for thread in pool:
+			thread.start()
 		
 		old_eps = 0.0
 		it = 0
@@ -25,24 +58,12 @@ class ParallelHMM(PySimpleHMM):
 
 		while (abs(new_eps - old_eps) > accuracy and it < maxiter):
 			
-			values = pool.map(ParallelHMM.process_obs, [self]*len(obss), obss)
-			[weights, nomsA, denomsA, nomsB, denomsB] = [np.array(t) for t in zip(*values)]
+			for k in xrange(K):
+				tasks.put(Task(self, obss[k]))
+			for k in xrange(K):
+				weights[k], nomsA[k], denomsA[k], nomsB[k], denomsB[k] = results.get()
 			
-			# update HMM
-			for i in range(N):
-				nomA = np.zeros(N, dtype=np.double)
-				denomA = 0.0
-				for k in range(K):
-					nomA += weights[k] * nomsA[k,i,:]
-					denomA += weights[k] * denomsA[k,i]
-				self.A[i,:] = nomA / denomA
-			for i in range(N):
-				nomB = np.zeros(M, dtype=np.double)
-				denomB = 0.0
-				for k in range(K):
-					nomB += weights[k] * nomsB[k, i, :]
-					denomB += weights[k] * denomsB[k, i]
-				self.B[i,:] = nomB / denomB
+			self.update_multiple(weights, nomsA, denomsA, nomsB, denomsB)
 
 			if (it == 0):
 				old_eps = 0
@@ -51,4 +72,11 @@ class ParallelHMM(PySimpleHMM):
 			new_eps = np.sum(weights)
 			it += 1
 			
+		tasks.join()
+		for k in range(K):
+			tasks.put(None)
+			
+		for thread in pool:
+			thread.join()
+
 		return new_eps, it

@@ -8,8 +8,8 @@ class PyHMM(PySimpleHMM):
 
 	def forward(self, obs):
 		T, N = len(obs), self.N
-		alpha = np.zeros((T,N), dtype=np.double)
-		self.scale = np.zeros(T, dtype=np.double)
+		alpha = np.zeros((T,N), dtype=np.float64)
+		self.scale = np.zeros(T, dtype=np.float64)
 		for i in range(N):
 			alpha[0,i] = self.pi[i]*self.B[i,obs[0]]
 			self.scale[0] += alpha[0,i]
@@ -31,7 +31,7 @@ class PyHMM(PySimpleHMM):
 
 	def backward(self, obs):
 		T, N = len(obs), self.N
-		beta = np.zeros((T,N), dtype=np.double)
+		beta = np.zeros((T,N), dtype=np.float64)
 		for i in range(N):
 			beta[T-1,i] = 1.0 / self.scale[T-1]
 		for t in range(T-2, -1, -1):

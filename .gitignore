@@ -9,3 +9,6 @@
 
 # ignore compiled cpp
 *.so
+
+# ignore idea project files
+.idea

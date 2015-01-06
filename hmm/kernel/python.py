@@ -120,16 +120,16 @@ def forward(A, B, pi, ob):
     --------
     forward_no_scaling : Compute forward coefficients without scaling
     """
-    T, N = len(obs), self.N
+    T, N = len(ob), len(A)
     alpha = np.zeros((T,N), dtype=A.dtype)
     scale = np.zeros(T, dtype=A.dtype)
     
     # initial values
     for i in range(N):
-        alpha[0,i] = self.pi[i]*self.B[i,obs[0]]
-        self.scale[0] += alpha[0,i]
+        alpha[0,i] = pi[i] * B[i,ob[0]]
+        scale[0] += alpha[0,i]
     for i in range(N):
-        alpha[0,i] /= self.scale[0]
+        alpha[0,i] /= scale[0]
 
     # induction
     for t in range(T-1):
@@ -137,12 +137,12 @@ def forward(A, B, pi, ob):
             alpha[t+1,j] = 0.0
             for i in range(N):
                 alpha[t+1,j] += alpha[t,i] * A[i,j]
-            alpha[t+1,j] *= self.B[j,obs[t+1]]
+            alpha[t+1,j] *= B[j, ob[t+1]]
             scale[t+1] += alpha[t+1,j]
         for j in range(N):
             alpha[t+1,j] /= scale[t+1]
         
     logprob = 0.0
     for t in range(T):
-        logprob += np.log(self.scale[t])
-    return (logprob, alpha)
+        logprob += np.log(scale[t])
+    return (logprob, alpha, scale)

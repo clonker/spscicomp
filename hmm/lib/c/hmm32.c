@@ -9,7 +9,7 @@ float forward32(
 		const float *A,
 		const float *B,
 		const float *pi,
-		const int *O,
+		const short *O,
 		int N, int M, int T)
 {
 	int i, j, t;
@@ -48,7 +48,7 @@ void compute_nomA32(
 		float *nomA,
 		const float *A,
 		const float *B,
-		const int *O,
+		const short *O,
 		const float *alpha,
 		const float *beta,
 		int N, int M, int T)
@@ -86,7 +86,7 @@ void compute_denomA32(
 void compute_nomB32(
 		float *nomB,
 		const float *gamma,
-		const int *O,
+		const short *O,
 		int N, int M, int T)
 {
 	int i, k, t;
@@ -103,7 +103,7 @@ void backward32(
 		float *beta,
 		const float *A,
 		const float *B,
-		const int *O,
+		const short *O,
 		const float *scale,
 		int N, int M, int T)
 {
@@ -151,7 +151,7 @@ void computeXi32(
 		float *xi,
 		const float *A,
 		const float *B,
-		const int *O,
+		const short *O,
 		const float *alpha,
 		const float *beta,
 		int N, int M, int T)
@@ -215,7 +215,7 @@ void update32(
 		float *A,
 		float *B,
 		float *pi,
-		const int *O,
+		const short *O,
 		const float *gamma,
 		const float *xi,
 		int N, int M, int T)

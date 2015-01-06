@@ -51,7 +51,7 @@ py_forward(PyObject *self, PyObject *args)
 	const double *A  = (double*)PyArray_DATA(pA);
 	const double *B  = (double*)PyArray_DATA(pB);
 	const double *pi = (double*)PyArray_DATA(pPi);
-	const int *O = (int*)PyArray_DATA(pO);
+	const short *O = (short*)PyArray_DATA(pO);
 	
 	npy_intp alpha_dims[2] = {T, N};
 	npy_intp scale_dims[1] = {T};
@@ -87,7 +87,7 @@ py_backward(PyObject *self, PyObject *args)
 	int M = PyArray_DIM(pB, 1);
 	const double *A  = (double*)PyArray_DATA(pA);
 	const double *B  = (double*)PyArray_DATA(pB);
-	const int *O = (int*)PyArray_DATA(pO);
+	const short *O = (short*)PyArray_DATA(pO);
 	const double *scale = (double*)PyArray_DATA(pScale);
 	
 	npy_intp dims[2] = {T, N};
@@ -149,7 +149,7 @@ py_nomA(PyObject *self, PyObject *args)
 	int M = PyArray_DIM(pB, 1);
 	const double *A  = (double*)PyArray_DATA(pA);
 	const double *B  = (double*)PyArray_DATA(pB);
-	const int *O = (int*)PyArray_DATA(pO);
+	const short *O = (short*)PyArray_DATA(pO);
 	const double *beta = (double*)PyArray_DATA(pBeta);
 	const double *alpha = (double*)PyArray_DATA(pAlpha);
 	
@@ -198,7 +198,7 @@ py_nomB(PyObject *self, PyObject *args)
 	int T = PyArray_DIM(pGamma, 0);
 	int N = PyArray_DIM(pGamma, 1);
 	const double *gamma = (double*)PyArray_DATA(pGamma);
-	const int *O = (int*)PyArray_DATA(pO);
+	const short *O = (short*)PyArray_DATA(pO);
 	
 	npy_intp nomB_dims[2] = {N,M};
 	PyObject *pNomB = PyArray_ZEROS(2, nomB_dims, NPY_DOUBLE, 0);
@@ -227,7 +227,7 @@ py_xi(PyObject *self, PyObject *args)
 	int M = PyArray_DIM(pB, 1);
 	const double *A  = (double*)PyArray_DATA(pA);
 	const double *B  = (double*)PyArray_DATA(pB);
-	const int *O = (int*)PyArray_DATA(pO);
+	const short *O = (short*)PyArray_DATA(pO);
 	const double *beta = (double*)PyArray_DATA(pBeta);
 	const double *alpha = (double*)PyArray_DATA(pAlpha);
 
@@ -294,7 +294,7 @@ py_update(PyObject *self, PyObject *args)
 	}
 	int T = PyArray_DIM(pO, 0);
 	int N = PyArray_DIM(pGamma, 1);
-	const int *O = (int*)PyArray_DATA(pO);
+	const short *O = (short*)PyArray_DATA(pO);
 	const double *gamma = (double*)PyArray_DATA(pGamma);
 	const double *xi    = (double*)PyArray_DATA(pXi);
 	
@@ -334,7 +334,7 @@ py_forward32(PyObject *self, PyObject *args)
 	const float *A  = (float*)PyArray_DATA(pA);
 	const float *B  = (float*)PyArray_DATA(pB);
 	const float *pi = (float*)PyArray_DATA(pPi);
-	const int *O = (int*)PyArray_DATA(pO);
+	const short *O = (short*)PyArray_DATA(pO);
 	
 	npy_intp alpha_dims[2] = {T, N};
 	npy_intp scale_dims[1] = {T};
@@ -366,7 +366,7 @@ py_backward32(PyObject *self, PyObject *args)
 	int M = PyArray_DIM(pB, 1);
 	const float *A  = (float*)PyArray_DATA(pA);
 	const float *B  = (float*)PyArray_DATA(pB);
-	const int *O = (int*)PyArray_DATA(pO);
+	const short *O = (short*)PyArray_DATA(pO);
 	const float *scale = (float*)PyArray_DATA(pScale);
 	
 	npy_intp dims[2] = {T, N};
@@ -419,7 +419,7 @@ py_nomA32(PyObject *self, PyObject *args)
 	int M = PyArray_DIM(pB, 1);
 	const float *A  = (float*)PyArray_DATA(pA);
 	const float *B  = (float*)PyArray_DATA(pB);
-	const int *O = (int*)PyArray_DATA(pO);
+	const short *O = (short*)PyArray_DATA(pO);
 	const float *beta = (float*)PyArray_DATA(pBeta);
 	const float *alpha = (float*)PyArray_DATA(pAlpha);
 	
@@ -468,7 +468,7 @@ py_nomB32(PyObject *self, PyObject *args)
 	int T = PyArray_DIM(pGamma, 0);
 	int N = PyArray_DIM(pGamma, 1);
 	const float *gamma = (float*)PyArray_DATA(pGamma);
-	const int *O = (int*)PyArray_DATA(pO);
+	const short *O = (short*)PyArray_DATA(pO);
 	
 	npy_intp nomB_dims[2] = {N,M};
 	PyObject *pNomB = PyArray_ZEROS(2, nomB_dims, NPY_FLOAT32, 0);
@@ -497,7 +497,7 @@ py_xi32(PyObject *self, PyObject *args)
 	int M = PyArray_DIM(pB, 1);
 	const float *A  = (float*)PyArray_DATA(pA);
 	const float *B  = (float*)PyArray_DATA(pB);
-	const int *O = (int*)PyArray_DATA(pO);
+	const short *O = (short*)PyArray_DATA(pO);
 	const float *beta = (float*)PyArray_DATA(pBeta);
 	const float *alpha = (float*)PyArray_DATA(pAlpha);
 
@@ -564,7 +564,7 @@ py_update32(PyObject *self, PyObject *args)
 	}
 	int T = PyArray_DIM(pO, 0);
 	int N = PyArray_DIM(pGamma, 1);
-	const int *O = (int*)PyArray_DATA(pO);
+	const short *O = (short*)PyArray_DATA(pO);
 	const float *gamma = (float*)PyArray_DATA(pGamma);
 	const float *xi    = (float*)PyArray_DATA(pXi);
 	
@@ -592,23 +592,21 @@ py_update32(PyObject *self, PyObject *args)
  */
 static PyMethodDef HmmMethods[] = {
 		{"forward", py_forward, METH_VARARGS, forward_doc},
-		{"backward", py_backward, METH_VARARGS, backward_doc},
-		{"update", py_update, METH_VARARGS, update_model_doc},
-		{"update_multiple", py_update_mult, METH_VARARGS, update_model_doc},
-		{"compute_gamma", py_gamma, METH_VARARGS, compute_gamma_doc},
-		{"compute_xi", py_xi, METH_VARARGS, compute_xi_doc},
-		{"compute_nomB", py_nomB, METH_VARARGS, compute_xi_doc},
-		{"compute_nomA", py_nomA, METH_VARARGS, compute_xi_doc},
-		{"compute_denomA", py_denomA, METH_VARARGS, compute_xi_doc},
 		{"forward32", py_forward32, METH_VARARGS, forward_doc},
+		{"backward", py_backward, METH_VARARGS, backward_doc},
 		{"backward32", py_backward32, METH_VARARGS, backward_doc},
+		{"update", py_update, METH_VARARGS, update_model_doc},
 		{"update32", py_update32, METH_VARARGS, update_model_doc},
-		{"update_multiple32", py_update_mult32, METH_VARARGS, update_model_doc},
-		{"compute_gamma32", py_gamma32, METH_VARARGS, compute_gamma_doc},
-		{"compute_xi32", py_xi32, METH_VARARGS, compute_xi_doc},
-		{"compute_nomB32", py_nomB32, METH_VARARGS, compute_xi_doc},
-		{"compute_nomA32", py_nomA32, METH_VARARGS, compute_xi_doc},
-		{"compute_denomA32", py_denomA32, METH_VARARGS, compute_xi_doc},
+		{"gamma", py_gamma, METH_VARARGS, compute_gamma_doc},
+		{"gamma32", py_gamma32, METH_VARARGS, compute_gamma_doc},
+		{"gamma_counts", py_nomB, METH_VARARGS, compute_xi_doc},
+		{"gamma_counts32", py_nomB32, METH_VARARGS, compute_xi_doc},
+		{"counts", py_xi, METH_VARARGS, compute_xi_doc},
+		{"counts32", py_xi32, METH_VARARGS, compute_xi_doc},
+		{"summed_counts", py_nomA, METH_VARARGS, compute_xi_doc},
+		{"summed_counts32", py_nomA32, METH_VARARGS, compute_xi_doc},
+		{"summed_gamma", py_denomA, METH_VARARGS, compute_xi_doc},	
+		{"summed_gamma32", py_denomA32, METH_VARARGS, compute_xi_doc},	
 		{NULL, NULL, 0, NULL}
 };
 

@@ -9,7 +9,7 @@ double forward(
         const double *A,
         const double *B,
         const double *pi,
-        const int *O,
+        const short *O,
         int N, int M, int T)
 {
     int i, j, t;
@@ -48,7 +48,7 @@ void compute_nomA(
         double *nomA,
         const double *A,
         const double *B,
-        const int *O,
+        const short *O,
         const double *alpha,
         const double *beta,
         int N, int M, int T)
@@ -86,7 +86,7 @@ void compute_denomA(
 void compute_nomB(
         double *nomB,
         const double *gamma,
-        const int *O,
+        const short *O,
         int N, int M, int T)
 {
     int i, k, t;
@@ -103,7 +103,7 @@ void backward(
         double *beta,
         const double *A,
         const double *B,
-        const int *O,
+        const short *O,
         const double *scale,
         int N, int M, int T)
 {
@@ -151,7 +151,7 @@ void computeXi(
         double *xi,
         const double *A,
         const double *B,
-        const int *O,
+        const short *O,
         const double *alpha,
         const double *beta,
         int N, int M, int T)
@@ -215,7 +215,7 @@ void update(
         double *A,
         double *B,
         double *pi,
-        const int *O,
+        const short *O,
         const double *gamma,
         const double *xi,
         int N, int M, int T)

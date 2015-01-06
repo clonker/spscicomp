@@ -27,11 +27,17 @@ class OpenCLKmeans(DefaultKmeans):
         assigns_buf = cl.Buffer(self.ctx, cl.mem_flags.WRITE_ONLY, data_assigns.nbytes)
         new_centers_buf = cl.Buffer(self.ctx, cl.mem_flags.WRITE_ONLY, new_centers.nbytes)
         centers_counter_buf = cl.Buffer(self.ctx, cl.mem_flags.WRITE_ONLY, centers_counter.nbytes)
-        dim_buf = cl.Buffer(self.ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=dim)
-        n_centers_buf = cl.Buffer(self.ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=n_centers)
 
         # run opencl extension
-        self.prg.kmeans_chunk_center_cl(self.queue, data.shape, None, data_buf, centers_buf, assigns_buf, new_centers_buf, centers_counter_buf, dim_buf, n_centers_buf).wait()
+        self.prg.kmeans_chunk_center_cl(self.queue, (len(data), 1), None,
+                                        data_buf,
+                                        centers_buf,
+                                        assigns_buf,
+                                        new_centers_buf,
+                                        centers_counter_buf,
+                                        np.int32(dim),
+                                        np.int32(n_centers)
+        ).wait()
 
         # wait for it to finish and read out buffers
         cl.enqueue_read_buffer(self.queue, assigns_buf, data_assigns).wait()
@@ -40,16 +46,8 @@ class OpenCLKmeans(DefaultKmeans):
 
         self._data_assigns.append(data_assigns)
 
-        #print data_assigns
-        #for p in data:
-        #    closest_center = self.closest_center(p, centers)
-        #    self._data_assigns.append(closest_center)
-        #    new_centers[closest_center] += p
-        #    centers_counter[closest_center] += 1
-        #print centers_counter
-        #print data_assigns
-        print data_assigns
         for i, center in enumerate(new_centers):
+            new_centers[i] = sum(p for k, p in enumerate(data) if k == i)
             if centers_counter[i] > 0:
                 new_centers[i] /= centers_counter[i]
             else:
@@ -64,11 +62,10 @@ class OpenCLKmeans(DefaultKmeans):
             return cl.Program(context, cl_program).build()
         return None
 
-
 """
     main
 """
-importer = CommonFileDataImporter(filename='data.txt')
+#importer = CommonFileDataImporter(filename='data.txt')
 
-km = OpenCLKmeans(importer=importer, chunk_size=20)
-km.calculate_centers(20)
+#km = OpenCLKmeans(importer=importer, chunk_size=500, max_steps=2)
+#km.calculate_centers(5, initial_centers=[[-0.3,0.3],[0,0],[0.5,0.5],[-0.5,-0.5],[-0.5,0.5]])

@@ -51,8 +51,7 @@ class DefaultKmeans(Kmeans):
         if initial_centers is not None:
             centers = np.asarray(initial_centers)
         else:
-            centers = [data[np.random.randint(0, len(data))] for _ in xrange(k)]
-            centers = np.asarray(centers)
+            centers = np.asarray([data[np.random.randint(0, len(data))] for _ in xrange(k)])
         history = []
         self._importer.rewind()
         for i in xrange(1, self._max_steps):

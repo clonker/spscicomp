@@ -129,7 +129,7 @@ class TestKmeans(unittest.TestCase):
                 kmeans = CKmeans(importer=importer_permutahedron)
             else:
                 kmeans = DefaultKmeans(importer=importer_permutahedron)
-            res, data, history = kmeans.calculate_centers(
+            res, data = kmeans.calculate_centers(
                 k=1,
                 return_centers=True
             )

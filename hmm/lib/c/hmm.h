@@ -3,7 +3,15 @@
 
 double forward(
 		double *alpha,
-		double *scale,
+		double *scaling,
+		const double *A,
+		const double *B,
+		const double *pi,
+		const short *O,
+		int N, int M, int T);
+
+double forward_no_scaling(
+		double *alpha,
 		const double *A,
 		const double *B,
 		const double *pi,
@@ -15,7 +23,14 @@ void backward(
 		const double *A,
 		const double *B,
 		const short *O,
-		const double *scale,
+		const double *scaling,
+		int N, int M, int T);
+
+void backward_no_scaling(
+		double *beta,
+		const double *A,
+		const double *B,
+		const short *O,
 		int N, int M, int T);
 
 void compute_nomA(
@@ -74,7 +89,15 @@ void update_multiple(
 		
 float forward32(
 		float *alpha,
-		float *scale,
+		float *scaling,
+		const float *A,
+		const float *B,
+		const float *pi,
+		const short *O,
+		int N, int M, int T);
+
+float forward_no_scaling32(
+		float *alpha,
 		const float *A,
 		const float *B,
 		const float *pi,
@@ -86,8 +109,15 @@ void backward32(
 		const float *A,
 		const float *B,
 		const short *O,
-		const float *scale,
+		const float *scaling,
 		int N, int M, int T);
+
+void backward_no_scaling32(
+        float *beta,
+        const float *A,
+        const float *B,
+        const short *ob,
+        int N, int M, int T);
 
 void compute_nomA32(
 		float *nomA,

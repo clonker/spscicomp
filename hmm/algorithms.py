@@ -43,11 +43,11 @@ def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.ker
     denomsB = numpy.zeros((K,N),   dtype=dtype)
     weights = numpy.zeros((K),     dtype=dtype)
 
-    old_eps = 0.0
+    old_probability = 0.0
     it      = 0
-    new_eps = accuracy+1
+    new_probability = accuracy+1
 
-    while (abs(new_eps - old_eps) > accuracy and it < maxit):
+    while (abs(new_probability - old_probability) > accuracy and it < maxit):
         for k in range(K):
             weights[k], nomsA[k], denomsA[k], nomsB[k], denomsB[k] = \
                     noms_and_denoms(A, B, pi, obs[k], kernel=kernel)
@@ -55,13 +55,13 @@ def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.ker
         A, B = update_multiple(weights, nomsA, denomsA, nomsB, denomsB)
 
         if (it == 0):
-            old_eps = 0
+            old_probability = 0
         else:
-            old_eps = new_eps        
-            new_eps = numpy.sum(weights)
+            old_probability = new_probability        
+        new_probability = numpy.sum(weights)
         it += 1
 
-    return A, B, pi, new_eps, it
+    return A, B, pi, new_probability, it
 
 def update(gamma, xi, ob, M, dtype=numpy.float64):
     """ Return an updated model for given state and transition counts.

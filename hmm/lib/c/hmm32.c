@@ -3,9 +3,42 @@
 #include <stdlib.h>
 #include <math.h>
 
+#ifndef __DIMS__
+#define __DIMS__
+#define DIMM2(arr, i, j)    arr[(i)*M + j]
+#define DIM2(arr, i, j)     arr[(i)*N + j]
+#define DIM3(arr, t, i , j) arr[(t)*N*N + (i)*N + j]
+#define DIMM3(arr, t, i, j) arr[(t)*N*M + (i)*M + j]
+#endif
+
+float forward_no_scaling32(
+        float *alpha,
+        const float *A,
+        const float *B,
+        const float *pi,
+        const short *ob,
+        int N, int M, int T)
+{
+    int i, j, t;
+    float sum, logprob = 0.0;
+
+    for (i = 0; i < N; i++)
+        DIM2(alpha, 0, i) = pi[i] * DIMM2(B, i, ob[0]);
+    for (t = 0; t < N; t++)
+        for (j = 0; j < N; j++) {
+            sum = 0.0;
+            for (i = 0; i < N; i++)
+                sum += DIM2(alpha, t, i) * DIM2(A, i, j);
+            DIM2(alpha, t+1, j) = sum * DIMM2(B, j, ob[t+1]);
+        }
+    for (i = 0; i < N; i++)
+        logprob += DIM2(alpha, T-1, i);
+    return log(logprob);
+}
+
 float forward32(
 		float *alpha,
-		float *scale,
+		float *scaling,
 		const float *A,
 		const float *B,
 		const float *pi,
@@ -15,32 +48,32 @@ float forward32(
 	int i, j, t;
 	float sum, logprob;
 
-	scale[0] = 0.0;
+	scaling[0] = 0.0;
 	for (i = 0; i < N; i++) {
 		alpha[i]  = pi[i] * B[i*M+O[0]];
-		scale[0] += alpha[i];
+		scaling[0] += alpha[i];
 	}
-	if (scale[0] != 0)
+	if (scaling[0] != 0)
 	for (i = 0; i < N; i++)
-		alpha[i] /= scale[0];
+		alpha[i] /= scaling[0];
 	for (t = 0; t < T-1; t++) {
-		scale[t+1] = 0.0;
+		scaling[t+1] = 0.0;
 		for (j = 0; j < N; j++) {
 			sum = 0.0;
 			for (i = 0; i < N; i++) {
 				sum += alpha[t*N+i]*A[i*N+j];
 			}
 			alpha[(t+1)*N+j] = sum * B[j*M+O[t+1]];
-			scale[t+1] += alpha[(t+1)*N+j];
+			scaling[t+1] += alpha[(t+1)*N+j];
 		}
-		if (scale[t+1] != 0)
+		if (scaling[t+1] != 0)
 		for (j = 0; j < N; j++)
-			alpha[(t+1)*N+j] /= scale[t+1];
+			alpha[(t+1)*N+j] /= scaling[t+1];
 	}
 	// calculate likelihood
 	logprob = 0.0f;
 	for (t = 0; t < T; t++)
-		logprob += log(scale[t]);
+		logprob += log(scaling[t]);
 	return logprob;
 }
 
@@ -99,20 +132,41 @@ void compute_nomB32(
 		}
 }
 
+void backward_no_scaling32(
+        float *beta,
+        const float *A,
+        const float *B,
+        const short *ob,
+        int N, int M, int T)
+{
+    int i, j, t;
+    float sum;
+
+    for (i = 0; i < N; i++)
+        DIM2(beta, T-1, i) = 1.0;
+
+    for (t = T-2; t >= 0; t--)
+        for (i = 0; i < N; i++) {
+            sum = 0.0;
+            for (j = 0; j < N; j++)
+                sum += DIM2(A,i,j)*DIMM2(B,j,ob[t+1])*DIM2(beta,t+1,j);
+            DIM2(beta,t,i) = sum;
+        }
+}
+
 void backward32(
 		float *beta,
 		const float *A,
 		const float *B,
 		const short *O,
-		const float *scale,
 		int N, int M, int T)
 {
 	int i, j, t;
 	float sum;
 
 	for (i = 0; i < N; i++)
-		if (scale[T-1] != 0)
-			beta[(T-1)*N+i] = 1.0 / scale[T-1];
+		if (scaling[T-1] != 0)
+			beta[(T-1)*N+i] = 1.0 / scaling[T-1];
 		else
 			beta[(T-1)*N+1] = 1.0;
 	for (t = T-2; t >= 0; t--)
@@ -120,8 +174,8 @@ void backward32(
 			sum = 0.0;
 			for (j = 0; j < N; j++)
 				sum += A[i*N+j]*B[j*M+O[t+1]]*beta[(t+1)*N+j];
-			if (scale[t] != 0)
-				beta[t*N+i] = sum / scale[t];
+			if (scaling[t] != 0)
+				beta[t*N+i] = sum / scaling[t];
 			else
 				beta[t*N+i] = sum;
 		}

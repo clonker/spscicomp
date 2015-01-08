@@ -434,3 +434,4 @@ def draw_state(distr):
 			return state
 		else:
 			x -= distr[state]
+	return state

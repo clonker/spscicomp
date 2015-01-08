@@ -1,14 +1,19 @@
 #!/usr/bin/python
+import numpy as np
+import hmm.utility
 
-from PySimpleHMM import *
-import sys
+A = np.array(	[[0.3, 0.7, 0.0],
+				 [0.1, 0.2, 0.7],
+				 [0.0, 0.4, 0.6]])
 
-A = np.loadtxt('data/t1_A.hmm')
-B = np.loadtxt('data/t1_B.hmm')
-pi = np.loadtxt('data/t1_pi.hmm')
+B = np.array(	[[0.3, 0.3, 0.3, 0.1],
+				 [0.1, 0.1, 0.1, 0.7],
+				 [0.2, 0.2, 0.2, 0.4]])
 
-hmm = PySimpleHMM(len(A), len(B[0]), A, B, pi)
-obs = hmm.randomSequence(int(sys.argv[1]))
+pi = np.array(	[[0.2],
+				 [0.4],
+				 [0.4]])
 
-for o in obs:
-	print o
+obs = hmm.utility.random_sequence(A, B, pi, 1000, kernel=hmm.kernel.python)
+
+print obs

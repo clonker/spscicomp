@@ -390,3 +390,47 @@ def transition_counts(alpha, beta, A, B, ob, dtype=numpy.float64):
                 xi[i,j] /= sum
         counts += xi
     return counts
+
+def random_sequence(A, B, pi, T):
+	""" Generate an observation sequence of length T from the model A, B, pi.
+
+	Parameters
+	----------
+	A : numpy.array shape (N,N)
+	    transition matrix of the model
+	B : numpy.array shape (N,M)
+	    symbol probability matrix of the model
+	pi : numpy.array shape (N)
+	     starting probability vector of the model
+
+	Returns
+	-------
+	obs : numpy.array shape (T)
+	      observation sequence containing only symbols, i.e. ints in [0,M)
+
+	Notes
+	-----
+	This function relies on the function draw_state(distr).
+ 
+	See Also
+	--------
+	draw_state : draw the index of the state, obeying the probability
+	             distribution vector distr
+
+	"""
+	obs    = numpy.zeros(T, dtype=numpy.int16)
+	state  = draw_state(pi)
+	obs[0] = state
+	for t in range(1,T):
+		state  = draw_state( A[state] )
+		obs[t] = draw_state( B[state] )
+	return obs
+
+def draw_state(distr):
+	x = numpy.random.random()
+	D = len(distr)
+	for state in range(D):
+		if x < distr[state]:
+			return state
+		else:
+			x -= distr[state]

@@ -24,7 +24,7 @@ double forward_no_scaling(
 
     for (i = 0; i < N; i++)
         DIM2(alpha, 0, i) = pi[i] * DIMM2(B, i, ob[0]);
-    for (t = 0; t < N; t++)
+    for (t = 0; t < T-1; t++)
         for (j = 0; j < N; j++) {
             sum = 0.0;
             for (i = 0; i < N; i++)
@@ -152,6 +152,7 @@ void compute_nomA(
             for (j = 0; j < N; j++)
                 nomA[i*N+j] += tmp[i*N+j] / sum;
     }
+    free(tmp);
 }
 
 void compute_denomA(
@@ -170,17 +171,13 @@ void compute_denomA(
 void compute_nomB(
         double *nomB,
         const double *gamma,
-        const short *O,
+        const short *ob,
         int N, int M, int T)
 {
-    int i, k, t;
-    for (i = 0; i < N; i++)
-        for (k = 0; k < M; k++) {
-            nomB[i*M+k] = 0.0;
-            for (t = 0; t < T; t++)
-                if (O[t] == k)
-                    nomB[i*M+k] += gamma[t*N+i];
-        }
+    int i, t;
+    for (t = 0; t < t; i++)
+    	for (i = 0; i < N; i++)
+	    	DIMM2(nomB, i, ob[t]) += DIM2(gamma, t, i);
 }
 
 void computeGamma(
@@ -229,6 +226,7 @@ void computeXi(
                 xi[i*N + j] += xi_t[i*N + j];
             }
     }
+    free(xi_t);
 }
 
 void update_multiple(

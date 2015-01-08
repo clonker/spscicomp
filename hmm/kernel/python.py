@@ -53,7 +53,7 @@ def forward_no_scaling(A, B, pi, ob, dtype=numpy.float64):
     prob = alpha[T-1].sum()
     return (prob, alpha)
 
-def backward_no_scaling(A, B, pi, ob, dtype=numpy.float64):
+def backward_no_scaling(A, B, ob, dtype=numpy.float64):
     """Compute all backward coefficients. No scaling.
 
     Parameters
@@ -62,8 +62,6 @@ def backward_no_scaling(A, B, pi, ob, dtype=numpy.float64):
         transition matrix of the hidden states
     B : numpy.array of floating numbers and shape (N,M)
         symbol probability matrix for each hidden state
-    pi : numpy.array of floating numbers and shape (N)
-         initial distribution
     ob : numpy.array of integers and shape (T)
          observation sequence of integer between 0 and M, used as indices in B
 
@@ -148,7 +146,7 @@ def forward(A, B, pi, ob, dtype=numpy.float64):
     return (logprob, alpha, scale)
 
 
-def backward(A, B, pi, ob, scaling, dtype=numpy.float64):
+def backward(A, B, ob, scaling, dtype=numpy.float64):
     """Compute all backward coefficients. With scaling!
 
     Parameters
@@ -157,8 +155,6 @@ def backward(A, B, pi, ob, scaling, dtype=numpy.float64):
         transition matrix of the hidden states
     B : numpy.array of floating numbers and shape (N,M)
         symbol probability matrix for each hidden state
-    pi : numpy.array of floating numbers and shape (N)
-         initial distribution
     ob : numpy.array of integers and shape (T)
          observation sequence of integer between 0 and M, used as indices in B
 
@@ -221,7 +217,7 @@ def state_probabilities(alpha, beta, dtype=numpy.float64):
             gamma[t,i] /= sum
     return gamma
 
-def state_counts(alpha, beta, T, dtype=numpy.float64):
+def state_counts(gamma, T, dtype=numpy.float64):
     """ Sum the probabilities of being in state i to time t
 
     Parameters
@@ -247,15 +243,10 @@ def state_counts(alpha, beta, T, dtype=numpy.float64):
     forward, forward_no_scaling : to calculate `alpha`
     backward, backward_no_scaling : to calculate `beta`
     """
-    count = numpy.zeros_like(alpha[0])
-    for t in range(T):
-        gamma = alpha[t]*beta[t]
-        gamma /= gamma.sum()
-        count += gamma
-    return count
+    return numpy.sum(gamma[0:T], axis=0)
 
 
-def symbol_counts(alpha, beta, ob, M, dtype=numpy.float64):
+def symbol_counts(gamma, ob, M, dtype=numpy.float64):
     """ Sum the observed probabilities to see symbol k in state i.
 
     Parameters
@@ -282,15 +273,11 @@ def symbol_counts(alpha, beta, ob, M, dtype=numpy.float64):
     forward, forward_no_scaling : to calculate `alpha`
     backward, backward_no_scaling : to calculate `beta`
     """
-    T, N = len(alpha), len(alpha[0])
+    T, N = len(gamma), len(gamma[0])
     counts = numpy.zeros((N,M), dtype=type)
     for t in range(T):
-        gamma = alpha[t]*beta[t]
-        gamma /= gamma.sum()
         for i in range(N):
-            for k in range(M):
-                if (ob[t] == k):
-                    counts[i,k] += gamma[i]
+            counts[i,ob[t]] += gamma[t,i]
     return counts
 
 

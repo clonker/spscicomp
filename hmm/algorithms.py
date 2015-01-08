@@ -2,16 +2,15 @@ import hmm.kernel.python
 import numpy
 
 def noms_and_denoms(A, B, pi, ob, kernel=hmm.kernel.python):
-        T = len(ob)
-        weight, alpha, scaling = kernel.forward(A, B, pi, ob)
-        beta   = kernel.backward(A, B, pi, ob, scaling)
-        nomA   = kernel.transition_counts(alpha, beta, A, B, ob)
-        denomA = kernel.state_counts(alpha, beta, T-1)
-        nomB   = kernel.symbol_counts(alpha, beta, ob, len(B[0]))
-        gamma  = alpha[T-1]*beta[T-1]
-        gamma /= numpy.sum(gamma)
-        denomB = denomA + gamma
-        return weight, nomA, denomA, nomB, denomB
+    T = len(ob)
+    weight, alpha, scaling = kernel.forward(A, B, pi, ob)
+    beta   = kernel.backward(A, B, ob, scaling)
+    gamma  = kernel.state_probabilities(alpha, beta)
+    nomA   = kernel.transition_counts(alpha, beta, A, B, ob)
+    denomA = kernel.state_counts(gamma, T-1)
+    nomB   = kernel.symbol_counts(gamma, ob, len(B[0]))
+    denomB = denomA + gamma[T-1]
+    return weight, nomA, denomA, nomB, denomB
 
 
 def update_multiple(weights, noms_A, denoms_A, noms_B, denoms_B, dtype=numpy.float64):
@@ -168,7 +167,7 @@ def baum_welch(ob, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.python
     old_probability = 0.0
     new_probability, alpha, scaling = kernel.forward(A, B, pi, ob, dtype)
     while (abs(new_probability - old_probability) > accuracy and it < maxit):
-        beta = kernel.backward(A, B, pi, ob, scaling, dtype)
+        beta = kernel.backward(A, B, ob, scaling, dtype)
         gamma = kernel.state_probabilities(alpha, beta, dtype)
         xi = kernel.transition_probabilities(alpha, beta, A, B, ob, dtype)
         A, B, pi = update(gamma, xi, ob, len(B[0]), dtype)

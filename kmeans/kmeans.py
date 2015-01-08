@@ -29,7 +29,7 @@ class DefaultKmeans(Kmeans):
         self._dimension = None
         self._data_assigns = []
 
-    # @profile
+    #@profile
     def calculate_centers(self, k, initial_centers=None, return_centers=False, save_history=False):
         """
         Main method of the k-means algorithm. Computes k cluster centers from the data supplied by a

@@ -28,20 +28,40 @@ __kernel void kmeans_chunk_center_cl(
     int dim,
     int n_centers
 ) {
+    __global float *newCentersLocal;
 
     int gid = get_global_id(0);
 
+    // global_id(d) = global_offset(d) + local_id(d) + group_id(d) * local_size(d)
+    // global_size(d) = local_size(d) * num_groups(d)
+
     __local int tmp_centersCounter[sizeof(centersCounter)];
+    __local float data_sum[sizeof(centersCounter)];
     for(int k = 0; k < n_centers; k++) {
         tmp_centersCounter[k] = 0;
+        for(size_t x = 0; x < get_num_groups(0); x++) {
+            newCentersLocal[k*get_num_groups(0)+x] = 0;
+        }
     }
-    barrier(CLK_LOCAL_MEM_FENCE);
+    barrier(CLK_GLOBAL_MEM_FENCE);
 
     // calculate closest center to the current data point
     int closestCenter = get_closest_center(gid, data, centers, dim, n_centers);
 
     // remember the mapping of data point -> center
     assigns[gid] = closestCenter;
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    // now aggregate the local data into the newCentersLocal array
+    if(get_local_id(0) == 0) {
+        size_t offset = get_group_id(0) * get_local_size(0) + get_global_offset(0);
+        for(size_t k = 0; k < get_local_size(0); k++) {
+            for(int d = 0; d < dim; d++) {
+                newCentersLocal[offset + assigns[offset+k] + d] += data[offset+k+d];
+            }
+        }
+    }
 
     barrier(CLK_LOCAL_MEM_FENCE);
     atomic_inc(&tmp_centersCounter[closestCenter]);
@@ -54,6 +74,26 @@ __kernel void kmeans_chunk_center_cl(
             } else {
                 centersCounter[k] = 0;
             }
+        }
+        for(size_t k = 1; k < get_num_groups(0); k++) {
+            for(int i = 0; i < n_centers; i++) {
+                for(int d = 0; d < dim; d++) {
+                    newCentersLocal[i + d] += newCentersLocal[k*i + d];
+                }
+            }
+        }
+        for(int k=0; k < n_centers; k++) {
+
+            if(newCentersLocal[k] > 0) {
+                for(int d = 0; d < dim; d++) {
+                    newCenters[k+d] = newCentersLocal[k+d] / (float) centersCounter[k];
+                }
+            } else {
+                for(int d = 0; d < dim; d++) {
+                    newCenters[k+d] = centers[k+d];
+                }
+            }
+
         }
     }
 }

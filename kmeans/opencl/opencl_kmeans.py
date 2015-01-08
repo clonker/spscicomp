@@ -8,10 +8,13 @@ import pyopencl as cl
 class OpenCLKmeans(DefaultKmeans):
     def __init__(self, metric=EuclideanMetric(), importer=None, chunk_size=1000, max_steps=100):
         super(OpenCLKmeans, self).__init__(metric, importer, chunk_size, max_steps)
-        self.ctx = cl.create_some_context(interactive=False)
+        platform = cl.get_platforms()
+        gpus = platform[0].get_devices(device_type=cl.device_type.GPU)
+        self.ctx= cl.Context(devices=gpus)
         self.queue = cl.CommandQueue(self.ctx)
         self.prg = OpenCLKmeans.load_cl_program(self.ctx, 'opencl_kmeans.cl')
 
+    #@profile
     def kmeans_chunk_center(self, data, centers):
         k = len(centers)
         centers_counter = np.zeros(k, dtype=np.int32)
@@ -44,12 +47,6 @@ class OpenCLKmeans(DefaultKmeans):
         cl.enqueue_read_buffer(self.queue, centers_counter_buf, centers_counter).wait()
 
         self._data_assigns.append(data_assigns)
-        for j, center in enumerate(new_centers):
-            new_centers[j, :] = sum(p for k, p in enumerate(data) if data_assigns[k] == j)
-            if centers_counter[j] > 0:
-                new_centers[j, :] = np.divide(new_centers[j, :], centers_counter[j])
-            else:
-                new_centers[j, :] = centers[j, :]
         return new_centers
 
     @staticmethod

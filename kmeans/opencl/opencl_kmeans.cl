@@ -36,7 +36,6 @@ __kernel void kmeans_chunk_center_cl(
     // global_size(d) = local_size(d) * num_groups(d)
 
     __local int tmp_centersCounter[sizeof(centersCounter)];
-    __local float data_sum[sizeof(centersCounter)];
     for(int k = 0; k < n_centers; k++) {
         tmp_centersCounter[k] = 0;
         for(size_t x = 0; x < get_num_groups(0); x++) {

@@ -66,8 +66,64 @@ py_forward(PyObject *self, PyObject *args)
 	return tuple;
 }
 
+static PyObject *
+py_forward_no_scaling(PyObject *self, PyObject *args)
+{
+	PyArrayObject *pA, *pB, *pPi, *pO;
+	if (!PyArg_ParseTuple(args, "O!O!O!O!",
+			&PyArray_Type, &pA,
+			&PyArray_Type, &pB,
+			&PyArray_Type, &pPi,
+			&PyArray_Type, &pO)) {
+		return NULL;
+	}
+	int T = PyArray_DIM(pO, 0);
+	int N = PyArray_DIM(pA, 0);
+	int M = PyArray_DIM(pB, 1);
+	const double *A  = (double*)PyArray_DATA(pA);
+	const double *B  = (double*)PyArray_DATA(pB);
+	const double *pi = (double*)PyArray_DATA(pPi);
+	const short *O = (short*)PyArray_DATA(pO);
+	
+	npy_intp alpha_dims[2] = {T, N};
+	PyObject *pAlpha = PyArray_ZEROS(2, alpha_dims, NPY_DOUBLE, 0);
+	
+	double *alpha = (double*) PyArray_DATA(pAlpha);
+	double logprob = forward_no_scaling(alpha, A, B, pi, O, N, M, T);
+	
+	PyObject *tuple = Py_BuildValue("(d,O)", logprob, pAlpha);
+	Py_DECREF(pAlpha);
+	return tuple;
+}
+
 static char backward_doc[]
 		= "This function calculates the backward coefficients in the hmm kernel.";
+
+static PyObject *
+py_backward_no_scaling(PyObject *self, PyObject *args)
+{
+	PyArrayObject *pA, *pB, *pO;
+	if (!PyArg_ParseTuple(args, "O!O!O!",
+			&PyArray_Type, &pA,
+			&PyArray_Type, &pB,
+			&PyArray_Type, &pO)) {
+		return NULL;
+	}
+	int T = PyArray_DIM(pO, 0);
+	int N = PyArray_DIM(pA, 0);
+	int M = PyArray_DIM(pB, 1);
+	const double *A  = (double*)PyArray_DATA(pA);
+	const double *B  = (double*)PyArray_DATA(pB);
+	const short *O = (short*)PyArray_DATA(pO);
+	
+	npy_intp dims[2] = {T, N};
+	PyObject *pBeta = PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
+	
+	double *beta = (double*) PyArray_DATA(pBeta);
+	backward_no_scaling(beta, A, B, O, N, M, T);
+
+	return pBeta;
+}
 
 static PyObject *
 py_backward(PyObject *self, PyObject *args)
@@ -316,6 +372,36 @@ py_update(PyObject *self, PyObject *args)
 }
 
 static PyObject *
+py_forward_no_scaling32(PyObject *self, PyObject *args)
+{
+	PyArrayObject *pA, *pB, *pPi, *pO;
+	if (!PyArg_ParseTuple(args, "O!O!O!O!",
+			&PyArray_Type, &pA,
+			&PyArray_Type, &pB,
+			&PyArray_Type, &pPi,
+			&PyArray_Type, &pO)) {
+		return NULL;
+	}
+	int T = PyArray_DIM(pO, 0);
+	int N = PyArray_DIM(pA, 0);
+	int M = PyArray_DIM(pB, 1);
+	const float *A  = (float*)PyArray_DATA(pA);
+	const float *B  = (float*)PyArray_DATA(pB);
+	const float *pi = (float*)PyArray_DATA(pPi);
+	const short *O = (short*)PyArray_DATA(pO);
+	
+	npy_intp alpha_dims[2] = {T, N};
+	PyObject *pAlpha = PyArray_ZEROS(2, alpha_dims, NPY_FLOAT32, 0);
+	
+	float *alpha = (float*) PyArray_DATA(pAlpha);
+	float logprob = forward_no_scaling32(alpha, A, B, pi, O, N, M, T);
+	
+	PyObject *tuple = Py_BuildValue("(d,O)", logprob, pAlpha);
+	Py_DECREF(pAlpha);
+	return tuple;
+}
+
+static PyObject *
 py_forward32(PyObject *self, PyObject *args)
 {
 	PyArrayObject *pA, *pB, *pPi, *pO;
@@ -336,8 +422,8 @@ py_forward32(PyObject *self, PyObject *args)
 	
 	npy_intp alpha_dims[2] = {T, N};
 	npy_intp scale_dims[1] = {T};
-	PyObject *pAlpha = PyArray_ZEROS(2, alpha_dims, NPY_FLOAT, 0);
-	PyObject *pScale = PyArray_ZEROS(1, scale_dims, NPY_FLOAT, 0);
+	PyObject *pAlpha = PyArray_ZEROS(2, alpha_dims, NPY_FLOAT32, 0);
+	PyObject *pScale = PyArray_ZEROS(1, scale_dims, NPY_FLOAT32, 0);
 	
 	float *alpha = (float*) PyArray_DATA(pAlpha);
 	float *scale = (float*) PyArray_DATA(pScale);
@@ -372,6 +458,32 @@ py_backward32(PyObject *self, PyObject *args)
 	
 	float *beta = (float*) PyArray_DATA(pBeta);
 	backward32(beta, A, B, O, scale, N, M, T);
+
+	return pBeta;
+}
+
+static PyObject *
+py_backward_no_scaling32(PyObject *self, PyObject *args)
+{
+	PyArrayObject *pA, *pB, *pO;
+	if (!PyArg_ParseTuple(args, "O!O!O!",
+			&PyArray_Type, &pA,
+			&PyArray_Type, &pB,
+			&PyArray_Type, &pO)) {
+		return NULL;
+	}
+	int T = PyArray_DIM(pO, 0);
+	int N = PyArray_DIM(pA, 0);
+	int M = PyArray_DIM(pB, 1);
+	const float *A  = (float*)PyArray_DATA(pA);
+	const float *B  = (float*)PyArray_DATA(pB);
+	const short *O = (short*)PyArray_DATA(pO);
+	
+	npy_intp dims[2] = {T, N};
+	PyObject *pBeta = PyArray_ZEROS(2, dims, NPY_FLOAT32, 0);
+	
+	float *beta = (float*) PyArray_DATA(pBeta);
+	backward_no_scaling32(beta, A, B, O, N, M, T);
 
 	return pBeta;
 }
@@ -593,18 +705,22 @@ static PyMethodDef HmmMethods[] = {
 		{"forward32", py_forward32, METH_VARARGS, forward_doc},
 		{"backward", py_backward, METH_VARARGS, backward_doc},
 		{"backward32", py_backward32, METH_VARARGS, backward_doc},
+		{"forward_no_scaling", py_forward_no_scaling, METH_VARARGS, forward_doc},
+		{"forward_no_scaling32", py_forward_no_scaling32, METH_VARARGS, forward_doc},
+		{"backward_no_scaling", py_backward_no_scaling, METH_VARARGS, backward_doc},
+		{"backward_no_scaling32", py_backward_no_scaling32, METH_VARARGS, backward_doc},
 		{"update", py_update, METH_VARARGS, update_model_doc},
 		{"update32", py_update32, METH_VARARGS, update_model_doc},
-		{"gamma", py_gamma, METH_VARARGS, compute_gamma_doc},
-		{"gamma32", py_gamma32, METH_VARARGS, compute_gamma_doc},
-		{"gamma_counts", py_nomB, METH_VARARGS, compute_xi_doc},
-		{"gamma_counts32", py_nomB32, METH_VARARGS, compute_xi_doc},
-		{"counts", py_xi, METH_VARARGS, compute_xi_doc},
-		{"counts32", py_xi32, METH_VARARGS, compute_xi_doc},
-		{"summed_counts", py_nomA, METH_VARARGS, compute_xi_doc},
-		{"summed_counts32", py_nomA32, METH_VARARGS, compute_xi_doc},
-		{"summed_gamma", py_denomA, METH_VARARGS, compute_xi_doc},	
-		{"summed_gamma32", py_denomA32, METH_VARARGS, compute_xi_doc},	
+		{"state_probabilities", py_gamma, METH_VARARGS, compute_gamma_doc},
+		{"state_probabilities32", py_gamma32, METH_VARARGS, compute_gamma_doc},
+		{"state_counts", py_denomA, METH_VARARGS, compute_xi_doc},	
+		{"state_counts32", py_denomA32, METH_VARARGS, compute_xi_doc},	
+		{"symbol_counts", py_nomB, METH_VARARGS, compute_xi_doc},
+		{"symbol_counts32", py_nomB32, METH_VARARGS, compute_xi_doc},
+		{"transition_probabilities", py_xi, METH_VARARGS, compute_xi_doc},
+		{"transition_probabilities32", py_xi32, METH_VARARGS, compute_xi_doc},
+		{"transition_counts", py_nomA, METH_VARARGS, compute_xi_doc},
+		{"transition_counts32", py_nomA32, METH_VARARGS, compute_xi_doc},
 		{NULL, NULL, 0, NULL}
 };
 

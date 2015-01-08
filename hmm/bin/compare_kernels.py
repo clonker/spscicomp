@@ -3,25 +3,16 @@
 import numpy	
 import hmm.kernel.python
 import hmm.algorithms
+import hmm.models
 import time as t
 
 # initial conditions
-A = numpy.array(
-    [[ 0.333, 0.333, 0.333 ],
-     [ 0.333, 0.333, 0.333 ],
-     [ 0.333, 0.333, 0.333 ]], dtype=numpy.float32)
-
-B = numpy.array(
-    [[ 1.0, 0.0 ],
-     [ 0.5, 0.5 ],
-     [ 0.0, 1.0 ]], dtype=numpy.float32)
-
-pi = numpy.array([ 0.333, 0.333, 0.333 ], dtype=numpy.float32)
+A, B, pi = hmm.models.get_models()['equi32']
 
 print 'Read data ...'
 
 obs = [
-	numpy.loadtxt('data/t1.1000.dat'),
+	numpy.loadtxt('data/hmm1.10000.dat'),
 #	numpy.loadtxt('data/t1.2000.dat'),
 ]
  

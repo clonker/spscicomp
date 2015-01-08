@@ -1,14 +1,12 @@
 #!/usr/bin/python
 
-from PySimpleHMM import *
+import hmm.utility
+import hmm.models
 import sys
 
-A = np.loadtxt('data/t1_A.hmm')
-B = np.loadtxt('data/t1_B.hmm')
-pi = np.loadtxt('data/t1_pi.hmm')
+A, B, pi = hmm.models.get_models()[sys.argv[1]]
 
-hmm = PySimpleHMM(len(A), len(B[0]), A, B, pi)
-obs = hmm.randomSequence(int(sys.argv[1]))
+seq = hmm.utility.generate_sequence(A, B, pi, int(sys.argv[2]))
 
-for o in obs:
-	print o
+for ob in seq:
+	print ob

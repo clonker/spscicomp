@@ -39,7 +39,7 @@ __kernel void kmeans_chunk_center_cl(
     for(int k = 0; k < n_centers; k++) {
         tmp_centersCounter[k] = 0;
         for(size_t x = 0; x < get_num_groups(0); x++) {
-            newCentersLocal[k*get_num_groups(0)+x] = 0;
+            newCentersLocal[k*get_num_groups(0)+x] = 0.0f;
         }
     }
     barrier(CLK_GLOBAL_MEM_FENCE);
@@ -81,7 +81,7 @@ __kernel void kmeans_chunk_center_cl(
                 }
             }
         }
-        for(int k=0; k < n_centers; k++) {
+        /*for(int k=0; k < n_centers; k++) {
 
             if(newCentersLocal[k] > 0) {
                 for(int d = 0; d < dim; d++) {
@@ -93,6 +93,6 @@ __kernel void kmeans_chunk_center_cl(
                 }
             }
 
-        }
+        }*/
     }
 }

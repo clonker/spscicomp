@@ -47,6 +47,12 @@ class OpenCLKmeans(DefaultKmeans):
         cl.enqueue_read_buffer(self.queue, centers_counter_buf, centers_counter).wait()
 
         self._data_assigns.append(data_assigns)
+
+        for i, center in enumerate(new_centers):
+            if centers_counter[i] > 0:
+                new_centers[i] /= centers_counter[i]
+            else:
+                new_centers[i] = centers[i]
         return new_centers
 
     @staticmethod

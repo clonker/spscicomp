@@ -5,29 +5,6 @@ import string
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class PyOpenCL_Instance:
     context = None
     queue   = None

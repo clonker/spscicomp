@@ -25,7 +25,7 @@ obs = [
 #	numpy.loadtxt('data/t1.2000.dat'),
 ]
  
-maxit = 10
+maxit = 1
 accuracy = 1e-3
 
 kernels = [ hmm.kernel.python ]
@@ -48,6 +48,7 @@ for kernel in kernels:
 				maxit=maxit, kernel=kernel, accuracy=accuracy
 			)
 		print A
+		print B
 		end = t.time()
 		time_used += end-start
 		print 'log P( O | A,B,pi ): ', prob
@@ -69,6 +70,7 @@ for kernel in kernels:
 			maxit=maxit, kernel=kernel, accuracy=accuracy
 		)
 	print A
+	print B 
 	end = t.time()
 	print 'log P( O | A,B,pi ): ', prob
 	print 'iterations done: ', maxit

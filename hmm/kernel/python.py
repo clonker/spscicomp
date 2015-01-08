@@ -247,17 +247,11 @@ def state_counts(alpha, beta, T, dtype=numpy.float64):
     forward, forward_no_scaling : to calculate `alpha`
     backward, backward_no_scaling : to calculate `beta`
     """
-    N = len(alpha[0])
-    gamma_t = numpy.zeros((N), dtype=dtype)
-    count = numpy.zeros_like(gamma_t)
+    count = numpy.zeros_like(alpha[0])
     for t in range(T):
-        sum = 0.0
-        for i in range(N):
-            gamma_t[i] = alpha[t,i]*beta[t,i]
-            sum += gamma_t[i]
-        for i in range(N):
-            gamma_t[i] /= sum
-        count += gamma_t
+        gamma = alpha[t]*beta[t]
+        gamma /= gamma.sum()
+        count += gamma
     return count
 
 

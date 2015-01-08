@@ -2,6 +2,32 @@ import pyopencl
 import numpy
 import string
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class PyOpenCL_Instance:
     context = None
     queue   = None
@@ -30,7 +56,7 @@ def initialize(N, M, num_groups=0, num_units=0, precision="float"):
 
     return cl.context, cl.queue
 
-@profile
+
 def forward(
         A, B, pi, ob, T,
         alpha      = None,
@@ -117,7 +143,7 @@ def forward(
 
     return alpha, matrices, scratch
 
-@profile
+
 def forward_no_scaling_naive(ctx, A, B, pi, ob):
     """Compute P(ob|A,B,pi) and all forward coefficients. No scaling done.
 

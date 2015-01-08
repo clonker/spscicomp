@@ -19,40 +19,6 @@ static int get_closest_center(int gid, __global const float *data, __global cons
     return minCenter;
 }
 
-/*void atomic_add_local(volatile local float *source, const float operand) {
-    union {
-        unsigned int intVal;
-        float floatVal;
-    } newVal;
-
-    union {
-        unsigned int intVal;
-        float floatVal;
-    } prevVal;
-
-    do {
-        prevVal.floatVal = *source;
-        newVal.floatVal = prevVal.floatVal + operand;
-    } while (atomic_cmpxchg((volatile local unsigned int *)source, prevVal.intVal, newVal.intVal) != prevVal.intVal);
-}
-
-void atomic_add_global(volatile global float *source, const float operand) {
-    union {
-        unsigned int intVal;
-        float floatVal;
-    } newVal;
-    union {
-        unsigned int intVal;
-        float floatVal;
-    } prevVal;
-
-    do {
-        prevVal.floatVal = *source;
-        newVal.floatVal = prevVal.floatVal + operand;
-    } while (atomic_cmpxchg((volatile global unsigned int *)source, prevVal.intVal, newVal.intVal) != prevVal.intVal);
-}*/
-
-
 __kernel void kmeans_chunk_center_cl(
     __global const float *data,
     __global const float *centers,
@@ -65,13 +31,9 @@ __kernel void kmeans_chunk_center_cl(
 
     int gid = get_global_id(0);
 
-    __local int tmp_centersCounter[sizeof(centersCounter) / sizeof(int)];
-    //__local float tmp_newCenters[sizeof(newCenters)];
+    __local int tmp_centersCounter[sizeof(centersCounter)];
     for(int k = 0; k < n_centers; k++) {
         tmp_centersCounter[k] = 0;
-        for(int i = 0; i < dim; i++) {
-            //tmp_newCenters[dim*k+i] = 0.0f;
-        }
     }
     barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -82,17 +44,15 @@ __kernel void kmeans_chunk_center_cl(
     assigns[gid] = closestCenter;
 
     barrier(CLK_LOCAL_MEM_FENCE);
-    atomic_add(&tmp_centersCounter[closestCenter], 1);
-    for(int i = 0; i < dim; i++) {
-        //atomic_add_local(&tmp_newCenters[dim*closestCenter+i], data[dim*gid + i]);
-    }
+    atomic_inc(&tmp_centersCounter[closestCenter]);
 
     barrier(CLK_GLOBAL_MEM_FENCE);
     if ( get_local_id(0) == get_local_size(0) - 1 ) {
         for(int k = 0; k < n_centers; k++) {
-            atomic_add(&centersCounter[k], tmp_centersCounter[k]);
-            for(int i = 0; i < dim; i++) {
-                //atomic_add_global(&newCenters[dim*k+i], tmp_newCenters[dim*k+i]);
+            if(tmp_centersCounter[k] > 0) {
+                atomic_add(&centersCounter[k], tmp_centersCounter[k]);
+            } else {
+                centersCounter[k] = 0;
             }
         }
     }

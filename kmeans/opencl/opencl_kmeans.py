@@ -1,5 +1,4 @@
 import os
-from common_data_importer import CommonFileDataImporter
 from kmeans import DefaultKmeans
 from kmeans_metric import EuclideanMetric
 import numpy as np
@@ -15,7 +14,7 @@ class OpenCLKmeans(DefaultKmeans):
 
     def kmeans_chunk_center(self, data, centers):
         k = len(centers)
-        centers_counter = np.zeros((k, 1), dtype=np.int32)
+        centers_counter = np.zeros(k, dtype=np.int32)
         new_centers = np.asarray([np.zeros(self._dimension) for _ in xrange(k)], dtype=np.float32)
         data_assigns = np.empty((len(data), 1), dtype=np.int32)
         dim = np.asarray([centers.ndim], dtype=np.int32)
@@ -45,13 +44,12 @@ class OpenCLKmeans(DefaultKmeans):
         cl.enqueue_read_buffer(self.queue, centers_counter_buf, centers_counter).wait()
 
         self._data_assigns.append(data_assigns)
-
-        for i, center in enumerate(new_centers):
-            new_centers[i] = sum(p for k, p in enumerate(data) if k == i)
-            if centers_counter[i] > 0:
-                new_centers[i] /= centers_counter[i]
+        for j, center in enumerate(new_centers):
+            new_centers[j, :] = sum(p for k, p in enumerate(data) if data_assigns[k] == j)
+            if centers_counter[j] > 0:
+                new_centers[j, :] = np.divide(new_centers[j, :], centers_counter[j])
             else:
-                new_centers[i] = centers[i]
+                new_centers[j, :] = centers[j, :]
         return new_centers
 
     @staticmethod
@@ -61,11 +59,3 @@ class OpenCLKmeans(DefaultKmeans):
         if cl_program is not None:
             return cl.Program(context, cl_program).build()
         return None
-
-"""
-    main
-"""
-#importer = CommonFileDataImporter(filename='data.txt')
-
-#km = OpenCLKmeans(importer=importer, chunk_size=500, max_steps=2)
-#km.calculate_centers(5, initial_centers=[[-0.3,0.3],[0,0],[0.5,0.5],[-0.5,-0.5],[-0.5,0.5]])

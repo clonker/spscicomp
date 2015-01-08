@@ -5,35 +5,33 @@
 
 static char forward_doc[]
 =
-
-"Compute P(ob|A,B,pi) and all forward coefficients and scaling coefficients.
-
-    Parameters
-    ----------
-    A : numpy.array of numpy.float64 and shape (N,N)
-        transition matrix of the hidden states
-    B : numpy.array of numpy.float64 and shape (N,M)
-        symbol probability matrix for each hidden state
-    pi : numpy.array of numpy.float64 and shape (N)
-         initial distribution
-    ob : numpy.array of numpy.int32 and shape (T)
-         observation sequence of integer between 0 and M, used as indices in B
-
-    Returns
-    -------
-    prob : numpy.float64
-           The probability to observe the sequence `ob` with the model given 
-           by `A`, `B` and `pi`.
-    alpha : numpy.array of numpy.float64 and shape (T,N)
-            alpha[t,i] is the ith forward coefficient of time t. These can be
-            used in many different algorithms related to HMMs.
-    scaling : numpy.array of numpy.float64 and shape (T)
-
-    See Also
-    --------
-    hmm.kernel.simple.forward : A simple python implementation of this function.
-    hmm.lib.c.forward32 : single precision variation using 32bit floats.
-";
+"Compute P(ob|A,B,pi) and all forward coefficients and scaling coefficients.\n" \
+"\n" \
+"    Parameters\n" \
+"    ----------\n" \
+"    A : numpy.array of numpy.float64 and shape (N,N)\n" \
+"        transition matrix of the hidden states\n" \
+"    B : numpy.array of numpy.float64 and shape (N,M)\n" \
+"        symbol probability matrix for each hidden state\n" \
+"    pi : numpy.array of numpy.float64 and shape (N)\n" \
+"         initial distribution\n" \
+"    ob : numpy.array of numpy.int32 and shape (T)\n" \
+"         observation sequence of integer between 0 and M, used as indices in B\n" \
+"\n" \
+"    Returns\n" \
+"    -------\n" \
+"    prob : numpy.float64\n" \
+"           The probability to observe the sequence 'ob' with the model given\n" \
+"           by 'A', 'B' and 'pi'.\n" \
+"    alpha : numpy.array of numpy.float64 and shape (T,N)\n" \
+"            alpha[t,i] is the ith forward coefficient of time t. These can be\n" \
+"            used in many different algorithms related to HMMs.\n" \
+"    scaling : numpy.array of numpy.float64 and shape (T)\n" \
+"\n" \
+"    See Also\n" \
+"    --------\n" \
+"    hmm.kernel.simple.forward : A simple python implementation of this function.\n" \
+"    hmm.lib.c.forward32 : single precision variation using 32bit floats.\n";
 static PyObject *
 py_forward(PyObject *self, PyObject *args)
 {

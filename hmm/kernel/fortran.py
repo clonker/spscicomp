@@ -1,7 +1,7 @@
 import hmm.lib.fortran as ext
 import numpy
 
-def forward_no_scaling(A, B, pi, ob, dtype=numpy.float32):
+def forward_no_scaling(A, B, pi, ob, dtype=numpy.float64):
     if ob.dtype != numpy.int16:
         ob = numpy.array(ob, dtype=numpy.int16)
     if dtype == numpy.float32:
@@ -21,7 +21,7 @@ def forward(A, B, pi, ob, dtype=numpy.float32):
     else
         raise ValueError
 
-def backward_no_scaling(A, B, pi, scaling, ob, dtype=numpy.float32):
+def backward_no_scaling(A, B, pi, scaling, ob, dtype=numpy.float64):
     if ob.dtype != numpy.int16:
         ob = numpy.array(ob, dtype=numpy.int16)
     if dtype == numpy.float32:
@@ -31,7 +31,7 @@ def backward_no_scaling(A, B, pi, scaling, ob, dtype=numpy.float32):
     else
         raise ValueError
 
-def backward(A, B, pi, scaling, ob, dtype=numpy.float32):
+def backward(A, B, pi, scaling, ob, dtype=numpy.float64):
     if ob.dtype != numpy.int16:
         ob = numpy.array(ob, dtype=numpy.int16)
     if dtype == numpy.float32:
@@ -49,7 +49,7 @@ def gamma(alpha, beta, dtype=numpy.float32):
     else
         raise ValueError
 
-def summed_gamma(alpha, beta, T, dtype=numpy.float32):
+def summed_gamma(alpha, beta, T, dtype=numpy.float64):
     if dtype == numpy.float32:
         return ext.summed_gamma32(A, B, pi, ob)
     else if dtype == numpy.float64:

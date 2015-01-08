@@ -32,16 +32,6 @@ ctx = hmm.kernel.opencl.Context(N, M)
 
 class TestForwardNoScaling(unittest.TestCase):
 
-    def test_forward_scaling_simple_example(self):
-        cl_alpha, cl_scaling = hmm.kernel.opencl.forward(ctx, A, B, pi, ob)
-        alpha    = numpy.zeros((T,N), numpy.float32)
-        scaling  = numpy.zeros((T), numpy.float32)
-        pyopencl.enqueue_copy(ctx.queue, alpha, cl_alpha)
-        pyopencl.enqueue_copy(ctx.queue, scaling, cl_scaling)
-        _, alpha2, scaling2 =  hmm.kernel.python.forward(A, B, pi, ob)
-#        numpy.testing.assert_array_almost_equal(alpha2, alpha)
-#       numpy.testing.assert_array_almost_equal(scaling2, scaling)
-
     def test_naive_is_correct_for_small_case(self):
         cl_alpha = hmm.kernel.opencl.forward_no_scaling_naive(ctx, A, B, pi, ob)
         alpha    = numpy.zeros((T,N), numpy.float32)

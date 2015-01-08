@@ -20,16 +20,16 @@ pi = np.array([ 0.333, 0.333, 0.333 ], dtype=np.float32)
 
 print 'Read data ...'
 
-ob = np.loadtxt('data/t1.100000.dat')
+ob = np.loadtxt('data/t1.3000000.dat')
 
 N, M, T = len(A), len(B[0]), len(ob)
  
-maxiter = 1000
+maxiter = 10
 
 print 'Initialize OpenCL'
 ctx = hmm.kernel.opencl.Context(N, M)
 
-print 'start opencl implementation of forward algorithm...'
+print 'start opencl naive implementation of forward algorithm...'
 start = t.time()
 for it in range(maxiter):
 	hmm.kernel.opencl.forward_no_scaling_naive(ctx, A, B, pi, ob)

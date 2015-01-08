@@ -2,63 +2,122 @@ import pyopencl
 import numpy
 import string
 
-def forward(ctx, A, B, pi, ob):
-    T,N = len(ob), len(A)
-    mf = pyopencl.mem_flags
+class PyOpenCL_Instance:
+    context = None
+    queue   = None
+    kernel  = None
+    num_groups = 8
+    num_units  = 256
+    N = 0
+    M = 0
 
-    if (ctx.WORK_GROUP_SIZE == 1):
+cl = PyOpenCL_Instance()
+mf = pyopencl.mem_flags
+
+_FORWARD_SOURCE = 'lib/opencl/forward_blelloch.cl'
+
+def initialize(N, M, num_groups=0, num_units=0, precision="float"):
+    platform = pyopencl.get_platforms()[0]
+    device   = platform.get_devices(device_type=pyopencl.device_type.GPU)[0]
+    cl.context = pyopencl.Context([device])
+    file     = open(_FORWARD_SOURCE, 'r')
+    source   = string.Template(
+        "".join(file.readlines())).substitute(N=N, M=M, precision=precision)
+    cl.kernel  = pyopencl.Program(cl.context, source).build()
+    cl.queue   = pyopencl.CommandQueue(cl.context)
+    cl.N = N
+    cl.M = M 
+
+    return cl.context, cl.queue
+
+@profile
+def forward(
+        A, B, pi, ob, T,
+        alpha      = None,
+        matrices   = None,
+        scratch    = None,
+        num_groups = 0,
+        num_units  = 0 ):
+    if cl.context == None:
         raise ValueError
 
-    A_, B_, pi_, ob_ = ctx.create_buffer(A, B, pi, ob)
+    # prepare variables 
+    N = cl.N
+    if alpha == None:
+        alpha = pyopencl.Buffer(cl.context, mf.READ_WRITE, T*N*N*4)
+    if num_groups == 0:
+        num_groups = cl.num_groups
+    if num_units == 0:
+        num_units = cl.num_units
+    if scratch == None:
+        scratch  = pyopencl.LocalMemory(4*N*N*2*num_units)
+    
+    def padding_time(time, num):
+        return ((time-1)/(2*num)+1)*2*num
 
-    ctx.kernel.forward_build_matrices (
-            ctx.queue,
-            (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-            ctx.matrices, ctx.alpha, ctx.scaling,
-            A_,B_,pi_,ob_, numpy.uint64(T))
+    padded = padding_time(T, num_units)
+    if matrices == None:
+        matrices = pyopencl.Buffer(cl.context, mf.READ_WRITE, padded*N*N*4)
 
-    T = T - 1 # ctx.matrices does not contain alpha_0!
+    cl.kernel.forward_build_matrices(cl.queue, (num_groups*num_units,), (num_units,),
+        matrices, alpha, A, B, pi, ob, numpy.uint64(T))
+    if padded - T > 0:
+        cl.kernel.append_identity(cl.queue, (padded-T,), None,
+            matrices, numpy.uint64(T), numpy.uint64(padded - T))
 
-    # forward upwind method
-    last_results = ctx.matrices
-    stack = [ (last_results, T) ]
-    while T > 1:
-        grouped_results = pyopencl.Buffer(ctx.context, 
-            mf.READ_WRITE, (T/ctx.WORK_GROUP_SIZE+1)*N*N*4)
-
-        ctx.kernel.forward_reduce_naive (
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                grouped_results, last_results,
-                ctx.scaling, ctx.scratch, numpy.uint64(T))
-
-
-        T = T / ctx.WORK_GROUP_SIZE
-        stack.append( (grouped_results, T) )
-        last_results = grouped_results
-
-    # forward rewind method
-    grouped_results = last_results
-    while stack:
-        last_results, T = stack.pop()
-        ctx.kernel.forward_rewind(
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                last_results, grouped_results, ctx.scaling, numpy.uint64(T))
-        grouped_results = last_results
-
-    T = T + 1
-    ctx.kernel.forward_multiply_with_alpha_0(
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                ctx.alpha, last_results, ctx.scaling, numpy.uint64(T))
-
-    event = pyopencl.enqueue_barrier(ctx.queue)
+    event = pyopencl.enqueue_barrier(cl.queue)
     event.wait()
 
-    return ctx.alpha, ctx.scaling
+    tmp_num_units = num_units
 
-#@profile
+    stack = [ ]
+    current = matrices      
+    S = padded
+    while S > 1:
+        new_S = S / (2*num_units)
+        new_num_units = num_units
+        while new_S < new_num_units:
+            new_num_units = new_num_units / 2
+        new_padded = padding_time(new_S, new_num_units)
+        if new_S == 1:
+            new_padded = 1        
+
+        reduced  = pyopencl.Buffer(cl.context, mf.READ_WRITE, new_padded*4*N*N)
+        cl.kernel.forward_reduce(cl.queue, (num_units*num_groups,), (num_units,), 
+            reduced, current, scratch, numpy.uint64(S))
+        if new_padded - new_S > 0:
+            cl.kernel.append_identity(cl.queue, (num_units*num_groups,), (num_units,),
+                reduced, numpy.uint64(new_S), numpy.uint64(new_padded-new_S))
+        stack.append( (current, S) )
+        current = reduced
+        S = new_padded
+        num_units = new_num_units
+    
+    event = pyopencl.enqueue_barrier(cl.queue)
+    event.wait()
+
+    num_units = tmp_num_units
+
+    reduced, rS = stack.pop()
+    while stack:
+        extended, S = stack.pop()
+        cl.kernel.forward_collect(cl.queue, (num_units*num_groups,), (num_units,),
+            extended, reduced, numpy.uint64(S))
+        reduced = extended
+        rS = S 
+
+    event = pyopencl.enqueue_barrier(cl.queue)
+    event.wait()
+
+    cl.kernel.forward_build_alpha(cl.queue, (num_groups*num_units,), (num_units,),
+        alpha, reduced, numpy.uint64(T))
+    
+    event = pyopencl.enqueue_barrier(cl.queue)
+    event.wait()
+
+    return alpha, matrices, scratch
+
+@profile
 def forward_no_scaling_naive(ctx, A, B, pi, ob):
     """Compute P(ob|A,B,pi) and all forward coefficients. No scaling done.
 
@@ -115,7 +174,7 @@ def forward_no_scaling_naive(ctx, A, B, pi, ob):
 
     A_, B_, pi_, ob_ = ctx.create_buffer(A, B, pi, ob)
 
-    ctx.kernel.forward_no_scaling_build_matrices (
+    ctx.kernel.forward_build_matrices (
             ctx.queue,
             (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
             ctx.matrices, ctx.alpha, A_, B_, pi_, ob_, numpy.uint64(T))
@@ -129,11 +188,10 @@ def forward_no_scaling_naive(ctx, A, B, pi, ob):
         grouped_results = pyopencl.Buffer(ctx.context, 
             mf.READ_WRITE, (T/ctx.WORK_GROUP_SIZE+1)*N*N*4)
 
-        ctx.kernel.forward_no_scaling_reduce_naive (
+        ctx.kernel.forward_reduce (
                 ctx.queue,
                 (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
                 grouped_results, last_results, ctx.scratch, numpy.uint64(T))
-
 
         T = T / ctx.WORK_GROUP_SIZE
         stack.append( (grouped_results, T) )
@@ -143,14 +201,14 @@ def forward_no_scaling_naive(ctx, A, B, pi, ob):
     grouped_results = last_results
     while stack:
         last_results, T = stack.pop()
-        ctx.kernel.forward_no_scaling_rewind(
+        ctx.kernel.forward_rewind(
                 ctx.queue,
                 (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
                 last_results, grouped_results, numpy.uint64(T))
         grouped_results = last_results
 
     T = T + 1
-    ctx.kernel.forward_no_scaling_multiply_with_alpha_0(
+    ctx.kernel.forward_multiply_with_alpha_0(
                 ctx.queue,
                 (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
                 ctx.alpha, last_results, numpy.uint64(T))
@@ -166,7 +224,7 @@ class Context:
     NUM_GROUPS      = 52
     WORK_GROUP_SIZE = 256
     NUM_UNITS = 52*256
-    _FORWARD_SOURCE  = 'lib/opencl/forward.cl'
+    _FORWARD_SOURCE  = 'lib/opencl/forward_naive.cl'
 
     COMPILED_N = 0
     COMPILED_M = 0
@@ -192,7 +250,8 @@ class Context:
 
     def _compile_kernel(self, N, M, DEBUG=1):
         f = open(self._FORWARD_SOURCE, 'r')
-        source = string.Template("".join(f.readlines())).substitute(N=N, M=M)
+        source = string.Template("".join(f.readlines())).substitute(
+            N=N, M=M, precision="float")
         kernel = pyopencl.Program(self.context, source).build()
         self.COMPILED_N = N
         self.COMPILED_M = M

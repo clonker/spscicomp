@@ -81,9 +81,9 @@ __kernel void kmeans_chunk_center_cl(
                 }
             }
         }
-        /*for(int k=0; k < n_centers; k++) {
+        for(int k=0; k < n_centers; k++) {
 
-            if(newCentersLocal[k] > 0) {
+            if(centersCounter[k] > 0) {
                 for(int d = 0; d < dim; d++) {
                     newCenters[k+d] = newCentersLocal[k+d] / (float) centersCounter[k];
                 }
@@ -93,6 +93,6 @@ __kernel void kmeans_chunk_center_cl(
                 }
             }
 
-        }*/
+        }
     }
 }

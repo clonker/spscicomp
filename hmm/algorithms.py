@@ -1,14 +1,14 @@
 import hmm.kernel.python
 import numpy
 
-def noms_and_denoms(A, B, pi, ob, kernel=hmm.kernel.python):
+def noms_and_denoms(A, B, pi, ob, kernel=hmm.kernel.python, dtype=numpy.float64):
     T = len(ob)
-    weight, alpha, scaling = kernel.forward(A, B, pi, ob)
-    beta   = kernel.backward(A, B, ob, scaling)
-    gamma  = kernel.state_probabilities(alpha, beta)
-    nomA   = kernel.transition_counts(alpha, beta, A, B, ob)
-    denomA = kernel.state_counts(gamma, T-1)
-    nomB   = kernel.symbol_counts(gamma, ob, len(B[0]))
+    weight, alpha, scaling = kernel.forward(A, B, pi, ob, dtype)
+    beta   = kernel.backward(A, B, ob, scaling, dtype)
+    gamma  = kernel.state_probabilities(alpha, beta, dtype)
+    nomA   = kernel.transition_counts(alpha, beta, A, B, ob, dtype)
+    denomA = kernel.state_counts(gamma, T-1, dtype)
+    nomB   = kernel.symbol_counts(gamma, ob, len(B[0]), dtype)
     denomB = denomA + gamma[T-1]
     return weight, nomA, denomA, nomB, denomB
 
@@ -49,74 +49,18 @@ def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.ker
     while (abs(new_probability - old_probability) > accuracy and it < maxit):
         for k in range(K):
             weights[k], nomsA[k], denomsA[k], nomsB[k], denomsB[k] = \
-                    noms_and_denoms(A, B, pi, obs[k], kernel=kernel)
+                    noms_and_denoms(A, B, pi, obs[k], kernel=kernel, dtype=dtype)
         
-        A, B = update_multiple(weights, nomsA, denomsA, nomsB, denomsB)
+        A, B = update_multiple(weights, nomsA, denomsA, nomsB, denomsB, dtype=dtype)
 
         if (it == 0):
             old_probability = 0
         else:
-            old_probability = new_probability        
+            old_probability = new_probability
         new_probability = numpy.sum(weights)
         it += 1
 
     return A, B, pi, new_probability, it
-
-def update(gamma, xi, ob, M, dtype=numpy.float64):
-    """ Return an updated model for given state and transition counts.
-
-    Parameters
-    ----------
-    gamma : numpy.array shape (T,N)
-            state probabilities for each t 
-    xi : numpy.array shape (T,N,N)
-         transition probabilities for each t
-    ob : numpy.array shape (T)
-         observation sequence containing only symbols, i.e. ints in [0,M)
-
-    Returns
-    -------
-    A : numpy.array (N,N)
-        new transition matrix
-    B : numpy.array (N,M)
-        new symbol probabilities
-    pi : numpy.array (N)
-         new initial distribution
-    dtype : { nupmy.float64, numpy.float32 }, optional
-
-    Notes
-    -----
-    This function is part of the Bell-Welch algorithm for a single observation.
-
-    See Also
-    --------
-    state_probabilities : to calculate `gamma`
-    transition_probabilities : to calculate `xi`
-
-    """
-    T,N = len(ob), len(gamma[0])
-    pi = numpy.zeros((N), dtype=dtype)
-    A  = numpy.zeros((N,N), dtype=dtype)
-    B  = numpy.zeros((N,M), dtype=dtype)
-    for i in range(N):
-        pi[i] = gamma[0,i]
-    for i in range(N):
-        gamma_sum = 0.0
-        for t in range(T-1):
-            gamma_sum += gamma[t,i]
-        for j in range(N):
-            A[i,j] = 0.0
-            for t in range(T-1):
-                A[i,j] += xi[t,i,j]
-            A[i,j] /= gamma_sum
-        gamma_sum += gamma[T-1, i]
-        for k in range(M):
-            B[i,k] = 0.0
-            for t in range(T):
-                if ob[t] == k:
-                    B[i,k] += gamma[t,i]
-            B[i,k] /= gamma_sum
-    return (A, B, pi)
 
 def baum_welch(ob, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.python, dtype=numpy.float32):
     """ Perform an optimization iteration with a given initial model.
@@ -170,7 +114,7 @@ def baum_welch(ob, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.python
         beta = kernel.backward(A, B, ob, scaling, dtype)
         gamma = kernel.state_probabilities(alpha, beta, dtype)
         xi = kernel.transition_probabilities(alpha, beta, A, B, ob, dtype)
-        A, B, pi = update(gamma, xi, ob, len(B[0]), dtype)
+        A, B, pi = kernel.update(gamma, xi, ob, len(B[0]), dtype)
         old_probability = new_probability
         new_probability, alpha, scaling = kernel.forward(A, B, pi, ob, dtype)
         it += 1

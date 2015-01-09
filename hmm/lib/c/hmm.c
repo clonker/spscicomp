@@ -163,7 +163,7 @@ void compute_denomA(
     int i, t;
     for (i = 0; i < N; i++) {
         denomA[i] = 0.0;
-        for (t = 0; t < T-1; t++)
+        for (t = 0; t < T; t++)
             denomA[i] += gamma[t*N+i];
     }
 }
@@ -174,10 +174,12 @@ void compute_nomB(
         const short *ob,
         int N, int M, int T)
 {
-    int i, t;
-    for (t = 0; t < t; i++)
-    	for (i = 0; i < N; i++)
-	    	DIMM2(nomB, i, ob[t]) += DIM2(gamma, t, i);
+    int i, k, t;
+    for (i = 0; i < N; i++)
+        for (k = 0; k < M; k++)
+            for (t = 0; t < T; t++)
+                if (ob[t] == k)
+                    DIMM2(nomB, i, ob[t]) += DIM2(gamma, t, i);
 }
 
 void computeGamma(
@@ -211,22 +213,19 @@ void computeXi(
 {
     int i, j, t;
     double sum;
-    double *xi_t = (double*) malloc(N*N*sizeof(double));
 
     for (t = 0; t < T-1; t++) {
         sum = 0.0;
         for (i = 0; i < N; i++)
             for (j = 0; j < N; j++) {
-                xi_t[i*N + j] = alpha[t*N+i]*beta[(t+1)*N+j]*A[i*N+j]*B[j*M+O[t+1]];
-                sum += xi_t[i*N + j];
+                DIM3(xi, t, i, j) = alpha[t*N+i]*beta[(t+1)*N+j]*A[i*N+j]*B[j*M+O[t+1]];
+                sum += DIM3(xi, t, i, j);
             }
         for (i = 0; i < N; i++)
             for (j = 0; j < N; j++) {
-                xi_t[i*N + j] /= sum;
-                xi[i*N + j] += xi_t[i*N + j];
+                DIM3(xi, t, i, j) /= sum;
             }
     }
-    free(xi_t);
 }
 
 void update_multiple(
@@ -284,22 +283,24 @@ void update(
     for (i = 0; i < N; i++) {
         gamma_sum = 0.0;
         for (t = 0; t < T-1; t++)
-            gamma_sum += gamma[t*N+i];
+            gamma_sum += DIM2(gamma,t,i);
 
         /* UPDATE TRANSITION MATRIX A */
         for (j = 0; j < N; j++) {
-            A[i*N + j] = xi[i*N + j] / gamma_sum;
+            sum = 0.0;
+            for (t = 0; t < T-1; t++)
+                sum += DIM3(xi,t,i,j);
+            DIM2(A,i,j) = sum / gamma_sum;
         }
 
-
         /* UPDATE SYMBOL PROBABILITY B */
-        gamma_sum += gamma[(T-1)*N + i];
+        gamma_sum += DIM2(gamma,T-1,i);
         for (k = 0; k < M; k++) {
             sum = 0.0;
             for (t = 0; t < T; t++)
                 if (O[t] == k)
-                    sum += gamma[t*N + i];
-            B[i*M + k] = sum / gamma_sum;
+                    sum += DIM2(gamma,t,i);
+            DIMM2(B,i,k) = sum / gamma_sum;
         }
     }
 }

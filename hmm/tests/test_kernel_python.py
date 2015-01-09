@@ -8,7 +8,7 @@ import numpy
 class TestCounts(unittest.TestCase):
 
     kernel = hmm.kernel.python
-    ob = numpy.array([1, 0, 1, 1])
+    ob = numpy.array([1, 0, 1, 1], dtype=numpy.int16)
     A, B, pi = hmm.utility.get_models()['equi32']
     dtype = numpy.float32
 

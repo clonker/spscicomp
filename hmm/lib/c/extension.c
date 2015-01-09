@@ -145,7 +145,7 @@ py_backward(PyObject *self, PyObject *args)
     const double *scale = (double*)PyArray_DATA(pScale);
     
     npy_intp dims[2] = {T, N};
-    PyObject *pBeta = PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
+    PyObject *pBeta = PyArray_ZEROS(2, dims, NPY_FLOAT64, 0);
     
     double *beta = (double*) PyArray_DATA(pBeta);
     backward(beta, A, B, O, scale, N, M, T);
@@ -177,7 +177,7 @@ py_gamma(PyObject *self, PyObject *args)
     const double *beta  = (double*)PyArray_DATA(pBeta);
     
     npy_intp dims[2] = {T, N};
-    PyObject *pGamma = PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
+    PyObject *pGamma = PyArray_ZEROS(2, dims, NPY_FLOAT64, 0);
 
     double *gamma = (double*) PyArray_DATA(pGamma);
     computeGamma(gamma, alpha, beta, T, N);
@@ -208,7 +208,7 @@ py_nomA(PyObject *self, PyObject *args)
     const double *alpha = (double*)PyArray_DATA(pAlpha);
     
     npy_intp nomA_dims[2] = {N,N};
-    PyObject *pNomA = PyArray_ZEROS(2, nomA_dims, NPY_DOUBLE, 0);
+    PyObject *pNomA = PyArray_ZEROS(2, nomA_dims, NPY_FLOAT64, 0);
 
     double *nomA = (double*) PyArray_DATA(pNomA);
     compute_nomA(nomA, A, B, O, alpha, beta, N, M, T);
@@ -229,7 +229,7 @@ py_denomA(PyObject *self, PyObject *args)
     const double *gamma = (double*)PyArray_DATA(pGamma);
     
     npy_intp denomA_dims[1] = {N};
-    PyObject *pDenomA = PyArray_ZEROS(1, denomA_dims, NPY_DOUBLE, 0);
+    PyObject *pDenomA = PyArray_ZEROS(1, denomA_dims, NPY_FLOAT64, 0);
 
     double *denomA = (double*) PyArray_DATA(pDenomA);
     compute_denomA(denomA, gamma, T, N);
@@ -243,8 +243,8 @@ py_nomB(PyObject *self, PyObject *args)
     PyArrayObject *pO, *pGamma;
     int M;
     if (!PyArg_ParseTuple(args, "O!O!i",
-            &PyArray_Type, &pO,
             &PyArray_Type, &pGamma,
+            &PyArray_Type, &pO,
             &M))
     {
         return NULL;
@@ -255,7 +255,7 @@ py_nomB(PyObject *self, PyObject *args)
     const short *O = (short*)PyArray_DATA(pO);
     
     npy_intp nomB_dims[2] = {N,M};
-    PyObject *pNomB = PyArray_ZEROS(2, nomB_dims, NPY_DOUBLE, 0);
+    PyObject *pNomB = PyArray_ZEROS(2, nomB_dims, NPY_FLOAT64, 0);
 
     double *nomB = (double*) PyArray_DATA(pNomB);
     compute_nomB(nomB, gamma, O, N, M, T);
@@ -285,12 +285,12 @@ py_xi(PyObject *self, PyObject *args)
     const double *beta = (double*)PyArray_DATA(pBeta);
     const double *alpha = (double*)PyArray_DATA(pAlpha);
 
-    npy_intp xi_dims[2] = {N,N};
-    PyObject *pXi = PyArray_ZEROS(2, xi_dims, NPY_DOUBLE, 0);
+    npy_intp xi_dims[3] = {T,N,N};
+    PyObject *pXi = PyArray_ZEROS(3, xi_dims, NPY_FLOAT64, 0);
 
     double *xi = (double*) PyArray_DATA(pXi);
     computeXi(xi, A, B, O, alpha, beta, N, M, T);
-    
+
     return pXi;
 }
 
@@ -319,8 +319,8 @@ py_update_mult(PyObject *self, PyObject *args)
     
     npy_intp A_dims[2] = {N,N};
     npy_intp B_dims[2] = {N,M};
-    PyObject *pA = PyArray_ZEROS(2, A_dims, NPY_DOUBLE, 0);
-    PyObject *pB = PyArray_ZEROS(2, B_dims, NPY_DOUBLE, 0);
+    PyObject *pA = PyArray_ZEROS(2, A_dims, NPY_FLOAT64, 0);
+    PyObject *pB = PyArray_ZEROS(2, B_dims, NPY_FLOAT64, 0);
 
     double *A  = (double*) PyArray_DATA(pA);
     double *B  = (double*) PyArray_DATA(pB);
@@ -339,9 +339,9 @@ py_update(PyObject *self, PyObject *args)
     PyArrayObject *pO, *pXi, *pGamma;
     int M;
     if (!PyArg_ParseTuple(args, "O!O!O!i",
-            &PyArray_Type, &pO,
             &PyArray_Type, &pGamma,
             &PyArray_Type, &pXi,
+            &PyArray_Type, &pO,
             &M))
     {
         return NULL;
@@ -355,9 +355,9 @@ py_update(PyObject *self, PyObject *args)
     npy_intp A_dims[2] = {N,N};
     npy_intp B_dims[2] = {N,M};
     npy_intp pi_dims[1] = {N};
-    PyObject *pA = PyArray_ZEROS(2, A_dims, NPY_DOUBLE, 0);
-    PyObject *pB = PyArray_ZEROS(2, B_dims, NPY_DOUBLE, 0);
-    PyObject *pPi = PyArray_ZEROS(1, pi_dims, NPY_DOUBLE, 0);
+    PyObject *pA = PyArray_ZEROS(2, A_dims, NPY_FLOAT64, 0);
+    PyObject *pB = PyArray_ZEROS(2, B_dims, NPY_FLOAT64, 0);
+    PyObject *pPi = PyArray_ZEROS(1, pi_dims, NPY_FLOAT64, 0);
 
     double *A  = (double*) PyArray_DATA(pA);
     double *B  = (double*) PyArray_DATA(pB);
@@ -418,8 +418,8 @@ py_forward32(PyObject *self, PyObject *args)
     const float *A  = (float*)PyArray_DATA(pA);
     const float *B  = (float*)PyArray_DATA(pB);
     const float *pi = (float*)PyArray_DATA(pPi);
-    const short *O = (short*)PyArray_DATA(pO);
-    
+    const int *O = (int*)PyArray_DATA(pO);
+
     npy_intp alpha_dims[2] = {T, N};
     npy_intp scale_dims[1] = {T};
     PyObject *pAlpha = PyArray_ZEROS(2, alpha_dims, NPY_FLOAT32, 0);
@@ -569,8 +569,8 @@ py_nomB32(PyObject *self, PyObject *args)
     PyArrayObject *pO, *pGamma;
     int M;
     if (!PyArg_ParseTuple(args, "O!O!i",
-            &PyArray_Type, &pO,
             &PyArray_Type, &pGamma,
+            &PyArray_Type, &pO,
             &M))
     {
         return NULL;
@@ -611,8 +611,8 @@ py_xi32(PyObject *self, PyObject *args)
     const float *beta = (float*)PyArray_DATA(pBeta);
     const float *alpha = (float*)PyArray_DATA(pAlpha);
 
-    npy_intp xi_dims[2] = {N,N};
-    PyObject *pXi = PyArray_ZEROS(2, xi_dims, NPY_FLOAT32, 0);
+    npy_intp xi_dims[3] = {T,N,N};
+    PyObject *pXi = PyArray_ZEROS(3, xi_dims, NPY_FLOAT32, 0);
 
     float *xi = (float*) PyArray_DATA(pXi);
     computeXi32(xi, A, B, O, alpha, beta, N, M, T);
@@ -665,9 +665,9 @@ py_update32(PyObject *self, PyObject *args)
     PyArrayObject *pO, *pXi, *pGamma;
     int M;
     if (!PyArg_ParseTuple(args, "O!O!O!i",
-            &PyArray_Type, &pO,
             &PyArray_Type, &pGamma,
             &PyArray_Type, &pXi,
+            &PyArray_Type, &pO,
             &M))
     {
         return NULL;

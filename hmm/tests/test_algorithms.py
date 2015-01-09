@@ -1,5 +1,5 @@
 import hmm.algorithms
-import hmm.models
+import hmm.utility
 import unittest
 import numpy
 import hmm.kernel.python
@@ -9,7 +9,7 @@ class TestBaumWelchMultiple(unittest.TestCase):
 
     def test_if_same_as_baum_welch_after_one_step(self):
         ob = [ 1, 1, 0, 1, 1, 0, 0, 1, 1 ]
-        A, B, pi = hmm.models.get_models()['equi32']
+        A, B, pi = hmm.utility.get_models()['equi32']
 
         A1, B1, pi1, prob1, it1 = hmm.algorithms.baum_welch(
                 ob, A, B, pi, maxit=1, kernel=hmm.kernel.python)
@@ -25,7 +25,7 @@ class TestBaumWelch(unittest.TestCase):
 
     def test_if_it_even_runs(self):
         ob = [ 1, 1, 0, 1 ]
-        A, B, pi = hmm.models.get_models()['equi32']
+        A, B, pi = hmm.utility.get_models()['equi32']
         A, B, pi, eps, it = hmm.algorithms.baum_welch(ob, A, B, pi)
         self.assertTrue(it > 0)
 

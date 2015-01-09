@@ -10,7 +10,7 @@ closely related to Rabiners [1] paper.
 """
 import numpy
 
-def forward_no_scaling(A, B, pi, ob, dtype=numpy.float64):
+def forward_no_scaling(A, B, pi, ob, dtype=numpy.float32):
     """Compute P(ob|A,B,pi) and all forward coefficients. No scaling done.
 
     Parameters
@@ -53,7 +53,7 @@ def forward_no_scaling(A, B, pi, ob, dtype=numpy.float64):
     prob = alpha[T-1].sum()
     return (prob, alpha)
 
-def backward_no_scaling(A, B, ob, dtype=numpy.float64):
+def backward_no_scaling(A, B, ob, dtype=numpy.float32):
     """Compute all backward coefficients. No scaling.
 
     Parameters
@@ -88,7 +88,7 @@ def backward_no_scaling(A, B, ob, dtype=numpy.float64):
                 beta[t,i] += A[i,j] * beta[t+1,j] * B[j,ob[t+1]]
     return beta
 
-def forward(A, B, pi, ob, dtype=numpy.float64):
+def forward(A, B, pi, ob, dtype=numpy.float32):
     """Compute P(ob|A,B,pi) and all forward coefficients. With scaling!
 
     Parameters
@@ -121,7 +121,6 @@ def forward(A, B, pi, ob, dtype=numpy.float64):
     T, N = len(ob), len(A)
     alpha = numpy.zeros((T,N), dtype=dtype)
     scale = numpy.zeros(T, dtype=dtype)
-    
     # initial values
     for i in range(N):
         alpha[0,i] = pi[i] * B[i,ob[0]]
@@ -139,14 +138,13 @@ def forward(A, B, pi, ob, dtype=numpy.float64):
             scale[t+1] += alpha[t+1,j]
         for j in range(N):
             alpha[t+1,j] /= scale[t+1]
-        
     logprob = 0.0
     for t in range(T):
         logprob += numpy.log(scale[t])
     return (logprob, alpha, scale)
 
 
-def backward(A, B, ob, scaling, dtype=numpy.float64):
+def backward(A, B, ob, scaling, dtype=numpy.float32):
     """Compute all backward coefficients. With scaling!
 
     Parameters
@@ -179,8 +177,63 @@ def backward(A, B, ob, scaling, dtype=numpy.float64):
                 beta[t,i] += A[i,j] * beta[t+1,j] * B[j,ob[t+1]] / scaling[t]
     return beta
 
+def update(gamma, xi, ob, M, dtype=numpy.float32):
+    """ Return an updated model for given state and transition counts.
 
-def state_probabilities(alpha, beta, dtype=numpy.float64):
+    Parameters
+    ----------
+    gamma : numpy.array shape (T,N)
+            state probabilities for each t 
+    xi : numpy.array shape (T,N,N)
+         transition probabilities for each t
+    ob : numpy.array shape (T)
+         observation sequence containing only symbols, i.e. ints in [0,M)
+
+    Returns
+    -------
+    A : numpy.array (N,N)
+        new transition matrix
+    B : numpy.array (N,M)
+        new symbol probabilities
+    pi : numpy.array (N)
+         new initial distribution
+    dtype : { nupmy.float64, numpy.float32 }, optional
+
+    Notes
+    -----
+    This function is part of the Bell-Welch algorithm for a single observation.
+
+    See Also
+    --------
+    state_probabilities : to calculate `gamma`
+    transition_probabilities : to calculate `xi`
+
+    """
+    T,N = len(ob), len(gamma[0])
+    pi = numpy.zeros((N), dtype=dtype)
+    A  = numpy.zeros((N,N), dtype=dtype)
+    B  = numpy.zeros((N,M), dtype=dtype)
+    for i in range(N):
+        pi[i] = gamma[0,i]
+    for i in range(N):
+        gamma_sum = 0.0
+        for t in range(T-1):
+            gamma_sum += gamma[t,i]
+        for j in range(N):
+            A[i,j] = 0.0
+            for t in range(T-1):
+                A[i,j] += xi[t,i,j]
+            A[i,j] /= gamma_sum
+        gamma_sum += gamma[T-1, i]
+        for k in range(M):
+            B[i,k] = 0.0
+            for t in range(T):
+                if ob[t] == k:
+                    B[i,k] += gamma[t,i]
+            B[i,k] /= gamma_sum
+    return (A, B, pi)
+
+def state_probabilities(alpha, beta, dtype=numpy.float32):
     """ Calculate the (T,N)-probabilty matrix for being in state i at time t.
 
     Parameters
@@ -217,7 +270,7 @@ def state_probabilities(alpha, beta, dtype=numpy.float64):
             gamma[t,i] /= sum
     return gamma
 
-def state_counts(gamma, T, dtype=numpy.float64):
+def state_counts(gamma, T, dtype=numpy.float32):
     """ Sum the probabilities of being in state i to time t
 
     Parameters
@@ -246,7 +299,7 @@ def state_counts(gamma, T, dtype=numpy.float64):
     return numpy.sum(gamma[0:T], axis=0)
 
 
-def symbol_counts(gamma, ob, M, dtype=numpy.float64):
+def symbol_counts(gamma, ob, M, dtype=numpy.float32):
     """ Sum the observed probabilities to see symbol k in state i.
 
     Parameters
@@ -281,7 +334,7 @@ def symbol_counts(gamma, ob, M, dtype=numpy.float64):
     return counts
 
 
-def transition_probabilities(alpha, beta, A, B, ob, dtype=numpy.float64):
+def transition_probabilities(alpha, beta, A, B, ob, dtype=numpy.float32):
     """ Compute for each t the probability to transition from state i to state j.
 
     Parameters
@@ -328,7 +381,7 @@ def transition_probabilities(alpha, beta, A, B, ob, dtype=numpy.float64):
                 xi[t,i,j] /= sum
     return xi
 
-def transition_counts(alpha, beta, A, B, ob, dtype=numpy.float64):
+def transition_counts(alpha, beta, A, B, ob, dtype=numpy.float32):
     """ Sum for all t the probability to transition from state i to state j.
 
     Parameters
@@ -361,7 +414,6 @@ def transition_counts(alpha, beta, A, B, ob, dtype=numpy.float64):
     transition_probabilities : return the matrix of transition probabilities
     forward : calculate forward coefficients `alpha`
     backward : calculate backward coefficients `beta`
-
     """
     T, N = len(ob), len(A)
     xi = numpy.zeros((N,N), dtype=dtype)
@@ -379,47 +431,47 @@ def transition_counts(alpha, beta, A, B, ob, dtype=numpy.float64):
     return counts
 
 def random_sequence(A, B, pi, T):
-	""" Generate an observation sequence of length T from the model A, B, pi.
+    """ Generate an observation sequence of length T from the model A, B, pi.
 
-	Parameters
-	----------
-	A : numpy.array shape (N,N)
-	    transition matrix of the model
-	B : numpy.array shape (N,M)
-	    symbol probability matrix of the model
-	pi : numpy.array shape (N)
-	     starting probability vector of the model
+    Parameters
+    ----------
+    A : numpy.array shape (N,N)
+        transition matrix of the model
+    B : numpy.array shape (N,M)
+        symbol probability matrix of the model
+    pi : numpy.array shape (N)
+         starting probability vector of the model
 
-	Returns
-	-------
-	obs : numpy.array shape (T)
-	      observation sequence containing only symbols, i.e. ints in [0,M)
+    Returns
+    -------
+    obs : numpy.array shape (T)
+          observation sequence containing only symbols, i.e. ints in [0,M)
 
-	Notes
-	-----
-	This function relies on the function draw_state(distr).
+    Notes
+    -----
+    This function relies on the function draw_state(distr).
  
-	See Also
-	--------
-	draw_state : draw the index of the state, obeying the probability
-	             distribution vector distr
+    See Also
+    --------
+    draw_state : draw the index of the state, obeying the probability
+                 distribution vector distr
 
-	"""
-	obs    = numpy.zeros(T, dtype=numpy.int16)
-	state  = draw_state(pi)
-	obs[0] = state
-	for t in range(1,T):
-		state  = draw_state( A[state] )
-		obs[t] = draw_state( B[state] )
-	return obs
+    """
+    obs    = numpy.zeros(T, dtype=numpy.int16)
+    state  = draw_state(pi)
+    obs[0] = state
+    for t in range(1,T):
+        state  = draw_state( A[state] )
+        obs[t] = draw_state( B[state] )
+    return obs
 
 def draw_state(distr):
-	x = numpy.random.random()
-	D = len(distr)
-	for state in range(D):
-		if x < distr[state]:
-			return state
-		else:
-			x -= distr[state]
-	return state
+    x = numpy.random.random()
+    D = len(distr)
+    for state in range(D):
+        if x < distr[state]:
+            return state
+        else:
+            x -= distr[state]
+    return state
 

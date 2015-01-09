@@ -48,27 +48,29 @@ float forward32(
     int i, j, t;
     float sum, logprob;
 
-    scaling[0] = 0.0;
+    scaling[0] = 0.0f;
     for (i = 0; i < N; i++) {
         alpha[i]  = pi[i] * B[i*M+O[0]];
         scaling[0] += alpha[i];
     }
     if (scaling[0] != 0)
-    for (i = 0; i < N; i++)
-        alpha[i] /= scaling[0];
+        for (i = 0; i < N; i++)
+            alpha[i] /= scaling[0];
+
     for (t = 0; t < T-1; t++) {
-        scaling[t+1] = 0.0;
+        scaling[t+1] = 0.0f;
         for (j = 0; j < N; j++) {
-            sum = 0.0;
+            sum = 0.0f;
             for (i = 0; i < N; i++) {
-                sum += alpha[t*N+i]*A[i*N+j];
+                sum += DIM2(alpha,t,i)*DIM2(A,i,j);
             }
-            alpha[(t+1)*N+j] = sum * B[j*M+O[t+1]];
-            scaling[t+1] += alpha[(t+1)*N+j];
+            DIM2(alpha,t+1,j) = sum * DIMM2(B,j,O[t+1]);
+            scaling[t+1] += DIM2(alpha,t+1,j);
         }
         if (scaling[t+1] != 0)
-        for (j = 0; j < N; j++)
-            alpha[(t+1)*N+j] /= scaling[t+1];
+            for (j = 0; j < N; j++) {
+                DIM2(alpha,t+1,j) /= scaling[t+1];
+            }
     }
     // calculate likelihood
     logprob = 0.0f;
@@ -122,9 +124,11 @@ void compute_nomB32(
         int N, int M, int T)
 {
     int i, k, t;
-    for (t = 0; t < t; i++)
-        for (i = 0; i < N; i++)
-            DIMM2(nomB, i, ob[t]) += DIM2(gamma, t, i);
+    for (i = 0; i < N; i++)
+        for (k = 0; k < M; k++)
+            for (t = 0; t < T; t++)
+                if (ob[t] == k)
+                    DIMM2(nomB, i, ob[t]) += DIM2(gamma, t, i);
 }
 
 void backward_no_scaling32(
@@ -208,22 +212,19 @@ void computeXi32(
 {
     int i, j, t;
     float sum;
-    float *xi_t = (float*) malloc(N*N*sizeof(float));
 
     for (t = 0; t < T-1; t++) {
         sum = 0.0;
         for (i = 0; i < N; i++)
             for (j = 0; j < N; j++) {
-                xi_t[i*N + j] = alpha[t*N+i]*beta[(t+1)*N+j]*A[i*N+j]*B[j*M+O[t+1]];
-                sum += xi_t[i*N + j];
+                DIM3(xi, t, i, j) = alpha[t*N+i]*beta[(t+1)*N+j]*A[i*N+j]*B[j*M+O[t+1]];
+                sum += DIM3(xi, t, i, j);
             }
         for (i = 0; i < N; i++)
             for (j = 0; j < N; j++) {
-                xi_t[i*N + j] /= sum;
-                xi[i*N + j] += xi_t[i*N + j];
+                DIM3(xi, t, i, j) /= sum;
             }
     }
-    free(xi_t);
 }
 
 void update_multiple32(
@@ -281,21 +282,24 @@ void update32(
     for (i = 0; i < N; i++) {
         gamma_sum = 0.0;
         for (t = 0; t < T-1; t++)
-            gamma_sum += gamma[t*N+i];
+            gamma_sum += DIM2(gamma,t,i);
 
         /* UPDATE TRANSITION MATRIX A */
         for (j = 0; j < N; j++) {
-            A[i*N + j] = xi[i*N + j] / gamma_sum;
+            sum = 0.0;
+            for (t = 0; t < T-1; t++)
+                sum += DIM3(xi,t,i,j);
+            DIM2(A,i,j) = sum / gamma_sum;
         }
 
         /* UPDATE SYMBOL PROBABILITY B */
-        gamma_sum += gamma[(T-1)*N + i];
+        gamma_sum += DIM2(gamma,T-1,i);
         for (k = 0; k < M; k++) {
             sum = 0.0;
             for (t = 0; t < T; t++)
                 if (O[t] == k)
-                    sum += gamma[t*N + i];
-            B[i*M + k] = sum / gamma_sum;
+                    sum += DIM2(gamma,t,i);
+            DIMM2(B,i,k) = sum / gamma_sum;
         }
     }
 }

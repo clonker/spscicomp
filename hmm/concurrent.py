@@ -1,7 +1,7 @@
 import numpy
 import multiprocessing
 import hmm.algorithms
-import hmm.kernel.fortran
+
 
 class Thread(multiprocessing.Process):
     def __init__(self, task_queue, result_queue):
@@ -22,16 +22,17 @@ class Thread(multiprocessing.Process):
             self.result_queue.put(answer)
 
 class Task(object):
-    def __init__(self, A, B, pi, ob, kernel):
-        self.kernel = kernel
+    def __init__(self, A, B, pi, ob):
         self.ob = ob
         self.A  = A
         self.B  = B
         self.pi = pi 
     def __call__(self):
-        return hmm.algorithms.noms_and_denoms(self.A, self.B, self.pi, self.b, self.kernel)
+        return hmm.algorithms.noms_and_denoms(
+            self.A, self.B, self.pi, self.ob, kernel=hmm.kernel.c)
 
-def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.fortran):
+def baum_welch_multiple(obs, A, B, pi, 
+        accuracy=1e-3, maxit=1000, kernel=hmm.kernel.c):
     K, N, M = len(obs), len(A), len(B[0])
     nomsA   = numpy.zeros((K,N,N), dtype=A.dtype)
     denomsA = numpy.zeros((K,N),   dtype=A.dtype)
@@ -52,19 +53,21 @@ def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.ker
     it = 0
     new_eps = accuracy+1
 
-    while (abs(new_eps - old_eps) > accuracy and it < maxiter):
+    while (abs(new_eps - old_eps) > accuracy and it < maxit):
         for k in xrange(K):
-            tasks.put(Task(, obs[k]))
+            tasks.put(Task(A, B, pi, obs[k]))
         for k in xrange(K):
-            weights[k], nomsA[k], denomsA[k], nomsB[k], denomsB[k] = results.get()
+            weights[k], nomsA[k], denomsA[k], nomsB[k], denomsB[k] \
+                = results.get()
             
-        A, B = hmm.algorithms.update_multiple(weights, nomsA, denomsA, nomsB, denomsB)
+        A, B = hmm.algorithms.update_multiple(
+            weights, nomsA, denomsA, nomsB, denomsB)
 
         if (it == 0):
             old_eps = 0
         else:
             old_eps = new_eps
-        new_eps = np.sum(weights)
+        new_eps = numpy.sum(weights)
         it += 1
             
     # Finalize threading but shutting them down
@@ -74,4 +77,4 @@ def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.ker
     for thread in pool:
         thread.join()
 
-    return new_eps, it
+    return A, B, pi, new_eps, it

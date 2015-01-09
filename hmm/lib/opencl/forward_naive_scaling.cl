@@ -106,8 +106,6 @@ kernel void
 forward_reduce (
       global   ${precision} *grouped_results,
       global   ${precision} *last_results,
-      global   ${precision} *scaling_results,
-      local    ${precision} *scaling_scratch
       local    ${precision} *scratch,
       unsigned long T)
 {
@@ -141,9 +139,6 @@ forward_reduce (
             for (int i = 0; i < N; i++)
                for (int j = 0; j < N; j++)
                   C_t[i][j] /= scaling_factor;
-
-            /* save scaling factor */
-            scaling_scratch[local_id] *= scaling_factor;
          }
          barrier(CLK_LOCAL_MEM_FENCE);
 

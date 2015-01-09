@@ -131,7 +131,8 @@ forward_reduce (
                for (int j = 0; j < N; j++) {
                   C_t[i][j] = 0.0f;
                   for (int k = 0; k < N; k++)
-                      C_t[i][j] += DIM3(scratch, local_id, i, k)*DIM3(scratch, local_id - offset, k, j);
+                     C_t[i][j] += DIM3(scratch, local_id, i, k)
+                           * DIM3(scratch, local_id - offset, k, j);
                }
          }
          barrier(CLK_LOCAL_MEM_FENCE);

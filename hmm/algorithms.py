@@ -1,7 +1,7 @@
 import hmm.kernel.python
 import numpy
 
-def noms_and_denoms(A, B, pi, ob, kernel=hmm.kernel.python, dtype=numpy.float64):
+def noms_and_denoms(A, B, pi, ob, kernel=hmm.kernel.python, dtype=numpy.float32):
     T = len(ob)
     weight, alpha, scaling = kernel.forward(A, B, pi, ob, dtype)
     beta   = kernel.backward(A, B, ob, scaling, dtype)
@@ -13,7 +13,7 @@ def noms_and_denoms(A, B, pi, ob, kernel=hmm.kernel.python, dtype=numpy.float64)
     return weight, nomA, denomA, nomB, denomB
 
 
-def update_multiple(weights, noms_A, denoms_A, noms_B, denoms_B, dtype=numpy.float64):
+def update_multiple(weights, noms_A, denoms_A, noms_B, denoms_B, dtype=numpy.float32):
     K, N, M = len(weights), len(noms_A[0]), len(noms_B[0,0])
     A = numpy.zeros((N,N), dtype=dtype)
     B = numpy.zeros((N,M), dtype=dtype)
@@ -34,7 +34,7 @@ def update_multiple(weights, noms_A, denoms_A, noms_B, denoms_B, dtype=numpy.flo
     return A, B
 
 
-def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.python, dtype=numpy.float64):
+def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.python, dtype=numpy.float32):
     K, N, M = len(obs), len(A), len(B[0])
     nomsA   = numpy.zeros((K,N,N), dtype=dtype)
     denomsA = numpy.zeros((K,N),   dtype=dtype)
@@ -85,7 +85,7 @@ def baum_welch(ob, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.python
             ending criteria for the iteration
     kernel : module, optional
              module containing all functions to make calculations with
-    dtype : { numpy.float32, numpy.float64 }, optional
+    dtype : { numpy.float32, numpy.float32 }, optional
             datatype to be used for the matrices.
 
     Returns
@@ -106,16 +106,21 @@ def baum_welch(ob, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.python
     kernel.python, kernel.c, kernel.fortran : possible kernels
     baum_welch_multiple : perform optimization with multiple observations.
     """
-    it = 0
     T = len(ob)
     old_probability = 0.0
-    new_probability, alpha, scaling = kernel.forward(A, B, pi, ob, dtype)
+    it = 0
+    new_probability = accuracy+1
     while (abs(new_probability - old_probability) > accuracy and it < maxit):
+        probability, alpha, scaling = kernel.forward(A, B, pi, ob, dtype)
         beta = kernel.backward(A, B, ob, scaling, dtype)
         gamma = kernel.state_probabilities(alpha, beta, dtype)
         xi = kernel.transition_probabilities(alpha, beta, A, B, ob, dtype)
         A, B, pi = kernel.update(gamma, xi, ob, len(B[0]), dtype)
-        old_probability = new_probability
-        new_probability, alpha, scaling = kernel.forward(A, B, pi, ob, dtype)
+
+        if it == 0:
+            old_probability = 0
+        else:
+            old_probability = new_probability
+        new_probability = probability
         it += 1
     return (A, B, pi, new_probability, it)

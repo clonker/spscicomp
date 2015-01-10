@@ -27,7 +27,7 @@
          result[i] += matrix[i][j]*vector[j];        \
       scaling += result[i];                          \
    }                                                 \
-   for (int i = 0; i < N; i++)                       \
+   if (scaling != 0) for (int i = 0; i < N; i++)     \
       result[i] /= scaling;                          \
 }
 
@@ -40,7 +40,7 @@
             result[i][j] += A[i][k]*B[k][j];         \
          scaling += result[i][j];                    \
       }                                              \
-   for (int i = 0; i < N; i++)                       \
+   if (scaling != 0) for (int i = 0; i < N; i++)     \
       for (int j = 0; j < N; j++)                    \
          result[i][j] /= scaling;                    \
 }
@@ -150,9 +150,10 @@ backward_reduce (
                   scaling_factor += C_t[i][j];
                }
             /* rescale C_t */
-            for (int i = 0; i < N; i++)
-               for (int j = 0; j < N; j++)
-                  C_t[i][j] /= scaling_factor;
+            if (scaling_factor != 0)
+               for (int i = 0; i < N; i++)
+                  for (int j = 0; j < N; j++)
+                     C_t[i][j] /= scaling_factor;
          }
          barrier(CLK_LOCAL_MEM_FENCE);
 

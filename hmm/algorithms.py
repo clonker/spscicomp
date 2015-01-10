@@ -112,7 +112,13 @@ def baum_welch(ob, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.python
     new_probability = accuracy+1
     while (abs(new_probability - old_probability) > accuracy and it < maxit):
         probability, alpha, scaling = kernel.forward(A, B, pi, ob, dtype)
+
+        print alpha
+
         beta = kernel.backward(A, B, ob, scaling, dtype)
+
+        print beta
+
         gamma = kernel.state_probabilities(alpha, beta, dtype)
         xi = kernel.transition_probabilities(alpha, beta, A, B, ob, dtype)
         A, B, pi = kernel.update(gamma, xi, ob, len(B[0]), dtype)

@@ -110,7 +110,7 @@ forward_build_matrices (
 
          for (int i = 0; i < N; i++)
             for (int j = 0; j < N; j++) {
-               matrices_ij = _A[i][j] * _B[i][o_t];
+               matrices_ij = _A[j][i] * _B[i][o_t];
                DIM3(matrices, global_id-1, i, j) = matrices_ij;
             }
       }

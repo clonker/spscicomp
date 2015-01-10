@@ -2,483 +2,276 @@ import pyopencl
 import numpy
 import string
 
+def update(A, B, pi, alpha, transitions, states, symbols, probability, N, T):
+    kernel.update.update(
+            queue,
+            (N,N), None,
+            A, B, pi, alpha, transitions, states, symbols, probability, numpy.int64(T))
 
-def backward_no_scaling_naive(ctx, A, B, pi, ob):
-    """Compute P(ob|A,B,pi) and all forward coefficients. No scaling done.
+def transition_probabilities(alpha, beta, A, B, ob, T, xi):
+    kernel.update.transition_probabilities(
+            queue,
+            (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
+            xi, alpha, beta, A, B, ob, numpy.uint64(T))
 
-    This function is for developing the algorithm in general. Do not use this
-    in real applications since there is no scaling done. For observation
-    sequences larger than 1500 you will get underflow issues.
+def state_probabilities(alpha, beta, T):
+    kernel.update.state_probabilities(
+            queue,
+            (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
+            alpha, beta, numpy.uint64(T))
 
-    Parameters
-    ----------
-    ctx : hmm.kernel.opencl.Context
-          context object created by this module, needed for caching buffers
-          handling device information and so on ...
-    A : numpy.array of np.float32 and shape (N,N)
-        transition matrix of the hidden states
-    B : numpy.array of np.float32 and shape (N,M)
-        symbol probability matrix for each hidden state
-    pi : numpy.array of np.float32 and shape (N)
-         initial distribution
-    ob : numpy.array of np.int16 and shape (T)
-         observation sequence of integer between 0 and M, used as indices in B
-
-    Returns
-    -------
-    alpha : pyopencl.Buffer
-            alpha[t,i] is the ith forward coefficient of time t. These can be
-            used in many different algorithms related to HMMs.
-
-    Notes
-    -----
-    The idea of this algorithm is to write alpha in terms of matrix
-    multiplications as shown in paper [1]. Since matrix multiplication is an
-    associative binary operator, one can easily apply well known parallelism
-    algorithms [2] for cumulative sums. That way one gets alpha_t for each
-    t logarithmic in time. See [3] for CUDA implementation details.
-
-    See Also
-    --------
-    hmm.kernel.python.forward_no_scaling : simple implementation
-
-    .. [1] "Algorithms for a parallel implementation of Hidden Markov Models 
-       with a small state space", Jesper Nielsen, Andreas Sand, 2011.
-       Bioinformatics Research Centre Aarhus University Aarhus, Denmark. 
-       http://www.hicomb.org/papers/HICOMB2011-06.pdf
-    .. [2] "Prefix Sums and Their Applications". Guy E. Blelloch. In John H. 
-       Reif (Ed.), Synthesis of Parallel Algorithms, Morgan Kaufmann, 1990.
-    .. [3] "Parallel Prefix Sum (Scan) with CUDA",
-       http://developer.download.nvidia.com/compute/cuda/1.1-Beta/x86_website/projects/scan/doc/scan.pdf
-    """
-    T,N = len(ob), len(A)
-    mf = pyopencl.mem_flags
-
-    if (ctx.WORK_GROUP_SIZE == 1):
-        raise ValueError
-
-    A_, B_, pi_, ob_ = ctx.create_buffer(A, B, pi, ob)
-
-    ctx.kernel_backward_no_scaling.backward_build_matrices (
-            ctx.queue,
-            (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-            ctx.matrices, ctx.beta, A_, B_, ob_, numpy.uint64(T))
-
-    T = T - 1 # ctx.matrices does not contain beta_T!
-
-    last_results = ctx.matrices
-    stack = [ (last_results, T) ]
+def transition_counts(xi, T, N, scratch):
     while T > 1:
-        grouped_results = pyopencl.Buffer(ctx.context, 
-            mf.READ_WRITE, (T/ctx.WORK_GROUP_SIZE+1)*N*N*4)
-        ctx.kernel_backward_no_scaling.backward_reduce (
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                grouped_results, last_results, ctx.scratch, numpy.uint64(T))
-        T = T / ctx.WORK_GROUP_SIZE
-        stack.append( (grouped_results, T) )
-        last_results = grouped_results
-
-    grouped_results = last_results
-    while stack:
-        last_results, T = stack.pop()
-        ctx.kernel_backward_no_scaling.backward_rewind(
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                last_results, grouped_results, numpy.uint64(T))
-        grouped_results = last_results
-
-    T = T + 1
-    ctx.kernel_backward_no_scaling.backward_multiply_with_beta_T(
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                ctx.beta, ctx.matrices, numpy.uint64(5))
-
-    return ctx.beta
+        if T > kernel.WORK_GROUP_SIZE:
+            S = T / kernel.WORK_GROUP_SIZE + 1
+        else:
+            S = 1
+        counts = pyopencl.Buffer(context, pyopencl.mem_flags.READ_WRITE, S*4*N*N)
+        kernel.update.transition_counts(
+            queue, (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
+            xi, scratch, numpy.uint64(T), counts)
+        xi = counts
+        T = S
+    return counts
 
 
-def backward_naive(ctx, A, B, pi, ob):
-    """Compute P(ob|A,B,pi) and all forward coefficients. No scaling done.
+def symbol_counts(gamma, ob, T, N, M, scratch):
+    if T > kernel.WORK_GROUP_SIZE:
+        S = T / kernel.WORK_GROUP_SIZE + 1
+    else:
+        S = 1
+    symbols = pyopencl.Buffer(context, pyopencl.mem_flags.READ_WRITE, S*4*N*M)
 
-    This function is for developing the algorithm in general. Do not use this
-    in real applications since there is no scaling done. For observation
-    sequences larger than 1500 you will get underflow issues.
+    kernel.update.symbol_counts(
+            queue, (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
+            gamma, ob, scratch, numpy.uint64(T), symbols)
+    return symbols
 
-    Parameters
-    ----------
-    ctx : hmm.kernel.opencl.Context
-          context object created by this module, needed for caching buffers
-          handling device information and so on ...
-    A : numpy.array of np.float32 and shape (N,N)
-        transition matrix of the hidden states
-    B : numpy.array of np.float32 and shape (N,M)
-        symbol probability matrix for each hidden state
-    pi : numpy.array of np.float32 and shape (N)
-         initial distribution
-    ob : numpy.array of np.int16 and shape (T)
-         observation sequence of integer between 0 and M, used as indices in B
-
-    Returns
-    -------
-    alpha : pyopencl.Buffer
-            alpha[t,i] is the ith forward coefficient of time t. These can be
-            used in many different algorithms related to HMMs.
-
-    Notes
-    -----
-    The idea of this algorithm is to write alpha in terms of matrix
-    multiplications as shown in paper [1]. Since matrix multiplication is an
-    associative binary operator, one can easily apply well known parallelism
-    algorithms [2] for cumulative sums. That way one gets alpha_t for each
-    t logarithmic in time. See [3] for CUDA implementation details.
-
-    See Also
-    --------
-    hmm.kernel.python.forward_no_scaling : simple implementation
-
-    .. [1] "Algorithms for a parallel implementation of Hidden Markov Models 
-       with a small state space", Jesper Nielsen, Andreas Sand, 2011.
-       Bioinformatics Research Centre Aarhus University Aarhus, Denmark. 
-       http://www.hicomb.org/papers/HICOMB2011-06.pdf
-    .. [2] "Prefix Sums and Their Applications". Guy E. Blelloch. In John H. 
-       Reif (Ed.), Synthesis of Parallel Algorithms, Morgan Kaufmann, 1990.
-    .. [3] "Parallel Prefix Sum (Scan) with CUDA",
-       http://developer.download.nvidia.com/compute/cuda/1.1-Beta/x86_website/projects/scan/doc/scan.pdf
-    """
-    T,N = len(ob), len(A)
-    mf = pyopencl.mem_flags
-
-    if (ctx.WORK_GROUP_SIZE == 1):
-        raise ValueError
-
-    A_, B_, pi_, ob_ = ctx.create_buffer(A, B, pi, ob)
-
-    ctx.kernel_backward.backward_build_matrices (
-            ctx.queue,
-            (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-            ctx.matrices, ctx.beta, A_, B_, ob_, numpy.uint64(T))
-
-    T = T - 1 # ctx.matrices does not contain alpha_0!
-
-    # forward upwind method
-    last_results = ctx.matrices
-    stack = [ (last_results, T) ]
+def state_counts(gamma, T, N, scratch):
+    gamma_counts = gamma
     while T > 1:
-        grouped_results = pyopencl.Buffer(ctx.context, 
-            mf.READ_WRITE, (T/ctx.WORK_GROUP_SIZE+1)*N*N*4)
-        ctx.kernel_backward.backward_reduce (
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                grouped_results, last_results, ctx.scratch, numpy.uint64(T))
-        T = T / ctx.WORK_GROUP_SIZE
-        stack.append( (grouped_results, T) )
-        last_results = grouped_results
+        if T > kernel.WORK_GROUP_SIZE:
+            S = T / kernel.WORK_GROUP_SIZE + 1
+        else:
+            S = 1
+        counts = pyopencl.Buffer(context, pyopencl.mem_flags.READ_WRITE, S*4*N)
+        kernel.update.state_counts(
+            queue, (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
+            gamma_counts, scratch, numpy.uint64(T), counts)
+        gamma_counts = counts
+        T = S
+    return gamma_counts
 
-    # forward rewind method
-    grouped_results = last_results
-    while stack:
-        last_results, T = stack.pop()
-        ctx.kernel_backward.backward_rewind(
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                last_results, grouped_results, numpy.uint64(T))
-        grouped_results = last_results
+def baum_welch(
+        sequence,
+        transition_probs,
+        symbol_probs,
+        initial_dist,
+        accuracy = 1e-3,
+        maxit    = 1):
 
-    T = T + 1
-    ctx.kernel_backward.backward_multiply_with_beta_T(
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                ctx.beta, last_results, numpy.uint64(T))
+    A  = pyopencl.Buffer(
+            context, 
+            pyopencl.mem_flags.READ_WRITE | pyopencl.mem_flags.COPY_HOST_PTR,
+            hostbuf=transition_probs)
+    B  = pyopencl.Buffer(
+            context,
+            pyopencl.mem_flags.READ_WRITE | pyopencl.mem_flags.COPY_HOST_PTR,
+            hostbuf=symbol_probs)
+    pi = pyopencl.Buffer(
+            context,
+            pyopencl.mem_flags.READ_WRITE | pyopencl.mem_flags.COPY_HOST_PTR,
+            hostbuf=initial_dist)
+    ob = pyopencl.Buffer(
+            context,
+            pyopencl.mem_flags.READ_ONLY | pyopencl.mem_flags.COPY_HOST_PTR,
+            hostbuf=sequence)
 
-    return ctx.beta
+    T = len(sequence)
+    N = len(transition_probs)
+    M = len(symbol_probs[0])
 
+    alpha = pyopencl.Buffer(
+            context,
+            pyopencl.mem_flags.READ_WRITE,
+            T*N * numpy.dtype('float32').itemsize)
 
-def forward_no_scaling_naive(ctx, A, B, pi, ob):
-    """Compute P(ob|A,B,pi) and all forward coefficients. No scaling done.
+    beta = pyopencl.Buffer(
+            context,
+            pyopencl.mem_flags.READ_WRITE,
+            T*N * numpy.dtype('float32').itemsize)
 
-    This function is for developing the algorithm in general. Do not use this
-    in real applications since there is no scaling done. For observation
-    sequences larger than 1500 you will get underflow issues.
+    matrix_buffer = pyopencl.Buffer(
+            context,
+            pyopencl.mem_flags.READ_WRITE,
+            T*N*N * numpy.dtype('float32').itemsize)
 
-    Parameters
-    ----------
-    ctx : hmm.kernel.opencl.Context
-          context object created by this module, needed for caching buffers
-          handling device information and so on ...
-    A : numpy.array of np.float32 and shape (N,N)
-        transition matrix of the hidden states
-    B : numpy.array of np.float32 and shape (N,M)
-        symbol probability matrix for each hidden state
-    pi : numpy.array of np.float32 and shape (N)
-         initial distribution
-    ob : numpy.array of np.int16 and shape (T)
-         observation sequence of integer between 0 and M, used as indices in B
+    scratch = pyopencl.LocalMemory(
+        kernel.WORK_GROUP_SIZE*N*N* numpy.dtype('float32').itemsize )
 
-    Returns
-    -------
-    alpha : pyopencl.Buffer
-            alpha[t,i] is the ith forward coefficient of time t. These can be
-            used in many different algorithms related to HMMs.
-
-    Notes
-    -----
-    The idea of this algorithm is to write alpha in terms of matrix
-    multiplications as shown in paper [1]. Since matrix multiplication is an
-    associative binary operator, one can easily apply well known parallelism
-    algorithms [2] for cumulative sums. That way one gets alpha_t for each
-    t logarithmic in time. See [3] for CUDA implementation details.
-
-    See Also
-    --------
-    hmm.kernel.python.forward_no_scaling : simple implementation
-
-    .. [1] "Algorithms for a parallel implementation of Hidden Markov Models 
-       with a small state space", Jesper Nielsen, Andreas Sand, 2011.
-       Bioinformatics Research Centre Aarhus University Aarhus, Denmark. 
-       http://www.hicomb.org/papers/HICOMB2011-06.pdf
-    .. [2] "Prefix Sums and Their Applications". Guy E. Blelloch. In John H. 
-       Reif (Ed.), Synthesis of Parallel Algorithms, Morgan Kaufmann, 1990.
-    .. [3] "Parallel Prefix Sum (Scan) with CUDA",
-       http://developer.download.nvidia.com/compute/cuda/1.1-Beta/x86_website/projects/scan/doc/scan.pdf
-    """
-    T,N = len(ob), len(A)
-    mf = pyopencl.mem_flags
-
-    if (ctx.WORK_GROUP_SIZE == 1):
-        raise ValueError
-
-    A_, B_, pi_, ob_ = ctx.create_buffer(A, B, pi, ob)
-
-    ctx.kernel_forward_no_scaling.forward_build_matrices (
-            ctx.queue,
-            (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-            ctx.matrices, ctx.alpha, A_, B_, pi_, ob_, numpy.uint64(T))
-
-    T = T - 1 # ctx.matrices does not contain alpha_0!
-
-    # forward upwind method
-    last_results = ctx.matrices
-    stack = [ (last_results, T) ]
-    while T > 1:
-        grouped_results = pyopencl.Buffer(ctx.context, 
-            mf.READ_WRITE, (T/ctx.WORK_GROUP_SIZE+1)*N*N*4)
-        ctx.kernel_forward_no_scaling.forward_reduce (
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                grouped_results, last_results, ctx.scratch, numpy.uint64(T))
-        T = T / ctx.WORK_GROUP_SIZE
-        stack.append( (grouped_results, T) )
-        last_results = grouped_results
-
-    # forward rewind method
-    grouped_results = last_results
-    while stack:
-        last_results, T = stack.pop()
-        ctx.kernel_forward_no_scaling.forward_rewind(
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                last_results, grouped_results, numpy.uint64(T))
-        grouped_results = last_results
-
-    T = T + 1
-    ctx.kernel_forward_no_scaling.forward_multiply_with_alpha_0(
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                ctx.alpha, last_results, numpy.uint64(T))
-
-    return ctx.alpha
+    probability = pyopencl.Buffer(
+            context,
+            pyopencl.mem_flags.WRITE_ONLY,
+            numpy.dtype('float32').itemsize )
 
 
-def forward_naive(ctx, A, B, pi, ob):
-    """Compute P(ob|A,B,pi) and all forward coefficients. No scaling done.
-
-    This function is for developing the algorithm in general. Do not use this
-    in real applications since there is no scaling done. For observation
-    sequences larger than 1500 you will get underflow issues.
-
-    Parameters
-    ----------
-    ctx : hmm.kernel.opencl.Context
-          context object created by this module, needed for caching buffers
-          handling device information and so on ...
-    A : numpy.array of np.float32 and shape (N,N)
-        transition matrix of the hidden states
-    B : numpy.array of np.float32 and shape (N,M)
-        symbol probability matrix for each hidden state
-    pi : numpy.array of np.float32 and shape (N)
-         initial distribution
-    ob : numpy.array of np.int16 and shape (T)
-         observation sequence of integer between 0 and M, used as indices in B
-
-    Returns
-    -------
-    alpha : pyopencl.Buffer
-            alpha[t,i] is the ith forward coefficient of time t. These can be
-            used in many different algorithms related to HMMs.
-
-    Notes
-    -----
-    The idea of this algorithm is to write alpha in terms of matrix
-    multiplications as shown in paper [1]. Since matrix multiplication is an
-    associative binary operator, one can easily apply well known parallelism
-    algorithms [2] for cumulative sums. That way one gets alpha_t for each
-    t logarithmic in time. See [3] for CUDA implementation details.
-
-    See Also
-    --------
-    hmm.kernel.python.forward_no_scaling : simple implementation
-
-    .. [1] "Algorithms for a parallel implementation of Hidden Markov Models 
-       with a small state space", Jesper Nielsen, Andreas Sand, 2011.
-       Bioinformatics Research Centre Aarhus University Aarhus, Denmark. 
-       http://www.hicomb.org/papers/HICOMB2011-06.pdf
-    .. [2] "Prefix Sums and Their Applications". Guy E. Blelloch. In John H. 
-       Reif (Ed.), Synthesis of Parallel Algorithms, Morgan Kaufmann, 1990.
-    .. [3] "Parallel Prefix Sum (Scan) with CUDA",
-       http://developer.download.nvidia.com/compute/cuda/1.1-Beta/x86_website/projects/scan/doc/scan.pdf
-    """
-    T,N = len(ob), len(A)
-    mf = pyopencl.mem_flags
-
-    if (ctx.WORK_GROUP_SIZE == 1):
-        raise ValueError
-
-    A_, B_, pi_, ob_ = ctx.create_buffer(A, B, pi, ob)
-
-    ctx.kernel_forward.forward_build_matrices (
-            ctx.queue,
-            (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-            ctx.matrices, ctx.alpha, A_, B_, pi_, ob_, numpy.uint64(T))
-
-    T = T - 1 # ctx.matrices does not contain alpha_0!
-
-    # forward upwind method
-    last_results = ctx.matrices
-    stack = [ (last_results, T) ]
-    while T > 1:
-        grouped_results = pyopencl.Buffer(ctx.context, 
-            mf.READ_WRITE, (T/ctx.WORK_GROUP_SIZE+1)*N*N*4)
-        ctx.kernel_forward.forward_reduce (
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                grouped_results, last_results, ctx.scratch, numpy.uint64(T))
-        T = T / ctx.WORK_GROUP_SIZE
-        stack.append( (grouped_results, T) )
-        last_results = grouped_results
-
-    # forward rewind method
-    grouped_results = last_results
-    while stack:
-        last_results, T = stack.pop()
-        ctx.kernel_forward.forward_rewind(
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                last_results, grouped_results, numpy.uint64(T))
-        grouped_results = last_results
-
-    T = T + 1
-    ctx.kernel_forward.forward_multiply_with_alpha_0(
-                ctx.queue,
-                (ctx.NUM_UNITS,), (ctx.WORK_GROUP_SIZE,),
-                ctx.alpha, last_results, numpy.uint64(T))
-
-    return ctx.alpha
-
-
-
-class Context:
-    NUM_GROUPS      = 56
-    WORK_GROUP_SIZE = 256
-    NUM_UNITS       = 56*256
-
-    _FORWARD_SOURCE_SCALING    = 'lib/opencl/forward_naive_scaling.cl'
-    _FORWARD_SOURCE_NO_SCALING = 'lib/opencl/forward_naive.cl'
-    _BACKWARD_SOURCE_SCALING    = 'lib/opencl/backward_naive_scaling.cl'
-    _BACKWARD_SOURCE_NO_SCALING = 'lib/opencl/backward_naive.cl'
-
-    COMPILED_N = 0
-    COMPILED_M = 0
-    CACHED_T   = 0
-
-    # forward buffer
-    last_T  = 0
-    A_buf   = None
-    B_buf   = None
-    pi_buf  = None
-    ob_buf  = None
-    scaling = None
-
-    def __init__(self, N, M, T=0):
-        platform = pyopencl.get_platforms()[0]
-        device = platform.get_devices(device_type=pyopencl.device_type.GPU)[0]
-        self.context = pyopencl.Context([device])
-        self._compile_kernel(N, M)
-        self.queue = pyopencl.CommandQueue(self.context)
-        self.CACHED_T = T
-        if T > 0:
-            self.create_buffer_forward()
-
-    def _compile_kernel(self, N, M, DEBUG=1):
-        ff = open(self._FORWARD_SOURCE_SCALING, 'r')
-        fb = open(self._BACKWARD_SOURCE_SCALING, 'r')
-        fnb = open(self._BACKWARD_SOURCE_NO_SCALING, 'r')
-        fnf = open(self._FORWARD_SOURCE_NO_SCALING, 'r')
-        source = string.Template("".join(ff.readlines())).substitute(N=N, M=M, precision="float")
-        self.kernel_forward = pyopencl.Program(self.context, source).build()
-        source = string.Template("".join(fb.readlines())).substitute(N=N, M=M, precision="float")
-        self.kernel_backward = pyopencl.Program(self.context, source).build()
-        source = string.Template("".join(fnb.readlines())).substitute(N=N, M=M, precision="float")
-        self.kernel_backward_no_scaling = pyopencl.Program(self.context, source).build()
-        source = string.Template("".join(fnf.readlines())).substitute(N=N, M=M, precision="float")
-        self.kernel_forward_no_scaling = pyopencl.Program(self.context, source).build()
-        self.COMPILED_N = N
-        self.COMPILED_M = M
-
-    #@profile
-    def create_buffer(self, A, B, pi, ob):
-        mf = pyopencl.mem_flags
-        N, M, T = len(pi), len(B[0]), len(ob)
-
-        if N != self.COMPILED_N or M != self.COMPILED_M:
-            self._compile_kernel(N, M)
-
-        if T != self.CACHED_T:
-            self.CACHED_T = T
-            self.create_buffer_forward()
-
-            A = numpy.array(A, numpy.float32)
-            B = numpy.array(B, numpy.float32)
-            pi = numpy.array(pi, numpy.float32)
-            ob = numpy.array(ob, numpy.int16)
-
-            self.A_buf = pyopencl.Buffer(self.context, 
-                mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=A)
-            self.B_buf = pyopencl.Buffer(self.context, 
-                mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=B)
-            self.pi_buf = pyopencl.Buffer(self.context, 
-                mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=pi)
-            self.ob_buf = pyopencl.Buffer(self.context, 
-                mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=ob)
-
+    old_prob = 0.0
+    new_prob = old_prob + accuracy + 1
+    it       = 0
+    while it < maxit: # abs(new_prob - old_prob) > accuracy and it < maxit:
+        forward_naive(ob, A, B, pi, T, N, alpha, matrix_buffer, scratch)
+        backward_naive(ob, A, B, T, N, beta, matrix_buffer, scratch)
         
-        return self.A_buf, self.B_buf, self.pi_buf, self.ob_buf
+        a = numpy.zeros((T,N), numpy.float32)
+        pyopencl.enqueue_copy(queue, a, alpha)
+        print 'alpha:\n', a
 
-    def create_buffer_forward(self):
-        mf = pyopencl.mem_flags
-        N, M, T = self.COMPILED_N, self.COMPILED_M, self.CACHED_T
-        self.alpha         = pyopencl.Buffer(self.context, mf.WRITE_ONLY, T*N*4)
-        self.beta          = pyopencl.Buffer(self.context, mf.WRITE_ONLY, T*N*4)
-        self.matrices      = pyopencl.Buffer(self.context, mf.READ_WRITE, T*N*N*4)
-        self.group_results = pyopencl.Buffer(self.context, mf.READ_WRITE, T*N*N*4)
-        self.scratch       = pyopencl.LocalMemory(self.WORK_GROUP_SIZE*N*N * 4)
-        if N != self.COMPILED_N or M != self.COMPILED_M:
-            self._compile_kernel(N, M)
+        b = numpy.zeros((T,N), numpy.float32)
+        pyopencl.enqueue_copy(queue, b, beta)
+        print 'beta:\n', b
 
-    def set_work_group_sizes(self, NUM_GROUPS, WORK_GROUP_SIZE):
-        if self.NUM_GROUPS != NUM_GROUPS or \
-                self.WORK_GROUP_SIZE != WORK_GROUP_SIZE:
-            self.NUM_GROUPS      = NUM_GROUPS
-            self.WORK_GROUP_SIZE = WORK_GROUP_SIZE
-            self.NUM_UNITS       = NUM_GROUPS*WORK_GROUP_SIZE
-            if self.CACHED_T > 0:
-                self.create_buffer_forward()
+        transition_probabilities(alpha, beta, A, B, ob, T, matrix_buffer)
+        state_probabilities(alpha, beta, T)
+
+        a = numpy.zeros((T,N), numpy.float32)
+        pyopencl.enqueue_copy(queue, a, alpha)
+        print a
+
+
+        transitions = transition_counts(matrix_buffer, T-1, N, scratch)
+        states = state_counts(alpha, T-1, N, scratch)
+        symbols = symbol_counts(alpha, ob, T, N, M, scratch)
+        update(A, B, pi, alpha, transitions, states, symbols, probability, N, T)
+        if it > 0:
+            old_prob = new_prob
+        new_prob = numpy.array((1), numpy.float32)
+        pyopencl.enqueue_copy(queue, new_prob, probability)
+        it = it + 1
+
+    pyopencl.enqueue_copy(queue, transition_probs, A)
+    pyopencl.enqueue_copy(queue, symbol_probs, B)
+    pyopencl.enqueue_copy(queue, initial_dist, pi)
+
+    return transition_probs, symbol_probs, initial_dist, new_prob, it
+
+
+
+def backward_naive(ob, A, B, T, N, beta, matrices, scratch):
+
+    kernel.backward.backward_build_matrices (
+            queue,
+            (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
+            matrices, beta, A, B, ob, numpy.uint64(T))
+
+    T = T - 1 # matrices does not contain alpha_0!
+
+    # forward upwind method
+    last_results = matrices
+    stack = [ (last_results, T) ]
+    while T > 1:
+        grouped_results = pyopencl.Buffer(context, 
+            pyopencl.mem_flags.READ_WRITE, (T/kernel.WORK_GROUP_SIZE+1)*N*N*4)
+        kernel.backward.backward_reduce (
+                queue,
+                (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
+                grouped_results, last_results, scratch, numpy.uint64(T))
+        T = T / kernel.WORK_GROUP_SIZE
+        stack.append( (grouped_results, T) )
+        last_results = grouped_results
+
+    # forward rewind method
+    grouped_results = last_results
+    while stack:
+        last_results, T = stack.pop()
+        kernel.backward.backward_rewind(
+                queue,
+                (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
+                last_results, grouped_results, numpy.uint64(T))
+        grouped_results = last_results
+
+    T = T + 1
+    kernel.backward.backward_multiply_with_beta_T(
+                queue,
+                (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
+                beta, last_results, numpy.uint64(T))
+
+    return beta
+
+
+def forward_naive(ob, A, B, pi, T, N, alpha, matrices, scratch):
+
+    kernel.forward.forward_build_matrices (
+            queue,
+            (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
+            matrices, alpha, A, B, pi, ob, numpy.uint64(T))
+
+    T = T - 1 # matrices does not contain alpha_0!
+
+    # forward upwind method
+    last_results = matrices
+    stack = [ (last_results, T) ]
+    while T > 1:
+        grouped_results = pyopencl.Buffer(context, 
+            pyopencl.mem_flags.READ_WRITE, (T/kernel.WORK_GROUP_SIZE+1)*N*N*4)
+        kernel.forward.forward_reduce (
+                queue,
+                (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
+                grouped_results, last_results, scratch, numpy.uint64(T))
+        T = T / kernel.WORK_GROUP_SIZE
+        stack.append( (grouped_results, T) )
+        last_results = grouped_results
+
+    # forward rewind method
+    grouped_results = last_results
+    while stack:
+        last_results, T = stack.pop()
+        kernel.forward.forward_rewind(
+                queue,
+                (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
+                last_results, grouped_results, numpy.uint64(T))
+        grouped_results = last_results
+
+    T = T + 1
+    kernel.forward.forward_multiply_with_alpha_0(
+                queue,
+                (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
+                alpha, last_results, numpy.uint64(T))
+
+    return alpha
+
+
+_FORWARD_SOURCE_SCALING  = 'lib/opencl/forward_naive_scaling.cl'
+_BACKWARD_SOURCE_SCALING = 'lib/opencl/backward_naive_scaling.cl'
+_UPDATE_SOURCE           = 'lib/opencl/update.cl'
+
+platform = pyopencl.get_platforms()[0]
+device   = platform.get_devices()[0] # device_type=pyopencl.device_type.GPU
+context  = pyopencl.Context([device])
+queue    = pyopencl.CommandQueue(context)
+
+class Kernel:
+    WORK_GROUP_SIZE = 2
+    NUM_UNITS = 2*2
+    NUM_GROUPS = 2
+
+    def __init__(self, N=3, M=2):
+        self.compile(N,M)
+
+    def compile(self, N, M):
+        ff = open(_FORWARD_SOURCE_SCALING, 'r')
+        fb = open(_BACKWARD_SOURCE_SCALING, 'r')
+        upd = open(_UPDATE_SOURCE, 'r')
+
+        source = string.Template("".join(ff.readlines())).substitute(
+            N=N, M=M, precision="float")
+        self.forward = pyopencl.Program(context, source).build()
+
+        source = string.Template("".join(fb.readlines())).substitute(
+            N=N, M=M, precision="float")
+        self.backward = pyopencl.Program(context, source).build()
+
+        source = string.Template("".join(upd.readlines())).substitute(
+            N=N, M=M, precision="float") 
+        self.update = pyopencl.Program(context, source).build()
+
+kernel = Kernel()

@@ -15,16 +15,16 @@ A, B, pi = hmm.utility.get_models()['t2']
 print 'Read data ...'
 
 obs = [
-     numpy.loadtxt('data/hmm1.1000000.dat', dtype=numpy.int16),
+#     numpy.loadtxt('data/hmm1.1000000.dat', dtype=numpy.int16),
 #    numpy.loadtxt('data/hmm1.100.dat'),
-#    numpy.array([1, 0, 1, 0, 1], dtype=numpy.int16)
+    numpy.array([1, 0, 1, 0, 1], dtype=numpy.int16)
 ]
 
 obs2 = [
 	numpy.loadtxt('data/t1.100000.dat', dtype=numpy.int16),
 ] * 10
  
-maxit = 10
+maxit = 50
 accuracy = 1e-3
 
 numpy.set_printoptions(suppress=True)

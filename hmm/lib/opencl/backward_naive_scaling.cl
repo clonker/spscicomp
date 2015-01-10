@@ -1,8 +1,8 @@
-/**
- * parallel GPU optimized kernel implementation of the forward algorithm.
+/*
+ * parallel GPU optimized kernel implementation of the backward algorithm.
  * 
  * modified ideas of http://www.hicomb.org/papers/HICOMB2011-06.pdf
- * This version calculates alpha_t for all t at once.
+ * This version calculates beta_t for all t at once.
  *
  * Maikel Nadolski <maikel.nadolski@fu-berlin.de>
  */
@@ -17,21 +17,32 @@
 #define DIMM3(B,t,i,j) A[(t)*N*M + (i)*M + j]
 #endif /* __DIMS__ */
 
+#ifndef __MULTIPLICATIONS__
+#define __MULTIPLICATIONS__
 #define matrix_times_vector(result,matrix,vector) {  \
+   ${precision} scaling = 0.0f;                      \
    for (int i = 0; i < N; i++) {                     \
       result[i] = 0.0f;                              \
       for (int j = 0; j < N; j++)                    \
          result[i] += matrix[i][j]*vector[j];        \
+      scaling += result[i];                          \
    }                                                 \
+   for (int i = 0; i < N; i++)                       \
+      result[i] /= scaling;                          \
 }
 
 #define matrix_times_matrix(result,A,B) {            \
+   ${precision} scaling = 0.0f;                      \
    for (int i = 0; i < N; i++)                       \
       for (int j = 0; j < N; j++) {                  \
          result[i][j] = 0.0f;                        \
          for (int k = 0; k < N; k++)                 \
             result[i][j] += A[i][k]*B[k][j];         \
+         scaling += result[i][j];                    \
       }                                              \
+   for (int i = 0; i < N; i++)                       \
+      for (int j = 0; j < N; j++)                    \
+         result[i][j] /= scaling;                    \
 }
 
 #define global_to_local(src, gid, dest, lid) {          \
@@ -51,50 +62,48 @@
       for (int j = 0; j < N; j++)                   \
          DIM3(dest, time, i, j) = src[i][j];        \
 }
+#endif
 
 /*
- * Create the matrices C_t, such that holds alpha_t = C_t * alpha_{t-1}
+ * Create the matrices C_t, such that holds beta_t = C_t * beta_{t+1}
  */
 kernel void
-forward_build_matrices (
+backward_build_matrices (
       global   ${precision} *matrices,
-      global   ${precision} *alpha,
+      global   ${precision} *beta,
       constant ${precision} *A,
       constant ${precision} *B,
-      constant ${precision} *pi,
       global  short *ob,
       unsigned long T) 
 {
    size_t global_id = get_global_id(0);
    ${precision} _A[N][N];
-   ${precision} _B[N][M];
-   ${precision} _pi[N];
-   for (int i = 0; i < N; i++) {
-      _pi[i] = pi[i];
+
+   for (int i = 0; i < N; i++)
       for (int j = 0; j < N; j++)
          _A[i][j] = DIM2(A, i, j);
+
+   /* copy data to private memory first */
+   ${precision} _B[N][M];
+   for (int i = 0; i < N; i++)
       for (int k = 0; k < M; k++)
          _B[i][k]  = DIMM2(B, i, k);
-   }
 
    while (global_id < T) {
 
       short o_t = ob[global_id];
 
       if (global_id == 0) {
-         ${precision} _alpha_0_i;
-         for (int i = 0; i < N; i++) {
-            _alpha_0_i = _B[i][o_t] * _pi[i];
-            DIM2(alpha, global_id, i) = _alpha_0_i;
-         }
+         for (int i = 0; i < N; i++)
+            DIM2(beta, T-1, i) = 1.0f / N;
 
       } else {
          ${precision} matrices_ij;
 
          for (int i = 0; i < N; i++)
             for (int j = 0; j < N; j++) {
-               matrices_ij = _A[i][j] * _B[i][o_t];
-               DIM3(matrices, global_id-1, i, j) = matrices_ij;
+               matrices_ij = _A[i][j] * _B[j][o_t];
+               DIM3(matrices, global_id-1 , i, j) = matrices_ij;
             }
       }
 
@@ -103,7 +112,7 @@ forward_build_matrices (
 }
 
 kernel void
-forward_reduce (
+backward_reduce (
       global   ${precision} *grouped_results,
       global   ${precision} *last_results,
       local    ${precision} *scratch,
@@ -112,8 +121,13 @@ forward_reduce (
    size_t global_id    = get_global_id(0);
    size_t current_root = 0;
    size_t local_id     = get_local_id(0);
-   size_t group_id     = get_group_id(0);   
+   size_t group_id     = get_group_id(0); 
+   size_t local_size   = get_local_size(0);  
    ${precision} C_t[N][N];
+
+   if (local_size > T) {
+      local_size = T;
+   }
 
    while (current_root < T) {
 
@@ -121,24 +135,29 @@ forward_reduce (
          global_to_local(last_results, global_id, scratch, local_id);
 
       for (size_t offset = 1;
-                  offset < get_local_size(0);
+                  offset < local_size;
                   offset <<= 1)
       {
          barrier(CLK_LOCAL_MEM_FENCE);
-         if (global_id < T && local_id >= offset) {
+         if (global_id < T && local_id+offset < local_size) {
+            ${precision} scaling_factor = 0.0f;
             /* copy matrices from local memory into private memory */
             for (int i = 0; i < N; i++)
                for (int j = 0; j < N; j++) {
                   C_t[i][j] = 0.0f;
                   for (int k = 0; k < N; k++)
-                     C_t[i][j] += DIM3(scratch, local_id, i, k)
-                           * DIM3(scratch, local_id - offset, k, j);
+                     C_t[i][j] += DIM3(scratch, local_id, i, k) * DIM3(scratch, local_id + offset, k, j);
+                  scaling_factor += C_t[i][j];
                }
+            /* rescale C_t */
+            for (int i = 0; i < N; i++)
+               for (int j = 0; j < N; j++)
+                  C_t[i][j] /= scaling_factor;
          }
          barrier(CLK_LOCAL_MEM_FENCE);
 
          /* store intermediate result in local memory */
-         if (global_id < T && local_id >= offset)
+         if (global_id < T && local_id+offset < local_size)
             for (int i = 0; i < N; i++)
                for (int j = 0; j < N; j++)
                   DIM3(scratch, local_id, i, j) = C_t[i][j];
@@ -156,7 +175,7 @@ forward_reduce (
             result into the group table. this table will be used
             sequentially by everyone. in the collection phase */
 
-         if (get_local_size(0)-1 == local_id) {
+         if (0 == local_id) {
             for (int i = 0; i < N; i++)
                for (int j = 0; j < N; j++)
                   DIM3(grouped_results, group_id, i, j)
@@ -170,22 +189,19 @@ forward_reduce (
    }
 }
 
-
 kernel void
-forward_rewind (
+backward_rewind (
       global ${precision} *last_results,
       global ${precision} *grouped_results,
       unsigned long T)
 {
    size_t global_id = get_global_id(0);
    size_t group_id  = get_group_id(0);
+   size_t num_groups = T / get_local_size(0);
+   if (T % get_local_size(0) != 0)
+      num_groups += 1;
 
-   if (group_id == 0) {
-      global_id += get_global_size(0);
-      group_id  += get_num_groups(0);
-   }
-
-   while (global_id < T) {
+   while (global_id < T && group_id+1 < num_groups) {
       ${precision} C_this[N][N];
       ${precision} C_grouped[N][N];
       ${precision} C_new[N][N];
@@ -196,9 +212,9 @@ forward_rewind (
 
       for (int i = 0; i < N; i++)
          for (int j = 0; j < N; j++)
-            C_grouped[i][j] = DIM3(grouped_results, group_id-1, i, j);
+            C_grouped[i][j] = DIM3(grouped_results, group_id+1, i, j);
 
-      matrix_times_matrix(C_new, C_this, C_grouped);
+      matrix_times_matrix(C_new, C_grouped, C_this);
 
       for (int i = 0; i < N; i++)
          for (int j = 0; j < N; j++)
@@ -210,8 +226,8 @@ forward_rewind (
 }
 
 kernel void
-forward_multiply_with_alpha_0(
-      global ${precision} *alpha,
+backward_multiply_with_beta_T(
+      global ${precision} *beta,
       global ${precision} *matrices,
       unsigned long T)
 {
@@ -219,19 +235,19 @@ forward_multiply_with_alpha_0(
 
    while (global_id < T-1) {
       ${precision} matrix[N][N];
-      ${precision} alpha_0[N];
-      ${precision} alpha_t[N];
+      ${precision} beta_T[N];
+      ${precision} beta_t[N];
 
       for (int i = 0; i < N; i++) {
-         alpha_0[i] = DIM2(alpha, 0, i);
+         beta_T[i] = DIM2(beta, T-1, i);
          for (int j = 0; j < N; j++)
             matrix[i][j] = DIM3(matrices, global_id, i, j);
       }
 
-      matrix_times_vector(alpha_t, matrix, alpha_0);
+      matrix_times_vector(beta_t, matrix, beta_T);
 
       for (int i = 0; i < N; i++)
-         DIM2(alpha, global_id+1, i) = alpha_t[i];
+         DIM2(beta, global_id, i) = beta_t[i];
 
       global_id += get_global_size(0);
    }

@@ -1,4 +1,4 @@
-/**
+/*
  * parallel GPU optimized kernel implementation of the forward algorithm.
  * 
  * modified ideas of http://www.hicomb.org/papers/HICOMB2011-06.pdf
@@ -17,21 +17,32 @@
 #define DIMM3(B,t,i,j) A[(t)*N*M + (i)*M + j]
 #endif /* __DIMS__ */
 
+#ifndef __MULTIPLICATIONS__
+#define __MULTIPLICATIONS__
 #define matrix_times_vector(result,matrix,vector) {  \
+   ${precision} scaling = 0.0f;                      \
    for (int i = 0; i < N; i++) {                     \
       result[i] = 0.0f;                              \
       for (int j = 0; j < N; j++)                    \
          result[i] += matrix[i][j]*vector[j];        \
+      scaling += result[i];                          \
    }                                                 \
+   for (int i = 0; i < N; i++)                       \
+      result[i] /= scaling;                          \
 }
 
 #define matrix_times_matrix(result,A,B) {            \
+   ${precision} scaling = 0.0f;                      \
    for (int i = 0; i < N; i++)                       \
       for (int j = 0; j < N; j++) {                  \
          result[i][j] = 0.0f;                        \
          for (int k = 0; k < N; k++)                 \
             result[i][j] += A[i][k]*B[k][j];         \
+         scaling += result[i][j];                    \
       }                                              \
+   for (int i = 0; i < N; i++)                       \
+      for (int j = 0; j < N; j++)                    \
+         result[i][j] /= scaling;                    \
 }
 
 #define global_to_local(src, gid, dest, lid) {          \
@@ -51,6 +62,7 @@
       for (int j = 0; j < N; j++)                   \
          DIM3(dest, time, i, j) = src[i][j];        \
 }
+#endif
 
 /*
  * Create the matrices C_t, such that holds alpha_t = C_t * alpha_{t-1}
@@ -66,35 +78,40 @@ forward_build_matrices (
       unsigned long T) 
 {
    size_t global_id = get_global_id(0);
-    
+   ${precision} _A[N][N];
+   ${precision} _B[N][M];
+   ${precision} _pi[N];
+   for (int i = 0; i < N; i++) {
+      _pi[i] = pi[i];
+      for (int j = 0; j < N; j++)
+         _A[i][j] = DIM2(A, i, j);
+      for (int k = 0; k < M; k++)
+         _B[i][k]  = DIMM2(B, i, k);
+   }
+
    while (global_id < T) {
 
-      /* copy data to private memory first */
-      ${precision} _B[N];
-      ${precision} _pi[N];
-      for (int i = 0; i < N; i++) {
-         _B[i]  = DIMM2(B, i, ob[global_id]);
-         _pi[i] = pi[i];
-      }
+      short o_t = ob[global_id];
 
       if (global_id == 0) {
          ${precision} _alpha_0[N];
-
+         ${precision} sum = 0.0f;
          for (int i = 0; i < N; i++) {
-            _alpha_0[i] = _B[i] * _pi[i];
+            _alpha_0[i] = _B[i][o_t] * _pi[i];
+            sum += _alpha_0[i];
+         }
+         for (int i = 0; i < N; i++) {
+            _alpha_0[i] /= sum;
             DIM2(alpha, global_id, i) = _alpha_0[i];
          }
 
       } else {
-         ${precision} _A[N][N], _matrices[N][N];
-         for (int i = 0; i < N; i++)
-            for (int j = 0; j < N; j++)
-               _A[i][j] = DIM2(A, j, i);
+         ${precision} matrices_ij;
 
          for (int i = 0; i < N; i++)
             for (int j = 0; j < N; j++) {
-               _matrices[i][j] = _A[i][j] * _B[i];
-               DIM3(matrices, global_id-1, i, j) = _matrices[i][j];
+               matrices_ij = _A[i][j] * _B[i][o_t];
+               DIM3(matrices, global_id-1, i, j) = matrices_ij;
             }
       }
 

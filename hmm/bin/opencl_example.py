@@ -1,11 +1,13 @@
 import hmm.kernel.opencl as hmmcl
+import hmm.kernel.fortran
+import hmm.kernel.python
+import hmm.lib.c
 import numpy
 import pyopencl
 import time as t
 
 N, M = 3, 2
 
-context, queue = hmmcl.initialize(N, M)
 
 transition_matrix = numpy.array(
 	[[ 0.333, 0.333, 0.333],
@@ -23,45 +25,62 @@ initial_distribution = numpy.array(
 	[ 0.333, 0.333, 0.333 ], dtype=numpy.float32
 )
 
+ctx = hmmcl.Context(3, 2)
+
 print 'Reading data'
-observation = numpy.loadtxt('data/t1.1000000.dat', dtype=numpy.int16)
-
-
-A = pyopencl.Buffer(
-		context,
-		pyopencl.mem_flags.READ_ONLY |
-		pyopencl.mem_flags.COPY_HOST_PTR,
-		hostbuf=transition_matrix
-	)
-
-B = pyopencl.Buffer(
-		context,
-		pyopencl.mem_flags.READ_ONLY |
-		pyopencl.mem_flags.COPY_HOST_PTR,
-		hostbuf=symbol_probablity
-	)
-
-pi = pyopencl.Buffer(
-		context,
-		pyopencl.mem_flags.READ_ONLY |
-		pyopencl.mem_flags.COPY_HOST_PTR,
-		hostbuf=initial_distribution
-	)
-
-ob = pyopencl.Buffer(
-		context,
-		pyopencl.mem_flags.READ_ONLY |
-		pyopencl.mem_flags.COPY_HOST_PTR,
-		hostbuf=observation
-	)
+observation = numpy.loadtxt('data/t1.3000000.dat', dtype=numpy.int16)
+observation2 = numpy.array([1, 0, 1, 0, 1], dtype=numpy.int16)
 
 T = len(observation)
 
-print 'Start forward'
+# beta = hmmcl.backward_naive(ctx, transition_matrix,
+# 	symbol_probablity, initial_distribution, observation2)
+# beta_ = numpy.zeros((T,N), dtype=numpy.float32)
+# pyopencl.enqueue_copy(ctx.queue, beta_, beta)
+# print beta_
+
+# alpha = hmmcl.forward_no_scaling_naive(ctx, transition_matrix,
+# 	symbol_probablity, initial_distribution, observation2)
+# alpha_ = numpy.zeros((T,N), dtype=numpy.float32)
+# pyopencl.enqueue_copy(ctx.queue, alpha_, alpha)
+# print alpha_
+
+
+# _, alpha_ = hmm.kernel.python.forward_no_scaling(
+# 	transition_matrix, symbol_probablity, initial_distribution, observation2)
+# print alpha_
 
 start = t.time()
 for i in range(10):
-	alpha_buffer, _, _ = hmmcl.forward(A, B, pi, ob, T, num_groups=T/256, num_units=64)
+	hmmcl.forward_no_scaling_naive(ctx, transition_matrix,
+		symbol_probablity, initial_distribution, observation)
+	event = pyopencl.enqueue_barrier(ctx.queue)
+	event.wait()
 end = t.time()
 
-print end-start
+print 'opencl forward no scaling naive:', end-start
+
+
+start = t.time()
+for i in range(10):
+	hmmcl.forward_naive(ctx, transition_matrix,
+		symbol_probablity, initial_distribution, observation)
+	event = pyopencl.enqueue_barrier(ctx.queue)
+	event.wait()
+end = t.time()
+
+print 'opencl forward scaling naive:', end-start
+
+start = t.time()
+for i in range(10):
+	hmm.kernel.fortran.forward(transition_matrix, symbol_probablity, initial_distribution, observation)
+end = t.time()
+
+print 'fortran forward scaling:', end-start
+
+start = t.time()
+for i in range(10):
+	hmm.lib.c.forward32(transition_matrix, symbol_probablity, initial_distribution, observation)
+end = t.time()
+
+print 'c forward scaling:', end-start

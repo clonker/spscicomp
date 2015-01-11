@@ -58,8 +58,7 @@
 /*
  * Create the matrices C_t, such that holds beta_t = C_t * beta_{t+1}
  */
-kernel void
-backward_build_matrices (
+kernel void build_matrices (
       global   ${precision} *matrices,
       global   ${precision} *beta,
       constant ${precision} *A,
@@ -89,12 +88,12 @@ backward_build_matrices (
             DIM2(beta, T-1, i) = 1.0f;
 
       } else {
-         ${precision} _matrices[N][N];
+         ${precision} matrices_ij;
 
          for (int i = 0; i < N; i++)
             for (int j = 0; j < N; j++) {
-               _matrices[i][j] = _A[i][j] * _B[j][o_t];
-               DIM3(matrices, global_id-1 , i, j) = _matrices[i][j];
+               matrices_ij = _A[i][j] * _B[j][o_t];
+               DIM3(matrices, global_id-1 , i, j) = matrices_ij;
             }
       }
 
@@ -102,18 +101,17 @@ backward_build_matrices (
    }
 }
 
-kernel void
-backward_reduce (
+kernel void reduce (
       global   ${precision} *grouped_results,
       global   ${precision} *last_results,
       local    ${precision} *scratch,
       unsigned long T)
 {
    size_t global_id    = get_global_id(0);
-   size_t current_root = 0;
    size_t local_id     = get_local_id(0);
    size_t group_id     = get_group_id(0); 
    size_t local_size   = get_local_size(0);
+   size_t current_root = global_id - local_id;
    ${precision} C_t[N][N];
 
    if (local_size > T) {
@@ -122,9 +120,17 @@ backward_reduce (
 
    while (current_root < T) {
 
+      if (global_id >= T)
+         for (int i = 0; i < N; i++)
+            for (int j = 0; j < N; j++)
+               if (i == j)
+                  DIM3(scratch, local_id, i, j) = 1.0f;
+               else
+                  DIM3(scratch, local_id, i, j) = 0.0f;
+
       if (global_id < T)
          global_to_local(last_results, global_id, scratch, local_id);
-
+      
       for (size_t offset = 1;
                   offset < local_size;
                   offset <<= 1)
@@ -136,7 +142,8 @@ backward_reduce (
                for (int j = 0; j < N; j++) {
                   C_t[i][j] = 0.0f;
                   for (int k = 0; k < N; k++)
-                     C_t[i][j] += DIM3(scratch, local_id, i, k)*DIM3(scratch, local_id+offset, k, j);
+                     C_t[i][j] += DIM3(scratch, local_id, i, k)
+                        *DIM3(scratch, local_id+offset, k, j);
                }
          }
          barrier(CLK_LOCAL_MEM_FENCE);
@@ -173,19 +180,16 @@ backward_reduce (
    }
 }
 
-kernel void
-backward_rewind (
+kernel void collect (
       global ${precision} *last_results,
       global ${precision} *grouped_results,
       unsigned long T)
 {
    size_t global_id = get_global_id(0);
    size_t group_id  = get_group_id(0);
-   size_t num_groups = T / get_local_size(0);
-   if (T % get_local_size(0) != 0)
-      num_groups += 1;
+   size_t local_size = get_local_size(0);
 
-   while (global_id < T && group_id+1 < num_groups) {
+   while (global_id < T && (group_id+1)*local_size < T) {
       ${precision} C_this[N][N];
       ${precision} C_grouped[N][N];
       ${precision} C_new[N][N];
@@ -198,7 +202,7 @@ backward_rewind (
          for (int j = 0; j < N; j++)
             C_grouped[i][j] = DIM3(grouped_results, group_id+1, i, j);
 
-      matrix_times_matrix(C_new, C_grouped, C_this);
+      matrix_times_matrix(C_new, C_this, C_grouped);
 
       for (int i = 0; i < N; i++)
          for (int j = 0; j < N; j++)
@@ -209,8 +213,7 @@ backward_rewind (
    }
 }
 
-kernel void
-backward_multiply_with_beta_T(
+kernel void multiply_with_beta_T(
       global ${precision} *beta,
       global ${precision} *matrices,
       unsigned long T)

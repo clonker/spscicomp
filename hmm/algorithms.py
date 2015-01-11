@@ -10,13 +10,20 @@ def noms_and_denoms(A, B, pi, ob, kernel=hmm.kernel.python, dtype=numpy.float32)
     denomA = kernel.state_counts(gamma, T-1, dtype)
     nomB   = kernel.symbol_counts(gamma, ob, len(B[0]), dtype)
     denomB = denomA + gamma[T-1]
-    return weight, nomA, denomA, nomB, denomB
+    gamma_0 = gamma[0]
+    return weight, nomA, denomA, nomB, denomB, gamma_0
 
 
-def update_multiple(weights, noms_A, denoms_A, noms_B, denoms_B, dtype=numpy.float32):
+def update_multiple(weights, noms_A, denoms_A, noms_B, denoms_B, gamma_0, dtype=numpy.float32):
     K, N, M = len(weights), len(noms_A[0]), len(noms_B[0,0])
     A = numpy.zeros((N,N), dtype=dtype)
     B = numpy.zeros((N,M), dtype=dtype)
+    pi = numpy.zeros((N),  dtype=dtype)
+
+    for k in xrange(K):
+        pi += weights[k] * gamma_0[k]
+    pi /= numpy.sum(weights)
+
     for i in range(N):
         nom_A_i   = numpy.zeros(N, dtype=dtype)
         denom_A_i = 0.0
@@ -31,7 +38,8 @@ def update_multiple(weights, noms_A, denoms_A, noms_B, denoms_B, dtype=numpy.flo
             nom_B_i   += weights[k] * noms_B[k, i, :]
             denom_B_i += weights[k] * denoms_B[k, i]
         B[i,:] = nom_B_i / denom_B_i
-    return A, B
+
+    return A, B, pi
 
 
 def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.python, dtype=numpy.float32):
@@ -41,6 +49,7 @@ def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.ker
     nomsB   = numpy.zeros((K,N,M), dtype=dtype)
     denomsB = numpy.zeros((K,N),   dtype=dtype)
     weights = numpy.zeros((K),     dtype=dtype)
+    gamma_0 = numpy.zeros((K,N),   dtype=dtype)
 
     old_probability = 0.0
     it      = 0
@@ -48,10 +57,10 @@ def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.ker
 
     while (abs(new_probability - old_probability) > accuracy and it < maxit):
         for k in range(K):
-            weights[k], nomsA[k], denomsA[k], nomsB[k], denomsB[k] = \
+            weights[k], nomsA[k], denomsA[k], nomsB[k], denomsB[k], gamma_0[k] = \
                     noms_and_denoms(A, B, pi, obs[k], kernel=kernel, dtype=dtype)
         
-        A, B = update_multiple(weights, nomsA, denomsA, nomsB, denomsB, dtype=dtype)
+        A, B, pi = update_multiple(weights, nomsA, denomsA, nomsB, denomsB, gamma_0, dtype=dtype)
 
         if (it == 0):
             old_probability = 0
@@ -112,13 +121,7 @@ def baum_welch(ob, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.python
     new_probability = accuracy+1
     while (abs(new_probability - old_probability) > accuracy and it < maxit):
         probability, alpha, scaling = kernel.forward(A, B, pi, ob, dtype)
-
-        print alpha
-
         beta = kernel.backward(A, B, ob, scaling, dtype)
-
-        print beta
-
         gamma = kernel.state_probabilities(alpha, beta, dtype)
         xi = kernel.transition_probabilities(alpha, beta, A, B, ob, dtype)
         A, B, pi = kernel.update(gamma, xi, ob, len(B[0]), dtype)

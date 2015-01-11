@@ -21,47 +21,61 @@ def state_probabilities(alpha, beta, T):
             alpha, beta, numpy.uint64(T))
 
 def transition_counts(xi, T, N, scratch):
-    while T > 1:
-        if T > kernel.WORK_GROUP_SIZE:
-            S = T / kernel.WORK_GROUP_SIZE + 1
-        else:
-            S = 1
-        counts = pyopencl.Buffer(context, pyopencl.mem_flags.READ_WRITE, S*4*N*N)
-        kernel.update.transition_counts(
-            queue, (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
-            xi, scratch, numpy.uint64(T), counts)
-        xi = counts
-        T = S
+    # allocate buffer on opencl device
+    counts_intermediate = pyopencl.Buffer(
+        context, pyopencl.mem_flags.READ_WRITE,
+        kernel.WORK_GROUP_SIZE*N*N* numpy.dtype('float32').itemsize)
+    counts = pyopencl.Buffer(context, pyopencl.mem_flags.READ_WRITE,
+        N*N* numpy.dtype('float32').itemsize)
+
+    # reduce sum to NUM_GROUPS summands
+    kernel.update.transition_counts(
+            queue, (kernel.WORK_GROUP_SIZE*kernel.WORK_GROUP_SIZE,), (kernel.WORK_GROUP_SIZE,),
+            xi, scratch, numpy.uint64(T), counts_intermediate)
+
+    # collect intermedate
+    kernel.update.transition_counts(
+            queue, (kernel.WORK_GROUP_SIZE,), (kernel.WORK_GROUP_SIZE,),
+            counts_intermediate, scratch, numpy.uint64(kernel.WORK_GROUP_SIZE), counts)
+
     return counts
 
 
 def symbol_counts(gamma, ob, T, N, M, scratch):
-    if T > kernel.WORK_GROUP_SIZE:
-        S = T / kernel.WORK_GROUP_SIZE + 1
-    else:
-        S = 1
-    symbols = pyopencl.Buffer(context, pyopencl.mem_flags.READ_WRITE, S*4*N*M)
+    symbols_intermediate = pyopencl.Buffer(
+        context, pyopencl.mem_flags.READ_WRITE,
+        kernel.WORK_GROUP_SIZE*N*M* numpy.dtype('float32').itemsize)
+    symbols = pyopencl.Buffer(context, pyopencl.mem_flags.READ_WRITE,
+        N*M* numpy.dtype('float32').itemsize)
 
     kernel.update.symbol_counts(
-            queue, (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
-            gamma, ob, scratch, numpy.uint64(T), symbols)
+            queue, (kernel.WORK_GROUP_SIZE*kernel.WORK_GROUP_SIZE,), (kernel.WORK_GROUP_SIZE,),
+            gamma, ob, scratch, numpy.uint64(T), symbols_intermediate)
+    kernel.update.symbol_collect(
+            queue, (kernel.WORK_GROUP_SIZE,), (kernel.WORK_GROUP_SIZE,),
+            symbols_intermediate, ob, scratch, numpy.uint64(kernel.WORK_GROUP_SIZE), symbols)
+
     return symbols
 
 def state_counts(gamma, T, N, scratch):
-    gamma_counts = gamma
-    while T > 1:
-        if T > kernel.WORK_GROUP_SIZE:
-            S = T / kernel.WORK_GROUP_SIZE + 1
-        else:
-            S = 1
-        counts = pyopencl.Buffer(context, pyopencl.mem_flags.READ_WRITE, S*4*N)
-        kernel.update.state_counts(
-            queue, (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
-            gamma_counts, scratch, numpy.uint64(T), counts)
-        gamma_counts = counts
-        T = S
-    return gamma_counts
+    counts_intermediate = pyopencl.Buffer(
+        context, pyopencl.mem_flags.READ_WRITE,
+        kernel.WORK_GROUP_SIZE*N* numpy.dtype('float32').itemsize)
+    counts = pyopencl.Buffer(
+        context, pyopencl.mem_flags.READ_WRITE,
+        N* numpy.dtype('float32').itemsize)
+    
+    kernel.update.state_counts(
+        queue, (kernel.WORK_GROUP_SIZE*kernel.WORK_GROUP_SIZE,), (kernel.WORK_GROUP_SIZE,),
+        gamma, scratch, numpy.uint64(T), counts_intermediate)
+    kernel.update.state_counts(
+        queue, (kernel.WORK_GROUP_SIZE,), (kernel.WORK_GROUP_SIZE,),
+        counts_intermediate, scratch, numpy.uint64(kernel.WORK_GROUP_SIZE), counts)
 
+    return counts
+
+
+@profile
 def baum_welch(
         sequence,
         transition_probs,
@@ -119,26 +133,12 @@ def baum_welch(
     new_prob = old_prob + accuracy + 1
     it       = 0
     while it < maxit: # abs(new_prob - old_prob) > accuracy and it < maxit:
+
         forward_naive(ob, A, B, pi, T, N, alpha, matrix_buffer, scratch)
         backward_naive(ob, A, B, T, N, beta, matrix_buffer, scratch)
-        
-        a = numpy.zeros((T,N), numpy.float32)
-        pyopencl.enqueue_copy(queue, a, alpha)
-        print 'alpha:\n', a
-
-        b = numpy.zeros((T,N), numpy.float32)
-        pyopencl.enqueue_copy(queue, b, beta)
-        print 'beta:\n', b
-
         transition_probabilities(alpha, beta, A, B, ob, T, matrix_buffer)
         state_probabilities(alpha, beta, T)
-
-        a = numpy.zeros((T,N), numpy.float32)
-        pyopencl.enqueue_copy(queue, a, alpha)
-        print a
-
-
-        transitions = transition_counts(matrix_buffer, T-1, N, scratch)
+        transitions = transition_counts(matrix_buffer, T-1, N, scratch) 
         states = state_counts(alpha, T-1, N, scratch)
         symbols = symbol_counts(alpha, ob, T, N, M, scratch)
         update(A, B, pi, alpha, transitions, states, symbols, probability, N, T)
@@ -147,6 +147,10 @@ def baum_welch(
         new_prob = numpy.array((1), numpy.float32)
         pyopencl.enqueue_copy(queue, new_prob, probability)
         it = it + 1
+
+    transition_probs = numpy.zeros_like(transition_probs)
+    symbol_probs     = numpy.zeros_like(symbol_probs)
+    initial_dist     = numpy.zeros_like(initial_dist)
 
     pyopencl.enqueue_copy(queue, transition_probs, A)
     pyopencl.enqueue_copy(queue, symbol_probs, B)
@@ -158,7 +162,7 @@ def baum_welch(
 
 def backward_naive(ob, A, B, T, N, beta, matrices, scratch):
 
-    kernel.backward.backward_build_matrices (
+    kernel.backward.build_matrices (
             queue,
             (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
             matrices, beta, A, B, ob, numpy.uint64(T))
@@ -171,7 +175,7 @@ def backward_naive(ob, A, B, T, N, beta, matrices, scratch):
     while T > 1:
         grouped_results = pyopencl.Buffer(context, 
             pyopencl.mem_flags.READ_WRITE, (T/kernel.WORK_GROUP_SIZE+1)*N*N*4)
-        kernel.backward.backward_reduce (
+        kernel.backward.reduce (
                 queue,
                 (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
                 grouped_results, last_results, scratch, numpy.uint64(T))
@@ -183,14 +187,14 @@ def backward_naive(ob, A, B, T, N, beta, matrices, scratch):
     grouped_results = last_results
     while stack:
         last_results, T = stack.pop()
-        kernel.backward.backward_rewind(
+        kernel.backward.collect(
                 queue,
                 (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
                 last_results, grouped_results, numpy.uint64(T))
         grouped_results = last_results
 
     T = T + 1
-    kernel.backward.backward_multiply_with_beta_T(
+    kernel.backward.multiply_with_beta_T(
                 queue,
                 (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
                 beta, last_results, numpy.uint64(T))
@@ -200,7 +204,7 @@ def backward_naive(ob, A, B, T, N, beta, matrices, scratch):
 
 def forward_naive(ob, A, B, pi, T, N, alpha, matrices, scratch):
 
-    kernel.forward.forward_build_matrices (
+    kernel.forward.build_matrices (
             queue,
             (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
             matrices, alpha, A, B, pi, ob, numpy.uint64(T))
@@ -213,7 +217,7 @@ def forward_naive(ob, A, B, pi, T, N, alpha, matrices, scratch):
     while T > 1:
         grouped_results = pyopencl.Buffer(context, 
             pyopencl.mem_flags.READ_WRITE, (T/kernel.WORK_GROUP_SIZE+1)*N*N*4)
-        kernel.forward.forward_reduce (
+        kernel.forward.reduce (
                 queue,
                 (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
                 grouped_results, last_results, scratch, numpy.uint64(T))
@@ -225,14 +229,14 @@ def forward_naive(ob, A, B, pi, T, N, alpha, matrices, scratch):
     grouped_results = last_results
     while stack:
         last_results, T = stack.pop()
-        kernel.forward.forward_rewind(
+        kernel.forward.collect(
                 queue,
                 (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
                 last_results, grouped_results, numpy.uint64(T))
         grouped_results = last_results
 
     T = T + 1
-    kernel.forward.forward_multiply_with_alpha_0(
+    kernel.forward.multiply_with_alpha_0(
                 queue,
                 (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
                 alpha, last_results, numpy.uint64(T))
@@ -245,7 +249,7 @@ _BACKWARD_SOURCE_SCALING = 'lib/opencl/backward_naive_scaling.cl'
 _UPDATE_SOURCE           = 'lib/opencl/update.cl'
 
 platform = pyopencl.get_platforms()[0]
-device   = platform.get_devices()[0] # device_type=pyopencl.device_type.GPU
+device   = platform.get_devices()[0]
 context  = pyopencl.Context([device])
 queue    = pyopencl.CommandQueue(context)
 

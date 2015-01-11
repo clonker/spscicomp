@@ -55,8 +55,7 @@
 /*
  * Create the matrices C_t, such that holds alpha_t = C_t * alpha_{t-1}
  */
-kernel void
-forward_build_matrices (
+kernel void build_matrices (
       global   ${precision} *matrices,
       global   ${precision} *alpha,
       constant ${precision} *A,
@@ -102,8 +101,7 @@ forward_build_matrices (
    }
 }
 
-kernel void
-forward_reduce (
+kernel void reduce (
       global   ${precision} *grouped_results,
       global   ${precision} *last_results,
       local    ${precision} *scratch,
@@ -171,8 +169,7 @@ forward_reduce (
 }
 
 
-kernel void
-forward_rewind (
+kernel void collect (
       global ${precision} *last_results,
       global ${precision} *grouped_results,
       unsigned long T)
@@ -209,8 +206,7 @@ forward_rewind (
    }
 }
 
-kernel void
-forward_multiply_with_alpha_0(
+kernel void multiply_with_alpha_0(
       global ${precision} *alpha,
       global ${precision} *matrices,
       unsigned long T)

@@ -67,8 +67,7 @@
 /*
  * Create the matrices C_t, such that holds beta_t = C_t * beta_{t+1}
  */
-kernel void
-backward_build_matrices (
+kernel void build_matrices (
       global   ${precision} *matrices,
       global   ${precision} *beta,
       constant ${precision} *A,
@@ -111,16 +110,15 @@ backward_build_matrices (
    }
 }
 
-kernel void
-backward_reduce (
+kernel void reduce (
       global   ${precision} *grouped_results,
       global   ${precision} *last_results,
       local    ${precision} *scratch,
       unsigned long T)
 {
    size_t global_id    = get_global_id(0);
-   size_t current_root = 0;
    size_t local_id     = get_local_id(0);
+   size_t current_root = global_id - local_id;
    size_t group_id     = get_group_id(0); 
    size_t local_size   = get_local_size(0);  
    ${precision} C_t[N][N];
@@ -130,6 +128,14 @@ backward_reduce (
    }
 
    while (current_root < T) {
+
+      if (global_id >= T)
+         for (int i = 0; i < N; i++)
+            for (int j = 0; j < N; j++)
+               if (i == j)
+                  DIM3(scratch, local_id, i, j) = 1.0f;
+               else
+                  DIM3(scratch, local_id, i, j) = 0.0f;
 
       if (global_id < T)
          global_to_local(last_results, global_id, scratch, local_id);
@@ -190,8 +196,7 @@ backward_reduce (
    }
 }
 
-kernel void
-backward_rewind (
+kernel void collect (
       global ${precision} *last_results,
       global ${precision} *grouped_results,
       unsigned long T)
@@ -215,7 +220,7 @@ backward_rewind (
          for (int j = 0; j < N; j++)
             C_grouped[i][j] = DIM3(grouped_results, group_id+1, i, j);
 
-      matrix_times_matrix(C_new, C_grouped, C_this);
+      matrix_times_matrix(C_new, C_this, C_grouped);
 
       for (int i = 0; i < N; i++)
          for (int j = 0; j < N; j++)
@@ -226,8 +231,7 @@ backward_rewind (
    }
 }
 
-kernel void
-backward_multiply_with_beta_T(
+kernel void multiply_with_beta_T(
       global ${precision} *beta,
       global ${precision} *matrices,
       unsigned long T)

@@ -69,6 +69,7 @@ transition_counts(
    size_t global_id = get_global_id(0);
    size_t global_size = get_global_size(0);
    ${precision} xi[N][N] = { 0.0f };
+
    while (global_id < T) {
       ${precision} tmp[N][N];
       for (int i = 0; i < N; i++)
@@ -85,6 +86,7 @@ transition_counts(
    for (int i = 0; i < N; i++)
       for (int j = 0; j < N; j++)
          DIM3(scratch, local_id, i, j) = xi[i][j];
+
    for (size_t offset = local_size >> 1;
                offset > 0;
                offset >>= 1) {
@@ -100,8 +102,9 @@ transition_counts(
             }
       }
    }
+
    size_t group_id = get_group_id(0);
-   if (local_id == 0 && get_global_id(0) < T)
+   if (local_id == 0)
       for (int i = 0; i < N; i++)
          for (int j = 0; j < N; j++)
             DIM3(transition_cts, group_id, i, j) = xi[i][j];
@@ -169,7 +172,7 @@ state_counts(
          }
    }
 
-   if (local_id == 0 && get_global_id(0) < T)
+   if (local_id == 0)
       for (int i = 0; i < N; i++)
          DIM2(gamma_counts, get_group_id(0), i) = gamma_t[i];
 }
@@ -210,10 +213,52 @@ symbol_counts(
             }
    }
 
-   if (local_id == 0 && get_global_id(0) < T)
+   if (local_id == 0)
       for (int i = 0; i < N; i++)
          for (int k = 0; k < M; k++)
-            DIMM3(symbols, get_group_id(0), i, k) = DIMM3(scratch, local_id, i, k);
+            DIMM3(symbols, get_group_id(0), i, k) = B[i][k];//DIM3(scratch, local_id, i, k);
+}
+
+kernel void
+symbol_collect(
+      global ${precision} *symbols_intermediate,
+      global short *ob,
+      local ${precision} *scratch,
+      unsigned long T,
+      global ${precision} *symbols
+      )
+{
+   size_t global_id = get_global_id(0);
+   ${precision} B[N][M] = { 0.0f };
+
+   while (global_id < T) {
+      for (int i = 0; i < N; i++)
+         for (int k = 0; k < M; k++)
+            B[i][k] += DIMM3(symbols_intermediate, global_id, i, k);
+      global_id += get_global_size(0);
+   }
+
+   size_t local_id = get_local_id(0);
+   for (int i = 0; i < N; i++)
+      for (int k = 0; k < M; k++)
+         DIMM3(scratch, local_id, i, k) = B[i][k];
+   for (size_t offset = get_local_size(0) >> 1;
+               offset > 0;
+               offset >>= 1)
+   {
+      barrier(CLK_LOCAL_MEM_FENCE);
+      if (local_id < offset)
+         for (int i = 0; i < N; i++)
+            for (int k = 0; k < M; k++) {
+               B[i][k] += DIMM3(scratch, local_id+offset, i, k);
+               DIMM3(scratch, local_id, i, k) = B[i][k];
+            }
+   }
+
+   if (local_id == 0)
+      for (int i = 0; i < N; i++)
+         for (int k = 0; k < M; k++)
+            DIMM3(symbols, get_group_id(0), i, k) = B[i][k];//DIM3(scratch, local_id, i, k);
 }
 
 kernel void
@@ -235,9 +280,9 @@ update(
       if (j == 0)
          pi[i] = DIM2(gamma, 0, i);
 
-      DIM2(A, i, j) = DIM2(transition_counts, i, j); // state_counts[i];
+      DIM2(A, i, j) = DIM2(transition_counts, i, j) / state_counts[i];
 
       if (j < M)
-         DIM2(B, i, j) = DIM2(symbol_counts, i, j); // (state_counts[i] + DIM2(gamma, T-1, i));
+         DIMM2(B, i, j) = DIMM2(symbol_counts, i, j) / (state_counts[i] + DIM2(gamma, T-1, i));
    }
 }

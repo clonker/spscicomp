@@ -47,6 +47,11 @@ for (int _i = 0; _i < N; _i++) \
          AB[_i][_j] += A[_i][_k]*B[_k][_j]; \
    }
 
+#define FROM_TO(src, src_id, dest, dest_id) \
+for (int _i = 0; _i < N; _i++) \
+   for (int _j = 0; _j < N; _j++) \
+      DIM3(dest, dest_id, _i, _j) = DIM3(src, src_id, _i, _j)
+
 #define MATRIX_MULTIPLY(AB, A, B) \
 ${precision} __sum = 0.0f; \
 for (int _i = 0; _i < N; _i++) \
@@ -191,40 +196,15 @@ kernel void reduce(
       PUT_DIM2(C, out, get_group_id(0));
 }
 
-/*
- * inplace toplevel scan with permutation
- */
-kernel void scan(
-      global ${precision} *in,
+void scan(
       local ${precision} *scratch,
-      constant int *transform,
-      int T)
+      local ${precision} last_element[N][N]
+   )
 {
    size_t NUM_BLOCK_THREADS = get_local_size(0);
-//   size_t BLOCK_SIZE = NUM_BLOCK_THREADS << 1;
-
    size_t local_id = get_local_id(0);
-   size_t left  = transform[2*local_id];
-   size_t right = transform[2*local_id+1];
-   size_t global_id = get_global_id(0);
-
-   ${precision} last_element[N][N];
    ${precision} C[N][N];
    ${precision} L[N][N] = {0.0f}, R[N][N] = {0.0f};
-
-   if (2*global_id < T) {
-      GET_DIM2(C, in, 2*global_id);
-      PUT_DIM2(C, scratch, left);
-   } else
-      PUT_ID(scratch, left);
-
-   if (2*global_id+1 < T) {
-      GET_DIM2(C, in, 2*global_id+1);
-      PUT_DIM2(C, scratch, right);
-   } else
-      PUT_ID(scratch, right);
-
-   barrier(CLK_LOCAL_MEM_FENCE);
 
    size_t bi = local_id + NUM_BLOCK_THREADS;
    GET_DIM2(C, scratch, bi);
@@ -236,7 +216,7 @@ kernel void scan(
       if (NUM_BLOCK_THREADS <= local_id + offset) {
          size_t ai = bi - offset;
          GET_DIM2(L, scratch, ai);
-         MATRIX_MULTIPLY_NS(R, C, L);
+         MATRIX_MULTIPLY(R, C, L);
          PUT_DIM2(R, scratch, bi);
          COPY(C,R);
       }  
@@ -258,26 +238,69 @@ kernel void scan(
          GET_DIM2(L, scratch, ai);
          GET_DIM2(C, scratch, bi);
          PUT_DIM2(C, scratch, ai);
-         MATRIX_MULTIPLY_NS(R, L, C);
+         MATRIX_MULTIPLY(R, L, C);
          PUT_DIM2(R, scratch, bi);
       }
-   }
-
-   if (2*global_id < T) {
-      GET_DIM2(C, scratch, right);
-      PUT_DIM2(C, in, 2*global_id);
-   } if (local_id == NUM_BLOCK_THREADS-1 && 2*global_id+1 < T)
-      PUT_DIM2(last_element, in, 2*global_id+1);
-   else if (local_id != 0 && 2*global_id-1 < T) {
-      GET_DIM2(C, scratch, left);
-      PUT_DIM2(C, in, 2*global_id-1);
    }
 }
 
 /*
  * inplace toplevel scan with permutation
  */
-kernel void scan_bottom(
+kernel void scan_toplevel(
+      global ${precision} *in,
+      local ${precision} *scratch,
+      constant int *transform,
+      int T)
+{
+   size_t NUM_BLOCK_THREADS = get_local_size(0);
+//   size_t BLOCK_SIZE = NUM_BLOCK_THREADS << 1;
+
+   size_t local_id = get_local_id(0);
+   size_t left  = transform[2*local_id];
+   size_t right = transform[2*local_id+1];
+   size_t global_id = get_global_id(0);
+
+   local ${precision} last_element[N][N];
+   // ${precision} C[N][N];
+
+   if (2*global_id < T) {
+      // GET_DIM2(C, in, 2*global_id);
+      // PUT_DIM2(C, scratch, left);
+      FROM_TO(in, 2*global_id, scratch, left);
+   } else
+      PUT_ID(scratch, left);
+
+   if (2*global_id+1 < T) {
+      // GET_DIM2(C, in, 2*global_id+1);
+      // PUT_DIM2(C, scratch, right);
+      FROM_TO(in, 2*global_id+1, scratch, right); 
+   } else
+      PUT_ID(scratch, right);
+
+   barrier(CLK_LOCAL_MEM_FENCE);
+   scan(scratch, last_element);
+   barrier(CLK_LOCAL_MEM_FENCE);
+
+   if (2*global_id < T) {
+      // GET_DIM2(C, scratch, right);
+      // PUT_DIM2(C, in, 2*global_id);
+      FROM_TO(scratch, right, in, 2*global_id);
+   } 
+
+   if (local_id == NUM_BLOCK_THREADS-1 && 2*global_id+1 < T)
+      PUT_DIM2(last_element, in, 2*global_id+1);
+   if (local_id != 0 && 2*global_id-1 < T) {
+      // GET_DIM2(C, scratch, left);
+      // PUT_DIM2(C, in, 2*global_id-1);
+      FROM_TO(scratch, left, in, 2*global_id-1);
+   }
+}
+
+/*
+ * inplace toplevel scan with permutation
+ */
+kernel void scan_all(
       global ${precision} *in,
       global ${precision} *toplevel,
       local ${precision} *scratch,
@@ -285,14 +308,14 @@ kernel void scan_bottom(
       global ${precision} *debug,
       int T)
 {
-   size_t group_id = get_group_id(0);
    size_t NUM_BLOCK_THREADS = get_local_size(0);
    size_t BLOCK_SIZE = NUM_BLOCK_THREADS << 1;
    size_t global_id = get_global_id(0);
+   size_t local_id = get_local_id(0);
    size_t TOTAL_SIZE = BLOCK_SIZE*get_num_groups(0);
    size_t num_corrections = (T / BLOCK_SIZE) % get_num_groups(0);
    int sequential_len = T / TOTAL_SIZE;
-   int T_start;
+   size_t T_start;
    if (get_group_id(0) >= num_corrections)
       T_start = (sequential_len+1)*num_corrections*BLOCK_SIZE
             + sequential_len*(2*global_id - num_corrections*BLOCK_SIZE);
@@ -301,36 +324,63 @@ kernel void scan_bottom(
       T_start = sequential_len*2*global_id;
    }
 
-   ${precision} C_0[N][N] = { 0.0f };
-   ${precision} A[N][N] = { 0.0f };
-   ${precision} B[N][N] = { 0.0f };
-   GET_DIM2(C_0, in, T_start);
-   if (get_group_id(0) > 0) {
-//      GET_DIM2(A, toplevel, get_group_id(0)-1);
-//      GET_DIM2(C_0, in, T_start);
-//      MATRIX_MULTIPLY_NS(C_0A, C_0, A);
-      for (int i = 0; i < N; i++)
-         for (int j = 0; j < N; j++)
-            DIM3(toplevel, 0, i, j) = 0.0f;
+   local ${precision} scanned[N][N];
+   ${precision} start[N][N];
+   ${precision} product[N][N];
+
+   size_t left  = transform[2*local_id];
+   size_t right = transform[2*local_id+1];
+
+   if (get_group_id(0) > 0 && local_id == 0) {
+      GET_DIM2(scanned, toplevel, get_group_id(0)-1);
+      GET_DIM2(start, in, T_start);
+      MATRIX_MULTIPLY(product, scanned, start);
+      PUT_DIM2(product, scratch, left);
+      FROM_TO(in, T_start+1, scratch, right);
+   } else {
+      FROM_TO(in, T_start+2*local_id,   scratch, left);
+      FROM_TO(in, T_start+2*local_id+1, scratch, right);
    }
-   B[0][0] = get_group_id(0);
-   B[0][1] = get_local_id(0);
-   B[0][2] = get_global_id(0);
-   B[1][0] = T_start;
-   B[1][1] = sequential_len;
-   B[1][2] = T;
-   PUT_DIM2(B, debug, 2*global_id);
-   PUT_DIM2(B, debug, 2*global_id+1);
 
-   // while (sequential_len > BLOCK_SIZE) {
-   //    scan(in + T_start, scratch, transform, BLOCK_SIZE);
+   FROM_TO(scratch, left,  debug, 2*global_id);
+   FROM_TO(scratch, right, debug, 2*global_id+1);
 
-   //    sequential_len -= BLOCK_SIZE;
-   //    T_start += BLOCK_SIZE;
-   //    GET_DIM2(A, in, T_start-1);
-   //    GET_DIM2(C_0, in, T_start);
-   //    MATRIX_MULTIPLY_NS(C_0A, C_0, A);
-   //    PUT_DIM2(C_0A, in, T_start);
-   // }
-//   scan(in + T_start, scratch, transform, sequential_len);
+//   while (sequential_len > 0) {
+      barrier(CLK_LOCAL_MEM_FENCE);
+      scan(scratch, scanned);
+      barrier(CLK_LOCAL_MEM_FENCE);
+
+      // FROM_TO(scratch, left,  debug, 2*global_id);
+      // FROM_TO(scratch, right, debug, 2*global_id+1);
+
+      if (local_id == NUM_BLOCK_THREADS-1)
+         PUT_DIM2(scanned, in, T_start+2*local_id+1);
+      
+      FROM_TO(scratch, right, in, T_start+2*local_id);
+      if (get_local_id(0) != 0)
+         FROM_TO(scratch, left, in, T_start+2*local_id-1);
+
+      T_start += BLOCK_SIZE;
+      sequential_len -= 1;
+
+      // if (local_id == 0) {
+      //    GET_DIM2(start, in, T_start);
+      //    MATRIX_MULTIPLY(product, scanned, start);
+      //    PUT_DIM2(product, scratch, left);
+      //    FROM_TO(in, T_start+1, scratch, right);
+      // } else {
+      //    FROM_TO(in, T_start+2*local_id,   scratch, left);
+      //    FROM_TO(in, T_start+2*local_id+1, scratch, right);
+      // }
+  // }
+   //   sequential_len -= 1;
+   //   T_start += BLOCK_SIZE;
+      // if (get_local_id(0) == 0) {
+      //    GET_DIM2(A, in, T_start-1);
+      //    GET_DIM2(C_0, in, T_start);
+      //    MATRIX_MULTIPLY_NS(C_0A, C_0, A);
+      //    PUT_DIM2(C_0A, in, T_start);
+      // }
+   //}
+   // scan(in + T_start, scratch, transform, debug, BLOCK_SIZE);
 }

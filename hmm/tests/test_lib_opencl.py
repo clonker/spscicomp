@@ -56,7 +56,7 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
 
     def test_forward_scan_bottom_level(self):
         A, B, pi = hmm.utility.get_models()['t2']
-        ob = numpy.loadtxt('data/hmm1.10.dat', numpy.int16)
+        ob = numpy.loadtxt('data/hmm1.5.dat', numpy.int16)
         T = len(ob)
         N,M = B.shape
         kernel = self.get_kernel(N, M, T)
@@ -76,15 +76,16 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
         balpha_T = pyopencl.Buffer(context, mf.READ_WRITE,
             numpy.dtype('float32').itemsize * N*N)
 
-        kernel.build_matrices(queue,
-                (64*256,), (256,),
-                bC, bA, bB, bpi, bob, numpy.int32(T))
-
         start = t.time()
         _, alpha, _ = chmm.forward(A, B, pi, ob)
         end = t.time()
         c_time = end-start
         print 'forward time in c: {t} seconds.'.format(t=c_time)
+        start = t.time()
+        _, alpha_ns = chmm.forward_no_scaling(A, B, pi, ob)
+        end = t.time()
+        c_time = end-start
+        print 'forward no scaling time in c: {t} seconds.'.format(t=c_time)
 
         blockss    = [1*n for n in range(1,40)]
         blocksizes = [2**n for n in range(9)]
@@ -96,8 +97,8 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
                 if blocks <= 2*blocksize and blocks*blocksize*2 <= T:
                     TOTAL_UNITS = 2*blocksize*blocks
                     BLOCK_UNITS = 2*blocksize
-                    print "time: {T}\nblocks: {b}\nblocksize: {bs}\n"\
-                          "TOTAL_UNITS: {tu}\nBLOCK_UNITS: {bu}".format(
+                    print "time: {T}\nblocks: {b}\nblock threads: {bs}\n"\
+                          "TOTAL_SIZE: {tu}\nBLOCK_SIZE: {bu}".format(
                         T=T, b=blocks, bs=blocksize, tu=TOTAL_UNITS, bu=BLOCK_UNITS)
 
                     balpha = pyopencl.Buffer(context, mf.READ_WRITE,
@@ -113,8 +114,13 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
                     btransform = pyopencl.Buffer(context,
                         mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=transform)
 
-                    # pyopencl.enqueue_copy(queue, reduced, balpha)
-                    # print 'reduced:\n', reduced
+                    kernel.build_matrices(queue,
+                            (64*256,), (256,),
+                            bC, bA, bB, bpi, bob, numpy.int32(T))
+
+                    C = numpy.zeros((T,N,N), numpy.float32)
+                    pyopencl.enqueue_copy(queue, C, bC)
+                    print 'C before:\n', C
 
                     e = pyopencl.enqueue_barrier(queue)
                     e.wait()
@@ -122,13 +128,10 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
                     kernel.reduce(queue,
                             (blocks*blocksize,), (blocksize,),
                             bC, balpha, scratch, btransform, numpy.int32(T))
-                    kernel.scan(queue,
+                    kernel.scan_toplevel(queue,
                             (blocksize,), (blocksize,),
                             balpha, scratch, btransform, numpy.int32(blocks))
-                    e = pyopencl.enqueue_barrier(queue)
-                    e.wait()
-                    
-                    kernel.scan_bottom(queue,
+                    kernel.scan_all(queue,
                             (blocks*blocksize,), (blocksize,),
                             bC, balpha, scratch, btransform, bdebug, numpy.int32(T))
                     e = pyopencl.enqueue_barrier(queue)
@@ -139,21 +142,15 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
                     pyopencl.enqueue_copy(queue, debug, bdebug)
                     print 'debug:\n', debug
 
-                    C = numpy.zeros((blocks,N,N), numpy.float32)
-                    pyopencl.enqueue_copy(queue, C, balpha)
-                    print C
+                    C = numpy.zeros((T,N,N), numpy.float32)
+                    pyopencl.enqueue_copy(queue, C, bC)
+                    print 'C after:\n', C
 
-                    # C_T = C[blocks-1]
-                    # T0 = (T/BLOCK_UNITS) * BLOCK_UNITS
-                    # for k in range(T%BLOCK_UNITS):
-                    #     C_T = C[T0+k].dot(C_T)
-                    #     C_T = C_T / numpy.sum(C_T)
-
-                    # alpha0 = pi * B[:, ob[0]]
-                    # alphaT = C_T.dot(alpha0)
-                    # alphaT = alphaT / numpy.sum(alphaT)
-                    # numpy.testing.assert_almost_equal(alphaT, alpha[T-1])
-                    # print 'scanned:\n', reduced
+                    C = forward_build_matrices(ob, A, B, pi)
+                    for i in range(1,len(C)):
+                        C[i] = C[i].dot(C[i-1])
+                        C[i] = C[i] / numpy.sum(C[i])
+                    print 'C should be:\n', C
 
                     if end-start <= minimum[2] and \
                        blocks    >= minimum[1] and \
@@ -207,13 +204,15 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
                     TOTAL_UNITS = 2*blocksize*blocks
                     BLOCK_UNITS = 2*blocksize
                     # print "time: {T}\nblocks: {b}\nblocksize: {bs}\n"\
-                    #       "TOTAL_UNITS: {tu}\nBLOCK_UNITS: {bu}".format(
-                    #     T=T, b=blocks, bs=blocksize, tu=TOTAL_UNITS, bu=BLOCK_UNITS)
+                    #       "TOTAL_UNITS: {tu}\nBLOCK_UNITS: {bu}\n"\
+                    #       "REDUCED_UNITS: {off}".format(
+                    #     T=T, b=blocks, bs=blocksize, tu=TOTAL_UNITS,
+                    #     bu=BLOCK_UNITS, off=(T/BLOCK_UNITS)*BLOCK_UNITS)
 
                     balpha = pyopencl.Buffer(context, mf.READ_WRITE,
                         numpy.dtype('float32').itemsize * blocks*N*N)
-                    # bdebug = pyopencl.Buffer(context, mf.WRITE_ONLY,
-                    #     numpy.dtype('float32').itemsize * TOTAL_UNITS*N*N)
+                    bdebug = pyopencl.Buffer(context, mf.WRITE_ONLY,
+                        numpy.dtype('float32').itemsize * TOTAL_UNITS*N*N)
                     scratch = pyopencl.LocalMemory(
                         numpy.dtype('float32').itemsize*BLOCK_UNITS*N*N)
 
@@ -223,37 +222,39 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
                     btransform = pyopencl.Buffer(context,
                         mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=transform)
 
-                    # pyopencl.enqueue_copy(queue, reduced, balpha)
-                    # print 'reduced:\n', reduced
-
                     e = pyopencl.enqueue_barrier(queue)
                     e.wait()
+
                     start = t.time()
                     kernel.reduce(queue,
                             (blocks*blocksize,), (blocksize,),
                             bC, balpha, scratch, btransform, numpy.int32(T))
-                    kernel.scan(queue,
+                    kernel.scan_toplevel(queue,
                             (blocksize,), (blocksize,),
                             balpha, scratch, btransform, numpy.int32(blocks))
                     e = pyopencl.enqueue_barrier(queue)
                     e.wait()
                     end = t.time()
 
+                    # debug = numpy.zeros((TOTAL_UNITS,N,N), numpy.float32)
+                    # pyopencl.enqueue_copy(queue, debug, bdebug)
+                    # print 'debug:\n', debug[0:8]
+
                     C = numpy.zeros((T,N,N), numpy.float32)
                     pyopencl.enqueue_copy(queue, C, bC)
                     scanned = numpy.zeros((blocks,N,N), numpy.float32)
                     pyopencl.enqueue_copy(queue, scanned, balpha)
+                    # print 'scanned:\n', scanned
+
                     C_T = scanned[blocks-1]
-                    T0 = (T/BLOCK_UNITS) * BLOCK_UNITS
+                    T0 = (T / BLOCK_UNITS) * BLOCK_UNITS
                     for k in range(T%BLOCK_UNITS):
                         C_T = C[T0+k].dot(C_T)
                         C_T = C_T / numpy.sum(C_T)
-
                     alpha0 = pi * B[:, ob[0]]
                     alphaT = C_T.dot(alpha0)
                     alphaT = alphaT / numpy.sum(alphaT)
                     numpy.testing.assert_almost_equal(alphaT, alpha[T-1])
-                    # print 'scanned:\n', reduced
 
                     if end-start <= minimum[2] and \
                        blocks    >= minimum[1] and \

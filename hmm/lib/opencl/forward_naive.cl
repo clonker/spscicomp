@@ -101,7 +101,7 @@ kernel void build_matrices (
    }
 }
 
-kernel void reduce (
+kernel void scan (
       global   ${precision} *grouped_results,
       global   ${precision} *last_results,
       local    ${precision} *scratch,
@@ -169,7 +169,7 @@ kernel void reduce (
 }
 
 
-kernel void collect (
+kernel void propagate (
       global ${precision} *last_results,
       global ${precision} *grouped_results,
       unsigned long T)

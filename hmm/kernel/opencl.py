@@ -175,7 +175,7 @@ def backward_naive(ob, A, B, T, N, beta, matrices, scratch):
     while T > 1:
         grouped_results = pyopencl.Buffer(context, 
             pyopencl.mem_flags.READ_WRITE, (T/kernel.WORK_GROUP_SIZE+1)*N*N*4)
-        kernel.backward.reduce (
+        kernel.backward.scan (
                 queue,
                 (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
                 grouped_results, last_results, scratch, numpy.uint64(T))
@@ -187,7 +187,7 @@ def backward_naive(ob, A, B, T, N, beta, matrices, scratch):
     grouped_results = last_results
     while stack:
         last_results, T = stack.pop()
-        kernel.backward.collect(
+        kernel.backward.propagate (
                 queue,
                 (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
                 last_results, grouped_results, numpy.uint64(T))
@@ -217,7 +217,7 @@ def forward_naive(ob, A, B, pi, T, N, alpha, matrices, scratch):
     while T > 1:
         grouped_results = pyopencl.Buffer(context, 
             pyopencl.mem_flags.READ_WRITE, (T/kernel.WORK_GROUP_SIZE+1)*N*N*4)
-        kernel.forward.reduce (
+        kernel.forward.scan (
                 queue,
                 (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
                 grouped_results, last_results, scratch, numpy.uint64(T))
@@ -229,7 +229,7 @@ def forward_naive(ob, A, B, pi, T, N, alpha, matrices, scratch):
     grouped_results = last_results
     while stack:
         last_results, T = stack.pop()
-        kernel.forward.collect(
+        kernel.forward.propagate (
                 queue,
                 (kernel.NUM_UNITS,), (kernel.WORK_GROUP_SIZE,),
                 last_results, grouped_results, numpy.uint64(T))

@@ -184,7 +184,7 @@ kernel void scan(
    size_t global_id = get_global_id(0);
    size_t group_root = global_id - local_id;
 
-   size_t T_segment = T / (get_num_groups(0)*BLOCK_SIZE)
+   size_t T_segment = T / (get_num_groups(0)*BLOCK_SIZE);
 
    local ${precision} last_element[N][N];
    ${precision} C[N][N];

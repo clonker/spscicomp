@@ -8,7 +8,7 @@ import hmm.kernel.c as chmm
 import time as t
 
 platform = pyopencl.get_platforms()[0]
-device   = platform.get_devices()[1]
+device   = platform.get_devices()[0]
 context  = pyopencl.Context([device])
 queue    = pyopencl.CommandQueue(context)
 
@@ -56,7 +56,7 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
 
     def test_forward_scan_bottom_level(self):
         A, B, pi = hmm.utility.get_models()['t2']
-        ob = numpy.loadtxt('data/hmm1.5.dat', numpy.int16)
+        ob = numpy.loadtxt('data/hmm1.3000000.dat', numpy.int16)
         T = len(ob)
         N,M = B.shape
         kernel = self.get_kernel(N, M, T)
@@ -77,34 +77,31 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
             numpy.dtype('float32').itemsize * N*N)
 
         start = t.time()
-        _, alpha, _ = chmm.forward(A, B, pi, ob)
-        end = t.time()
-        c_time = end-start
-        print 'forward time in c: {t} seconds.'.format(t=c_time)
-        start = t.time()
         _, alpha_ns = chmm.forward_no_scaling(A, B, pi, ob)
         end = t.time()
         c_time = end-start
         print 'forward no scaling time in c: {t} seconds.'.format(t=c_time)
 
-        blockss    = [1*n for n in range(1,40)]
+        start = t.time()
+        _, alpha, _ = chmm.forward(A, B, pi, ob)
+        end = t.time()
+        c_time = end-start
+        print 'forward time in c: {t} seconds.'.format(t=c_time)
+
+        blockss    = [7*n for n in range(1,40)]
         blocksizes = [2**n for n in range(9)]
 
         minimum = (0, 0, 1.0)
-        print 'benchmarking hmm.lib.opencl.forward.scan_bottom_level'
+        print 'benchmarking hmm.lib.opencl.forward.scan_all'
         for blocksize in blocksizes:
             for blocks in blockss:
                 if blocks <= 2*blocksize and blocks*blocksize*2 <= T:
                     TOTAL_UNITS = 2*blocksize*blocks
                     BLOCK_UNITS = 2*blocksize
-                    print "time: {T}\nblocks: {b}\nblock threads: {bs}\n"\
-                          "TOTAL_SIZE: {tu}\nBLOCK_SIZE: {bu}".format(
-                        T=T, b=blocks, bs=blocksize, tu=TOTAL_UNITS, bu=BLOCK_UNITS)
 
                     balpha = pyopencl.Buffer(context, mf.READ_WRITE,
                         numpy.dtype('float32').itemsize * blocks*N*N)
-                    bdebug = pyopencl.Buffer(context, mf.READ_WRITE,
-                        numpy.dtype('float32').itemsize * TOTAL_UNITS*N*N)
+
                     scratch = pyopencl.LocalMemory(
                         numpy.dtype('float32').itemsize*BLOCK_UNITS*N*N)
 
@@ -114,17 +111,12 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
                     btransform = pyopencl.Buffer(context,
                         mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=transform)
 
-                    kernel.build_matrices(queue,
-                            (64*256,), (256,),
-                            bC, bA, bB, bpi, bob, numpy.int32(T))
-
-                    C = numpy.zeros((T,N,N), numpy.float32)
-                    pyopencl.enqueue_copy(queue, C, bC)
-                    print 'C before:\n', C
-
                     e = pyopencl.enqueue_barrier(queue)
                     e.wait()
                     start = t.time()
+                    kernel.build_matrices(queue,
+                            (64*256,), (256,),
+                            bC, bA, bB, bpi, bob, numpy.int32(T))
                     kernel.reduce(queue,
                             (blocks*blocksize,), (blocksize,),
                             bC, balpha, scratch, btransform, numpy.int32(T))
@@ -133,24 +125,18 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
                             balpha, scratch, btransform, numpy.int32(blocks))
                     kernel.scan_all(queue,
                             (blocks*blocksize,), (blocksize,),
-                            bC, balpha, scratch, btransform, bdebug, numpy.int32(T))
+                            bC, balpha, scratch, btransform, numpy.int32(T))
                     e = pyopencl.enqueue_barrier(queue)
                     e.wait()
                     end = t.time()
 
-                    debug = numpy.zeros((TOTAL_UNITS, N, N), numpy.float32)
-                    pyopencl.enqueue_copy(queue, debug, bdebug)
-                    print 'debug:\n', debug
-
-                    C = numpy.zeros((T,N,N), numpy.float32)
-                    pyopencl.enqueue_copy(queue, C, bC)
-                    print 'C after:\n', C
-
-                    C = forward_build_matrices(ob, A, B, pi)
-                    for i in range(1,len(C)):
-                        C[i] = C[i].dot(C[i-1])
-                        C[i] = C[i] / numpy.sum(C[i])
-                    print 'C should be:\n', C
+                    # C_ref = forward_build_matrices(ob, A, B, pi)
+                    # C_ref[0] = C_ref[0] / numpy.sum(C_ref[0])
+                    # for i in range(1,len(C)):
+                    #     C_ref[i] = C_ref[i].dot(C_ref[i-1])
+                    #     C_ref[i] = C_ref[i] / numpy.sum(C_ref[i])
+                    # print 'C should be:\n', C_ref
+                    # numpy.testing.assert_almost_equal(C, C_ref, 5)
 
                     if end-start <= minimum[2] and \
                        blocks    >= minimum[1] and \
@@ -163,7 +149,7 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
 
     def test_forward_scan_top_level(self):
         A, B, pi = hmm.utility.get_models()['t2']
-        ob = numpy.loadtxt('data/hmm1.100.dat', numpy.int16)
+        ob = numpy.loadtxt('data/hmm1.1000.dat', numpy.int16)
         T = len(ob)
         N,M = B.shape
         kernel = self.get_kernel(N, M, T)
@@ -203,16 +189,9 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
                 if blocks <= 2*blocksize and blocks*blocksize*2 <= T:
                     TOTAL_UNITS = 2*blocksize*blocks
                     BLOCK_UNITS = 2*blocksize
-                    # print "time: {T}\nblocks: {b}\nblocksize: {bs}\n"\
-                    #       "TOTAL_UNITS: {tu}\nBLOCK_UNITS: {bu}\n"\
-                    #       "REDUCED_UNITS: {off}".format(
-                    #     T=T, b=blocks, bs=blocksize, tu=TOTAL_UNITS,
-                    #     bu=BLOCK_UNITS, off=(T/BLOCK_UNITS)*BLOCK_UNITS)
 
                     balpha = pyopencl.Buffer(context, mf.READ_WRITE,
                         numpy.dtype('float32').itemsize * blocks*N*N)
-                    bdebug = pyopencl.Buffer(context, mf.WRITE_ONLY,
-                        numpy.dtype('float32').itemsize * TOTAL_UNITS*N*N)
                     scratch = pyopencl.LocalMemory(
                         numpy.dtype('float32').itemsize*BLOCK_UNITS*N*N)
 
@@ -236,15 +215,10 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
                     e.wait()
                     end = t.time()
 
-                    # debug = numpy.zeros((TOTAL_UNITS,N,N), numpy.float32)
-                    # pyopencl.enqueue_copy(queue, debug, bdebug)
-                    # print 'debug:\n', debug[0:8]
-
                     C = numpy.zeros((T,N,N), numpy.float32)
                     pyopencl.enqueue_copy(queue, C, bC)
                     scanned = numpy.zeros((blocks,N,N), numpy.float32)
                     pyopencl.enqueue_copy(queue, scanned, balpha)
-                    # print 'scanned:\n', scanned
 
                     C_T = scanned[blocks-1]
                     T0 = (T / BLOCK_UNITS) * BLOCK_UNITS
@@ -268,7 +242,7 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
 
     def test_forward_reduce(self):
         A, B, pi = hmm.utility.get_models()['t2']
-        ob = numpy.loadtxt('data/hmm1.10000.dat', numpy.int16) # numpy.array([1,0,1,0,1], numpy.int16)
+        ob = numpy.loadtxt('data/hmm1.1000.dat', numpy.int16) # numpy.array([1,0,1,0,1], numpy.int16)
         T = len(ob)
         N,M = B.shape
         kernel = self.get_kernel(N, M, T)
@@ -311,49 +285,39 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
                 if blocks <= 2*blocksize and blocks*blocksize*2 <= T:
                     TOTAL_UNITS = 2*blocksize*blocks
                     BLOCK_UNITS = 2*blocksize
-
                     balpha = pyopencl.Buffer(context, mf.READ_WRITE,
                         numpy.dtype('float32').itemsize * blocks*N*N)
-                    bdebug = pyopencl.Buffer(context, mf.WRITE_ONLY,
-                        numpy.dtype('float32').itemsize * TOTAL_UNITS*N*N)
                     scratch = pyopencl.LocalMemory(
                         numpy.dtype('float32').itemsize*BLOCK_UNITS*N*N)
-
                     transform = numpy.array(
                         calculate_index_table([0], numpy.log2(blocksize)+1),
                         numpy.int32)
                     btransform = pyopencl.Buffer(context,
-                        mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=transform)                    
-
+                        mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=transform)
                     start = t.time()
                     kernel.reduce(queue,
-                                (blocks*blocksize,), (blocksize,),
-                                bC, balpha, scratch, btransform, numpy.int32(T))
-
+                            (blocks*blocksize,), (blocksize,),
+                            bC, balpha, scratch, btransform, numpy.int32(T))
                     e = pyopencl.enqueue_barrier(queue)
                     e.wait()
                     end = t.time()
-
                     C = numpy.zeros((T,N,N), numpy.float32)
                     pyopencl.enqueue_copy(queue, C, bC)
-
                     reduced = numpy.zeros((blocks,N,N), numpy.float32)
                     pyopencl.enqueue_copy(queue, reduced, balpha)
                     C_T = reduced[0]
                     for k in range(1, len(reduced)):
                         C_T = reduced[k].dot(C_T)
                         C_T = C_T / numpy.sum(C_T)
-
                     T0 = (T/BLOCK_UNITS) * BLOCK_UNITS
                     for k in range(T%BLOCK_UNITS):
                         C_T = C[T0+k].dot(C_T)
                         C_T = C_T / numpy.sum(C_T)
-
                     alpha0 = pi * B[:, ob[0]]
                     alphaT = C_T.dot(alpha0)
                     alphaT = alphaT / numpy.sum(alphaT)
                     numpy.testing.assert_almost_equal(alphaT, alpha[T-1])
-                    
+
                     if end-start <= minimum[2] and \
                        blocks    >= minimum[1] and \
                        blocksize >= minimum[0]:
@@ -364,16 +328,9 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
         print "speedup: {s}".format(s=c_time/(minimum[2]))
 
 
-        # C = forward_build_matrices(ob, A, B, pi)
-        # C_T = numpy.eye(N)
-        # for C_t in C:
-        #     C_T = C_t.dot(C_T)
-        # print C_T
-
-
     def test_forward_build_matrices(self):
         A, B, pi = hmm.utility.get_models()['t2']
-        ob = numpy.loadtxt('data/hmm1.1000.dat', numpy.int16)
+        ob = numpy.loadtxt('data/hmm1.10.dat', numpy.int16)
         T = len(ob)
         N,M = B.shape
         kernel = self.get_kernel(N, M, T)

@@ -23,11 +23,11 @@ print initial_distribution
 print 'Reading data'
 
 obs = [
-#	numpy.loadtxt('data/t1.3000000.dat', dtype=numpy.int16),
-	numpy.array([1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1], dtype=numpy.int16)
+	numpy.loadtxt('data/hmm1.3000000.dat', dtype=numpy.int16),
+#	numpy.array([1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1], dtype=numpy.int16)
 ]
 
-maxit = 1
+maxit = 100
 
 print 'start opencl'
 start = t.time()

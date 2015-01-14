@@ -84,8 +84,9 @@ for (int _i = 0; _i < N; _i++) \
 /* Create the vector of matrices which we want to do the cumulative sum
  * with.
  */
-kernel void build_matrices (
+kernel void initialize (
       global   ${precision} *C, /* matrices */
+      global   ${precision} *alpha,
       constant ${precision} *A,
       constant ${precision} *B,
       constant ${precision} *pi,
@@ -97,11 +98,22 @@ kernel void build_matrices (
    
    ${precision} _A[N][N];
    ${precision} _B[N][M];
+   ${precision} _alpha[N];
+   ${precision} sum = 0.0f;
    GET_DIM2(_A, A, 0);
    GET_DIMM2(_B, B, 0);
 
    if (global_id == 0) {
       PUT_ID(C, 0);
+      for (int i = 0; i < N; i++) {
+         _alpha[i] = pi[i] * _B[i][seq[0]];
+         sum += _alpha[i];
+      }
+      for (int i = 0; i < N; i++) {
+         _alpha[i] /= sum;
+         DIM2(alpha, 0, i) = _alpha[i];
+      }
+
       global_id += global_size;
    }
 
@@ -359,7 +371,7 @@ kernel void scan_all(
          FROM_TO(in, t_left, scratch, left);
       }
       FROM_TO(in, t_right, scratch, right);
-  }
+   }
 
   if (get_group_id(0) == get_num_groups(0)-1 && T % BLOCK_SIZE != 0) {
       barrier(CLK_LOCAL_MEM_FENCE);
@@ -388,5 +400,39 @@ kernel void scan_all(
          FROM_TO(scratch, right, in, t_left);
       if (get_local_id(0) != 0 && t_left-1 < T)
          FROM_TO(scratch, left, in, t_left-1);
-  }
+   }
+}
+
+kernel void finalize(
+      global ${precision} *C,
+      global ${precision} *alpha,
+      int T)
+{
+   size_t global_id = get_global_id(0);
+   ${precision} C_t[N][N];
+   ${precision} alpha_0[N];
+   ${precision} alpha_t[N] = { 0.0f };
+   ${precision} sum;
+
+
+   while (global_id < T) {
+      GET_DIM2(C_t, C, global_id);
+      
+      for (int i = 0; i < N; i++)
+         alpha_0[i] = DIM2(alpha, 0, i);
+
+      sum = 0.0f;
+      for (int i = 0; i < N; i++) {
+         for (int j = 0; j < N; j++) 
+            alpha_t[i] += C_t[i][j]*alpha_0[j];
+         sum += alpha_t[i];
+      }
+
+      for (int i = 0; i < N; i++) {
+         alpha_t[i] /= sum;
+         DIM2(alpha, global_id, i) = alpha_t[i];
+      }
+
+      global_id += get_global_size(0);
+   }
 }

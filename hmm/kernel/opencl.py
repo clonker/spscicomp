@@ -2,11 +2,19 @@ import pyopencl
 import numpy
 import string
 
+def calculate_index_table(table, depth):
+    if depth == 0:
+        return table
+    else:
+        table = [2*t for t in table]
+        table = table + [t+1 for t in table]
+        return calculate_index_table(table, depth-1)
+
 def update(A, B, pi, alpha, transitions, states, symbols, probability, N, T):
     kernel.update.update(
             queue,
-            (N,N), None,
-            A, B, pi, alpha, transitions, states, symbols, probability, numpy.int64(T))
+            (N,N), None, A, B, pi,
+            alpha, transitions, states, symbols, probability, numpy.int64(T))
 
 def transition_probabilities(alpha, beta, A, B, ob, T, xi):
     kernel.update.transition_probabilities(
@@ -74,8 +82,6 @@ def state_counts(gamma, T, N, scratch):
 
     return counts
 
-
-@profile
 def baum_welch(
         sequence,
         transition_probs,
@@ -121,7 +127,12 @@ def baum_welch(
             T*N*N * numpy.dtype('float32').itemsize)
 
     scratch = pyopencl.LocalMemory(
-        kernel.WORK_GROUP_SIZE*N*N* numpy.dtype('float32').itemsize )
+            2*kernel.WORK_GROUP_SIZE*N*N* numpy.dtype('float32').itemsize )
+
+    reduced = pyopencl.Buffer(
+            context,
+            pyopencl.mem_flags.READ_WRITE,
+            blocks*N*N * numpy.dtype('float32').itemsize)
 
     probability = pyopencl.Buffer(
             context,
@@ -134,8 +145,13 @@ def baum_welch(
     it       = 0
     while it < maxit: # abs(new_prob - old_prob) > accuracy and it < maxit:
 
-        forward_naive(ob, A, B, pi, T, N, alpha, matrix_buffer, scratch)
+        forward(ob, A, B, pi, T, N, alpha, matrix_buffer, scratch, reduced)
+        # forward_naive(ob, A, B, pi, T, N, alpha, matrix_buffer, scratch)
+        e = pyopencl.enqueue_barrier(queue)
+        e.wait()
         backward_naive(ob, A, B, T, N, beta, matrix_buffer, scratch)
+        e = pyopencl.enqueue_barrier(queue)
+        e.wait()
         transition_probabilities(alpha, beta, A, B, ob, T, matrix_buffer)
         state_probabilities(alpha, beta, T)
         transitions = transition_counts(matrix_buffer, T-1, N, scratch) 
@@ -158,6 +174,34 @@ def baum_welch(
 
     return transition_probs, symbol_probs, initial_dist, new_prob, it
 
+def forward(ob, A, B, pi, T, N, alpha, matrices, scratch, reduced):
+    # BLOCK_UNITS = 2*blocksize
+
+    # reduced = pyopencl.Buffer(context, pyopencl.mem_flags.READ_WRITE,
+    #     numpy.dtype('float32').itemsize * blocks*N*N)
+    # scratch = pyopencl.LocalMemory(
+    #     numpy.dtype('float32').itemsize*BLOCK_UNITS*N*N)
+    # matrices = pyopencl.Buffer(context, pyopencl.mem_flags.READ_WRITE,
+    #     numpy.dtype('float32').itemsize * T*N*N)    
+    
+
+    kernel.forward2.initialize(queue,
+            (64*256,), (256,),
+            matrices, alpha, A, B, pi, ob, numpy.int32(T))
+    kernel.forward2.reduce(queue,
+            (blocks*blocksize,), (blocksize,),
+            matrices, reduced, scratch, transform, numpy.int32(T))
+    kernel.forward2.scan_toplevel(queue,
+            (blocksize,), (blocksize,),
+            reduced, scratch, transform, numpy.int32(blocks))
+    kernel.forward2.scan_all(queue,
+            (blocks*blocksize,), (blocksize,),
+            matrices, reduced, scratch, transform, numpy.int32(T))
+    kernel.forward2.finalize(queue,
+            (64*256,), (256,),
+            matrices, alpha, numpy.int32(T))
+
+    return alpha
 
 
 def backward_naive(ob, A, B, T, N, beta, matrices, scratch):
@@ -245,6 +289,7 @@ def forward_naive(ob, A, B, pi, T, N, alpha, matrices, scratch):
 
 
 _FORWARD_SOURCE_SCALING  = 'lib/opencl/forward_naive_scaling.cl'
+_FORWARD_SOURCE          = 'lib/opencl/forward.cl'
 _BACKWARD_SOURCE_SCALING = 'lib/opencl/backward_naive_scaling.cl'
 _UPDATE_SOURCE           = 'lib/opencl/update.cl'
 
@@ -253,10 +298,20 @@ device   = platform.get_devices()[0]
 context  = pyopencl.Context([device])
 queue    = pyopencl.CommandQueue(context)
 
+blocksize = 256
+blocks    = 168
+
+pre_compiled = numpy.array(
+    calculate_index_table([0], numpy.log2(blocksize)+1),
+    numpy.int32)
+transform = pyopencl.Buffer(context,
+    pyopencl.mem_flags.READ_ONLY | pyopencl.mem_flags.COPY_HOST_PTR,
+    hostbuf=pre_compiled)
+
 class Kernel:
-    WORK_GROUP_SIZE = 2
-    NUM_UNITS = 2*2
-    NUM_GROUPS = 2
+    WORK_GROUP_SIZE = 256
+    NUM_UNITS = 168*256
+    NUM_GROUPS = 168
 
     def __init__(self, N=3, M=2):
         self.compile(N,M)
@@ -269,6 +324,11 @@ class Kernel:
         source = string.Template("".join(ff.readlines())).substitute(
             N=N, M=M, precision="float")
         self.forward = pyopencl.Program(context, source).build()
+
+        ff = open(_FORWARD_SOURCE, 'r')
+        source = string.Template("".join(ff.readlines())).substitute(
+            N=N, M=M, precision="float")
+        self.forward2 = pyopencl.Program(context, source).build()
 
         source = string.Template("".join(fb.readlines())).substitute(
             N=N, M=M, precision="float")

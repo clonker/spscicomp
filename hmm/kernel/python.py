@@ -201,7 +201,7 @@ def update(gamma, xi, ob, M, dtype=numpy.float32):
 
     Notes
     -----
-    This function is part of the Bell-Welch algorithm for a single observation.
+    This function is part of the Baum-Welch algorithm for a single observation.
 
     See Also
     --------

@@ -61,7 +61,22 @@ models['t2'] = (
         [0.333, 0.333, 0.333], numpy.float32
     ),
 )
-
+models['tbm1'] = (
+	numpy.array(
+		[[0.3, 0.3, 0.2, 0.1, 0.1],
+		 [0.1, 0.3, 0.3, 0.2, 0.1],
+		 [0.0, 0.1, 0.8, 0.1, 0.0],
+		 [0.1, 0.2, 0.3, 0.3, 0.1],
+		 [0.0, 0.0, 0.1, 0.3, 0.6]], numpy.float64),
+	numpy.array(
+		[[0.2, 0.2, 0.2, 0.4],
+		 [1.0, 0.0, 0.0, 0.0],
+		 [0.0, 0.2, 0.8, 0.0],
+		 [0.0, 0.0, 0.0, 1.0],
+		 [0.2, 0.8, 0.0, 0.0]], numpy.float64),
+	numpy.array(
+		[0.2, 0.2, 0.2, 0.2, 0.2],numpy.float64)
+)
 
 def get_models():
     return models
@@ -78,3 +93,18 @@ def compare_models(A1, B1, pi1, A2, B2, pi2, T, kernel=hmm.kernel.python):
     similarity2 = (logprob2 - logprob1) / float(T)
     return 0.5 * (similarity1 + similarity2)
 
+def generate_startmodel(N, M, dtype=numpy.float64):
+	A  = numpy.zeros((N,N), dtype=dtype)
+	B  = numpy.ones( (N,M), dtype=dtype)
+	pi = numpy.ones(  N   , dtype=dtype)
+
+	for i in range(N):
+		for j in range(N):
+			if (i==j):
+				A[i,j] = 0.8
+			else:
+				A[i,j] = 0.2 / float(N-1)
+	
+	B /= float(M)
+	pi /= float(N)
+	return (A, B, pi)

@@ -2,6 +2,20 @@ from kmeans import DefaultKmeans
 
 
 def kmeans(k, importer=None):
+    """
+    Initialize and run the k-means algorithm. If any of the optimized implementations (CUDA, OpenCL, C extension) are
+    available, they are selected and initialized automatically in the above order. Then the respective
+    :func:`kmeans.Kmeans.calculate_centers` method is called and the output is returned.
+
+    :param k: Number of cluster centers to compute.
+    :type k: int
+    :param importer: A :class:`.CommonDataImporter` object to be used for importing the numerical data.
+    :type importer: :class:`.CommonDataImporter`
+    :return: An array of integers :math:`[c(x_i)]` where :math:`x_i` is the i-th data point and
+             :math:`c(x_i)` is the index of the cluster center to which :math:`x_i` belongs.
+    :rtype: int[]
+    """
+
     kmeans_implementation = None
     if importer:
         try:
@@ -27,6 +41,6 @@ def kmeans(k, importer=None):
         print 'Needs data importer!'
     print 'implementation chosen = ' + str(type(kmeans_implementation))
     if kmeans_implementation and importer:
-        c, _ = kmeans_implementation.calculate_centers(k, return_centers=True)
-        return c
+        data_assigns = kmeans_implementation.calculate_centers(k)
+        return data_assigns
     return None

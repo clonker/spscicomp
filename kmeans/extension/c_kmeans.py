@@ -4,6 +4,10 @@ from kmeans_metric import EuclideanMetric
 
 
 class CKmeans(DefaultKmeans):
+    """
+    An implementation of the k-means algorithm in C. Refer to the :class:`.DefaultKmeans` class for parameters and
+    public methods.
+    """
 
     def __init__(self, metric=EuclideanMetric(), importer=None, chunk_size=1000, max_steps=100):
         super(CKmeans, self).__init__(metric, importer, chunk_size, max_steps)

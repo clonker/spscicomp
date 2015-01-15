@@ -3,7 +3,7 @@ import numpy as np
 
 
 class KmeansDataGenerator:
-    """ abstract data generator """
+    """ Abstract data generator. Implementations are expected to override the generate_data method. """
 
     def __init__(self):
         pass
@@ -17,8 +17,15 @@ class KmeansDataGenerator:
 
 class KmeansRandomDataGenerator(KmeansDataGenerator):
     """
-    Generate a test dataset for the K-Means algorithm. The centers are generated uniformly.
+    Generate a test dataset for the k-means algorithm. The centers are generated uniformly.
     The other points are produced randomly near one of the centers with normal distribution.
+
+    :param size: Number of data points to generate.
+    :type size: int
+    :param dimension: Dimension of the euclidean space the data points will belong to.
+    :type dimension: int
+    :param centers_count: Number of cluster centers around which the data points are to be generated.
+    :type centers_count: int
     """
     def __init__(self, size, dimension, centers_count):
         super(KmeansDataGenerator, self).__init__()
@@ -41,13 +48,39 @@ class KmeansRandomDataGenerator(KmeansDataGenerator):
             self._data[i, :] = self._centers[center] + noise
 
     def get_centers(self):
+        """
+        Return the generated cluster centers.
+
+        :return: A list of numpy arrays representing the cluster centers.
+        :rtype: np.array[]
+        """
         return self._centers
 
     def get_data(self):
+        """
+        Return the generated data points.
+
+        :return: A numpy array of size *size*x*dimension*.
+        :rtype: np.array
+        """
         return self._data
 
     def to_file(self, filename):
+        """
+        Save the generated data to a text file using :func:`numpy.savetxt` which can be read later using the
+        respective :class:`.CommonDataImporter` object.
+
+        :param filename: The file name.
+        :type filename: str
+        """
         np.savetxt(filename, self._data)
 
     def to_binary_file(self, filename):
+        """
+        Save the generated data to a binary file using :func:`numpy.save` which can be read later using the
+        respective :class:`.CommonDataImporter` object.
+
+        :param filename: The file name.
+        :type filename: str
+        """
         np.save(filename, self._data)

@@ -4,7 +4,7 @@ from kmeans_metric import EuclideanMetric
 
 
 class Kmeans:
-    """ Abstract k-means algorithm """
+    """Abstract k-means algorithm. Implementations are expected to override the calculate_centers method."""
     __metaclass__ = ABCMeta
 
     def __init__(self, metric=EuclideanMetric(), importer=None):
@@ -18,8 +18,19 @@ class Kmeans:
 
 class DefaultKmeans(Kmeans):
     """
-    Default implementation of the k-means algorithm. Once supplied with an CommonDataImporter object, use the
+    Default implementation of the k-means algorithm. Once supplied with an :class:`.CommonDataImporter` object, use the
     calculate_centers method to compute k cluster centers.
+
+    :param metric: A :class:`.KmeansMetric` object to be used for calculating distances between points. The default is
+                   the :class:`.EuclideanMetric`.
+    :type metric: :class:`.KmeansMetric`
+    :param importer: A :class:`.CommonDataImporter` object to be used for importing the numerical data.
+    :type importer: :class:`.CommonDataImporter`
+    :param chunk_size: The number of data points to be imported and processed at a time.
+    :type chunk_size: int
+    :param max_steps: The maximum number of steps to run the algorithm for. If the iteration did not converge after
+                      this number of steps, the algorithm is terminated and the last result returned.
+    :type max_steps: int
     """
 
     def __init__(self, metric=EuclideanMetric(), importer=None, chunk_size=1000, max_steps=100):
@@ -33,16 +44,25 @@ class DefaultKmeans(Kmeans):
     def calculate_centers(self, k, initial_centers=None, return_centers=False, save_history=False):
         """
         Main method of the k-means algorithm. Computes k cluster centers from the data supplied by a
-        CommonDataImporter object.
+        :class:`.CommonDataImporter` object.
+
         :param k: Number of cluster centers to compute.
+        :type k: int
         :param initial_centers: Array of cluster centers to start the iteration with. If omitted, random data points
-        from the first chunk of data are used.
+                                from the first chunk of data are used.
+        :type initial_centers: numpy.array
         :param return_centers: If set to True then the cluster centers are returned.
+        :type return_centers: bool
         :param save_history: If this and return_centers is set to True then the cluster centers in each iteration step
-        are returned.
-        :return: centers - an array of the computed cluster centers. data_assigns - an array of integers [c(xi)] where
-        xi is the i-th data point and c(xi) is the index of the cluster center to which xi belongs. history - a list of
-        arrays of the cluster centers in each iteration step.
+                             are returned.
+        :type save_history: bool
+        :return: An array of integers :math:`[c(x_i)]` where :math:`x_i` is the i-th data point and
+                 :math:`c(x_i)` is the index of the cluster center to which :math:`x_i` belongs.
+        :rtype: int[]
+        :return: An array of the computed cluster centers.
+        :rtype: np.array
+        :return: A list of arrays of the cluster centers in each iteration step.
+        :rtype: np.array[]
         """
 
         self._importer.rewind()

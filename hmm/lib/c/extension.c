@@ -285,7 +285,7 @@ py_xi(PyObject *self, PyObject *args)
     const double *beta = (double*)PyArray_DATA(pBeta);
     const double *alpha = (double*)PyArray_DATA(pAlpha);
 
-    npy_intp xi_dims[3] = {T,N,N};
+    npy_intp xi_dims[3] = {T-1,N,N};
     PyObject *pXi = PyArray_ZEROS(3, xi_dims, NPY_FLOAT64, 0);
 
     double *xi = (double*) PyArray_DATA(pXi);
@@ -611,7 +611,7 @@ py_xi32(PyObject *self, PyObject *args)
     const float *beta = (float*)PyArray_DATA(pBeta);
     const float *alpha = (float*)PyArray_DATA(pAlpha);
 
-    npy_intp xi_dims[3] = {T,N,N};
+    npy_intp xi_dims[3] = {T-1,N,N};
     PyObject *pXi = PyArray_ZEROS(3, xi_dims, NPY_FLOAT32, 0);
 
     float *xi = (float*) PyArray_DATA(pXi);

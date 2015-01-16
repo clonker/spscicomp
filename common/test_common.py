@@ -8,7 +8,7 @@ class TestCommonDataImporter(unittest.TestCase):
         pass
 
     def test_common_file_data_importer(self):
-        f_name = 'common/unittest_data.txt'
+        f_name = 'unittest_data.txt'
         importer = CommonFileDataImporter(filename=f_name)
         line_count = sum(1 for _ in open(f_name))
         for i in xrange(5):

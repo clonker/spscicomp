@@ -13,6 +13,7 @@ Contents:
 
    common
    kmeans
+   hmm
 
 
 Indices and tables

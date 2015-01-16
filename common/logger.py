@@ -8,7 +8,8 @@ class Logger():
     """
     A class which wraps the python logger. Example usage:
     ::
-        LOG = common.Logger(__name__).get()
+        import logger
+        LOG = logger.Logger(__name__).get()
         LOG.debug("test")
     """
     def __init__(

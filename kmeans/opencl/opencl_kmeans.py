@@ -1,18 +1,21 @@
 import os
-from kmeans import DefaultKmeans
-from kmeans_metric import EuclideanMetric
+
 import numpy as np
 import pyopencl as cl
-import kmeans_log
 
-LOG = kmeans_log.Logger(__name__).get()
+from kmeans import DefaultKmeans
+from kmeans_metric import EuclideanMetric
+import logger
+
+
+LOG = logger.Logger(__name__).get()
 
 
 class OpenCLKmeans(DefaultKmeans):
     def __init__(self, metric=EuclideanMetric(), importer=None, chunk_size=1000, max_steps=100):
         super(OpenCLKmeans, self).__init__(metric, importer, chunk_size, max_steps)
         platform = cl.get_platforms()
-        gpus = platform[0].get_devices(device_type=cl.device_type.GPU)
+        gpus = platform[0].get_devices(device_type=cl.device_type.CPU)
         self.ctx = cl.Context(devices=gpus)
         self.queue = cl.CommandQueue(self.ctx)
         self.prg = OpenCLKmeans.load_cl_program(self.ctx, 'opencl_kmeans.cl')

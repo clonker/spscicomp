@@ -7,10 +7,10 @@
 #include "numpy/arrayobject.h"
 
 /* Needs to be compiled as C files because of the Naming problem in Namespace */
-#ifdef __cplusplus 
-extern "C" {  
-#endif 
-  
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 PyObject* kmeans_chunk_center(PyArrayObject *data, PyArrayObject *centers, PyObject *data_assigns);
 
 static PyObject* cal_chunk_centers(PyObject *dummy, PyObject *args)
@@ -21,9 +21,15 @@ static PyObject* cal_chunk_centers(PyObject *dummy, PyObject *args)
     PyObject *centers = NULL;
     PyObject *data_assigns = NULL;
     if (!PyArg_ParseTuple(args, "O!OO!", &PyArray_Type, &data, &centers, &PyList_Type, &data_assigns))
+    {
+        PyErr_SetString(PyExc_TypeError, "Python Arguments parse error!");
         return NULL;
+    }
     PyObject *chunk_centers = NULL;
     chunk_centers = kmeans_chunk_center(data, (PyArrayObject*)centers, data_assigns);
+    if (chunk_centers == NULL){
+        return NULL;
+    }
     Py_INCREF(chunk_centers);  /* The returned list should still exist after calling the C extension */
     return chunk_centers;
 }
@@ -36,13 +42,13 @@ static PyMethodDef kmeans_c_extensionMethods[] =
 };
 
 void initkmeans_c_extension()
-{  
+{
     /* Initialize the extension module */
     import_array();
     PyObject* m;
     m = Py_InitModule("kmeans_c_extension", kmeans_c_extensionMethods);
 }
 
-#ifdef __cplusplus  
+#ifdef __cplusplus
 }
 #endif

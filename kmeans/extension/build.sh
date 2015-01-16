@@ -1,5 +1,5 @@
 #!/bin/sh
 
-rm -R build
-python2 setup.py build
-cp build/lib.linux-x86_64-2.7/kmeans_c_extension.so .
+python2 setup.py build_ext --inplace
+rm -Rf ./build
+#echo $(python2 -c 'from distutils.util import get_platform; print get_platform()')

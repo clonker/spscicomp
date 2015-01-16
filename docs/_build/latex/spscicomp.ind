@@ -1,0 +1,70 @@
+\begin{theindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter C
+  \item calculate\_centers() (kmeans.DefaultKmeans method), \hyperpage{5}
+  \item CKmeans (class in extension.c\_kmeans), \hyperpage{6}
+  \item close\_file() (common\_data\_importer.CommonFileDataImporter method), \hyperpage{3}
+  \item common\_data\_importer (module), \hyperpage{3}
+  \item CommonBinaryFileDataImporter (class in common\_data\_importer), \hyperpage{3}
+  \item CommonDataImporter (class in common\_data\_importer), \hyperpage{3}
+  \item CommonFileDataImporter (class in common\_data\_importer), \hyperpage{3}
+  \item CommonSimpleDataImporter (class in common\_data\_importer), \hyperpage{4}
+  \item cuda.cuda\_kmeans.CUDAKmeans (class in extension.c\_kmeans), \hyperpage{6}
+
+  \indexspace
+  \bigletter D
+  \item DefaultKmeans (class in kmeans), \hyperpage{5}
+
+  \indexspace
+  \bigletter E
+  \item extension.c\_kmeans (module), \hyperpage{6}
+
+  \indexspace
+  \bigletter G
+  \item get\_centers() (kmeans\_data\_generator.KmeansRandomDataGenerator method), \hyperpage{7}
+  \item get\_data() (common\_data\_importer.CommonBinaryFileDataImporter method), \hyperpage{3}
+  \item get\_data() (common\_data\_importer.CommonFileDataImporter method), \hyperpage{3}
+  \item get\_data() (common\_data\_importer.CommonSimpleDataImporter method), \hyperpage{4}
+  \item get\_data() (kmeans\_data\_generator.KmeansRandomDataGenerator method), \hyperpage{7}
+
+  \indexspace
+  \bigletter H
+  \item has\_more\_data() (common\_data\_importer.CommonBinaryFileDataImporter method), 
+		\hyperpage{3}
+  \item has\_more\_data() (common\_data\_importer.CommonFileDataImporter method), \hyperpage{4}
+  \item has\_more\_data() (common\_data\_importer.CommonSimpleDataImporter method), \hyperpage{4}
+
+  \indexspace
+  \bigletter I
+  \item init\_file\_input\_stream() (common\_data\_importer.CommonBinaryFileDataImporter method), 
+		\hyperpage{3}
+  \item init\_file\_input\_stream() (common\_data\_importer.CommonFileDataImporter method), 
+		\hyperpage{4}
+
+  \indexspace
+  \bigletter K
+  \item Kmeans (class in kmeans), \hyperpage{6}
+  \item kmeans (module), \hyperpage{5}
+  \item kmeans() (in module kmeans\_main), \hyperpage{5}
+  \item kmeans\_data\_generator (module), \hyperpage{7}
+  \item kmeans\_main (module), \hyperpage{5}
+  \item KmeansDataGenerator (class in kmeans\_data\_generator), \hyperpage{7}
+  \item KmeansRandomDataGenerator (class in kmeans\_data\_generator), \hyperpage{7}
+
+  \indexspace
+  \bigletter O
+  \item opencl.opencl\_kmeans.OpenCLKmeans (class in extension.c\_kmeans), \hyperpage{6}
+
+  \indexspace
+  \bigletter R
+  \item rewind() (common\_data\_importer.CommonBinaryFileDataImporter method), \hyperpage{3}
+  \item rewind() (common\_data\_importer.CommonFileDataImporter method), \hyperpage{4}
+
+  \indexspace
+  \bigletter T
+  \item to\_binary\_file() (kmeans\_data\_generator.KmeansRandomDataGenerator method), 
+		\hyperpage{7}
+  \item to\_file() (kmeans\_data\_generator.KmeansRandomDataGenerator method), \hyperpage{7}
+
+\end{theindex}

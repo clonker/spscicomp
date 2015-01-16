@@ -69,9 +69,9 @@ class DefaultKmeans(Kmeans):
         data = self._importer.get_data(self._chunk_size)
         self._dimension = data[0].shape[0]
         if initial_centers is not None:
-            centers = np.asarray(initial_centers)
+            centers = np.asarray(initial_centers, dtype=np.float32)
         else:
-            centers = np.asarray([data[np.random.randint(0, len(data))] for _ in xrange(k)])
+            centers = np.asarray([data[np.random.randint(0, len(data))] for _ in xrange(k)], dtype=np.float32)
         history = []
         self._importer.rewind()
         for i in xrange(1, self._max_steps):
@@ -91,6 +91,22 @@ class DefaultKmeans(Kmeans):
 
     # @profile
     def _iterate(self, centers, centers_list, data):
+        """
+        Override method for some special implementations, e.g., the c extension.
+
+        :param centers: The current list of centers
+        :type centers: numpy.array
+
+        :param centers_list: A list that subsequently contains the currently computed centers, as in every chunk of the
+        data file which gets processed, the corresponding centers are being calculated and in the end need
+        to be averaged.
+        :type centers_list: np.array[]
+
+        :param data: The current chunk of data.
+        :type data: np.array
+
+        :return: None
+        """
         centers_list.append(self.kmeans_chunk_center(data, centers))
 
     def kmeans_iterate(self, centers):

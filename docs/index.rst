@@ -16,6 +16,35 @@ Contents:
    hmm
 
 
+==============================
+How to build the documentation
+==============================
+
+1. Merge your code branch into the dev branch. ::
+
+    $ git checkout dev
+    $ git merge <YOUR BRANCH>
+  
+2. Edit the rst files in docs/ to include your documentation in the code. Python, NumPy and Google style documentation markup is supported.
+3. In the docs/ folder, run the compilation: ::
+
+    $ make html
+  
+4. Commit the documentation changes. Be careful to not include any other changes you may have done, as we will cherry-pick this commit into the GitHub Pages branch. ::
+
+    $ git add docs/
+    $ git commit -m "updated documentation."
+  
+5. Switch to the gh-pages branch and cherry-pick the commit into this branch. ::
+
+    $ git checkout gh-pages
+    $ git cherry-pick <COMMIT ID>
+  
+6. Push! ::
+
+    $ git push
+
+
 Indices and tables
 ==================
 

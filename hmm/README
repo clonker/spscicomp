@@ -1,0 +1,24 @@
+Dont forget to add hmm.py into your PYTHONPATH. For Linux add to your .bashrc following line
+
+export SPSCICOMP=<your spscicomp path>
+export PYTHONPATH=$SPSCICOMP/hmm
+
+TODO list
+
+all:
+	- When doing traininByModel with 10x10 matrix there is an allocating error
+		it returns NaNs
+	- How to handle multiple obs. sequences without storing 
+	  every matrix / parallelizing
+	- Prepare for integration tests with other modules
+chris:
+	- Validation tests (trainingByModel and think of more)
+	- Unit tests
+maikel:
+	- Benchmarking/lineprofiler
+honglei:
+	- How to construct initial conditions from scratch only given the
+	  observation sequence
+	(- Check the docstrings for consistency with PEP-257, and if
+	   they're informative)
+tobias:

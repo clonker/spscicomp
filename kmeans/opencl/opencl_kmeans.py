@@ -39,7 +39,7 @@ class OpenCLKmeans(DefaultKmeans):
 
         centers = np.asarray(centers, dtype=np.float32)
         out = np.zeros((len(data), 1), dtype=np.float32)
-        centers_counter = np.asarray(k * [0] * self.n_work_groups, dtype=np.int32)
+        #centers_counter = np.asarray(k * [0] * self.n_work_groups, dtype=np.int32)
         new_centers = np.asarray(self.n_work_groups * [np.zeros(self._dimension) for _ in xrange(k)], dtype=np.float32)
         data_assigns = np.empty((len(data), 1), dtype=np.int32)
 
@@ -51,8 +51,10 @@ class OpenCLKmeans(DefaultKmeans):
         data_buf = cl.Buffer(self.ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=data)
         centers_buf = cl.Buffer(self.ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=centers)
         assigns_buf = cl.Buffer(self.ctx, cl.mem_flags.READ_WRITE, data_assigns.nbytes)
-        new_centers_buf = cl.Buffer(self.ctx, cl.mem_flags.WRITE_ONLY, new_centers.nbytes)
-        centers_counter_buf = cl.Buffer(self.ctx, cl.mem_flags.READ_WRITE, centers_counter.nbytes)
+        new_centers_buf = cl.Buffer(
+            self.ctx, cl.mem_flags.WRITE_ONLY, self.n_work_groups * dim * k * np.dtype('float32').itemsize
+        )
+        centers_counter_buf = cl.Buffer(self.ctx, cl.mem_flags.WRITE_ONLY, k*self.n_work_groups * np.dtype('int32').itemsize) #centers_counter.nbytes
         out_buf = cl.Buffer(self.ctx, cl.mem_flags.WRITE_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=out)
 
         # run opencl extension
@@ -67,24 +69,38 @@ class OpenCLKmeans(DefaultKmeans):
         #                                np.int32(k)
         #).wait()
 
-        self.prg.kmeans_chunk_center_cl(self.queue, (len(data),), None, data_buf, assigns_buf, centers_buf, centers_counter_buf, new_centers_buf, out_buf).wait()
-
+        self.prg.kmeans_chunk_center_cl(
+            self.queue,
+            (len(data),),
+            None,
+            data_buf,
+            assigns_buf,
+            centers_buf,
+            centers_counter_buf,
+            new_centers_buf, out_buf
+        )
+        e = cl.enqueue_barrier(self.queue)
+        e.wait()
         # wait for it to finish and read out buffers
-        cl.enqueue_read_buffer(self.queue, assigns_buf, data_assigns).wait()
-        cl.enqueue_read_buffer(self.queue, new_centers_buf, new_centers).wait()
-        cl.enqueue_read_buffer(self.queue, centers_counter_buf, centers_counter).wait()
-        cl.enqueue_read_buffer(self.queue, out_buf, out).wait()
+        cl.enqueue_copy(self.queue, data_assigns, assigns_buf)
+        cl.enqueue_copy(self.queue, new_centers, new_centers_buf)
+        #cl.enqueue_copy(self.queue, centers_counter, centers_counter_buf)
+        cl.enqueue_copy(self.queue, out, out_buf)
+        #cl.enqueue_read_buffer(self.queue, assigns_buf, data_assigns).wait()
+        #cl.enqueue_read_buffer(self.queue, new_centers_buf, new_centers).wait()
+        #cl.enqueue_read_buffer(self.queue, centers_counter_buf, centers_counter).wait()
+        #cl.enqueue_read_buffer(self.queue, out_buf, out).wait()
 
-        LOG.debug("cc=" + str(centers_counter))
-        centers_counter = centers_counter[:k]
+        #centers_counter = centers_counter[:k]
+        #LOG.debug("cc=" + str(centers_counter))
         new_centers = new_centers[:k]
-
-        self._data_assigns.append(data_assigns)
-        LOG.debug("new_centers=" + str(new_centers))
-        LOG.debug("assigns=" + str(data_assigns))
-        #LOG.debug("out=" + str(out))
+        #LOG.debug("assigns=" + str(data_assigns))
+        #LOG.debug("new_centers=" + str(new_centers))
+        #print data_assigns.flatten().tolist()
+        self._data_assigns.extend(data_assigns.flatten().tolist())
 
         return new_centers
+
 
     @staticmethod
     def load_cl_program(context, program, dimension, n_centers):

@@ -1,54 +1,60 @@
+#ifndef __DIMS__
+#define __DIMS__
+
 #define DIM ${DIM}
 #define K ${K}
 
-kernel void kmeans_chunk_center_cl(
-    global const float* data,
-    global int* assigns,
-    global const float* centers,
-    global int* centersCounter,
-    global float* newCenters,
-    global float* out
+#endif
+
+__kernel void kmeans_chunk_center_cl(
+    __global const float* data,
+    __global int* assigns,
+    __global const float* centers,
+    __global int* centersCounter,
+    __global float* newCenters,
+    __global float* out
 ) {
     unsigned int gid = get_global_id(0);
     unsigned int lid = get_local_id(0);
 
-    int minCenter = 3;
+    int closestCenter = 0;
     float minDist = INFINITY;
-    for(int c = 0; c < K; c++) {
+    for(int k = 0; k < K; k++) {
         float currDist = 0;
-        for (int i = 0; i < DIM; i++) {
-            float xi = data[DIM*gid + i];
-            float ci = centers[DIM*c + i];
+        for (int d = 0; d < DIM; d++) {
+            float xi = data[DIM*gid + d];
+            float ci = centers[DIM*k + d];
             currDist += (xi-ci)*(xi-ci);
         }
         currDist = sqrt(currDist);
         if(currDist < minDist) {
             minDist = currDist;
-            minCenter = c;
+            closestCenter = k;
         }
     }
-    minCenter = 3;
-    int closestCenter = minCenter;
-    out[gid] = closestCenter;
     assigns[gid] = closestCenter;
 
-    barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
+    if (closestCenter > 10000 || closestCenter < 10000) {
+        out[0] = 123123123123;
+        out[1] = 32132132131;
+    }
 
+
+    barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
     if(lid == 0) {
         unsigned int offset = get_group_id(0) * get_local_size(0);
         for(int k = 0; k < K; k++) {
             centersCounter[offset + k] = 0;
             for(int d = 0; d < DIM; d++) {
-                newCenters[offset + k + d] = 0.0f;
+                newCenters[DIM*offset + DIM*k + d] = 0.0f;
             }
         }
-        out[0] = newCenters[0];
-        out[1] = newCenters[1];
+
         for(unsigned int k = 0; k < get_local_size(0); k++) {
             int assign = assigns[offset+k];
             centersCounter[assign + offset] += 1;
             for(int d = 0; d < DIM; d++) {
-                newCenters[offset + assign + d] += data[offset+k+d];
+                newCenters[DIM*offset + DIM*assign + d] += data[DIM*offset+DIM*k+d];
             }
         }
     }
@@ -57,10 +63,10 @@ kernel void kmeans_chunk_center_cl(
 
     if (gid == 0) {
         for(int i = 0; i < K; i++) {
-            centersCounter[i] += centersCounter[i + get_local_size(0)];
-            for(uint g = 1; g < get_num_groups(0); g++) {
+            for(unsigned int g = 1; g < get_num_groups(0); g++) {
+                centersCounter[i] += centersCounter[i + g*get_local_size(0)];
                 for(int d = 0; d < DIM; d++) {
-                    newCenters[i+d] += newCenters[i + g + get_local_size(0)];
+                    newCenters[DIM*i+d] += newCenters[DIM*i + d + DIM*g*get_local_size(0)];
                 }
             }
         }
@@ -68,16 +74,13 @@ kernel void kmeans_chunk_center_cl(
         for(int k=0; k < K; k++) {
             if(centersCounter[k] > 0) {
                 for(int d = 0; d < DIM; d++) {
-                    newCenters[k+d] /= (float) centersCounter[k];
+                    newCenters[DIM*k+d] /= (float) centersCounter[k];
                 }
             } else {
                 for(int d = 0; d < DIM; d++) {
-                    newCenters[k+d] = centers[k+d];
+                    newCenters[DIM*k+d] = centers[DIM*k+d];
                 }
             }
         }
-        out[2] = newCenters[0];
-        out[3] = newCenters[1];
-        out[0] = 1234567;
     }
 }

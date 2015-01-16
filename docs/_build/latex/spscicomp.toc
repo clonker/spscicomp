@@ -1,0 +1,13 @@
+\select@language {english}
+\contentsline {chapter}{\numberline {1}Common modules}{3}{chapter.1}
+\contentsline {section}{\numberline {1.1}common\_data\_importer}{3}{section.1.1}
+\contentsline {chapter}{\numberline {2}The k-means algorithm}{5}{chapter.2}
+\contentsline {section}{\numberline {2.1}kmeans\_main}{5}{section.2.1}
+\contentsline {section}{\numberline {2.2}kmeans}{5}{section.2.2}
+\contentsline {section}{\numberline {2.3}c\_kmeans}{6}{section.2.3}
+\contentsline {section}{\numberline {2.4}cuda\_kmeans}{6}{section.2.4}
+\contentsline {section}{\numberline {2.5}opencl\_kmeans}{6}{section.2.5}
+\contentsline {section}{\numberline {2.6}kmeans\_data\_generator}{7}{section.2.6}
+\contentsline {chapter}{\numberline {3}Indices and tables}{9}{chapter.3}
+\contentsline {chapter}{Python Module Index}{11}{section*.31}
+\contentsline {chapter}{Index}{13}{section*.32}

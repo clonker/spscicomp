@@ -1,0 +1,346 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The k-means algorithm &mdash; spscicomp beta documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="spscicomp beta documentation" href="index.html" />
+    <link rel="prev" title="Common modules" href="common.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="common.html" title="Common modules"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">spscicomp beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="the-k-means-algorithm">
+<h1>The k-means algorithm<a class="headerlink" href="#the-k-means-algorithm" title="Permalink to this headline">¶</a></h1>
+<p>The implementation of the k-means algorithm consists of the following modules:</p>
+<div class="section" id="module-kmeans_main">
+<span id="kmeans-main"></span><h2>kmeans_main<a class="headerlink" href="#module-kmeans_main" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="kmeans_main.kmeans">
+<tt class="descclassname">kmeans_main.</tt><tt class="descname">kmeans</tt><big>(</big><em>k</em>, <em>importer=None</em><big>)</big><a class="headerlink" href="#kmeans_main.kmeans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize and run the k-means algorithm. If any of the optimized implementations (CUDA, OpenCL, C extension) are
+available, they are selected and initialized automatically in the above order. Then the respective
+<tt class="xref py py-func docutils literal"><span class="pre">kmeans.Kmeans.calculate_centers()</span></tt> method is called and the output is returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>k</strong> (<em>int</em>) &#8211; Number of cluster centers to compute.</li>
+<li><strong>importer</strong> (<a class="reference internal" href="common.html#common_data_importer.CommonDataImporter" title="common_data_importer.CommonDataImporter"><tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt></a>) &#8211; A <a class="reference internal" href="common.html#common_data_importer.CommonDataImporter" title="common_data_importer.CommonDataImporter"><tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt></a> object to be used for importing the numerical data.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">An array of integers <span class="math">\([c(x_i)]\)</span> where <span class="math">\(x_i\)</span> is the i-th data point and
+<span class="math">\(c(x_i)\)</span> is the index of the cluster center to which <span class="math">\(x_i\)</span> belongs.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int[]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-kmeans">
+<span id="kmeans"></span><h2>kmeans<a class="headerlink" href="#module-kmeans" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="kmeans.DefaultKmeans">
+<em class="property">class </em><tt class="descclassname">kmeans.</tt><tt class="descname">DefaultKmeans</tt><big>(</big><em>metric=&lt;kmeans_metric.EuclideanMetric object at 0x7f1901016750&gt;</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#kmeans.DefaultKmeans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default implementation of the k-means algorithm. Once supplied with an <a class="reference internal" href="common.html#common_data_importer.CommonDataImporter" title="common_data_importer.CommonDataImporter"><tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt></a> object, use the
+calculate_centers method to compute k cluster centers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>metric</strong> (<tt class="xref py py-class docutils literal"><span class="pre">KmeansMetric</span></tt>) &#8211; A <tt class="xref py py-class docutils literal"><span class="pre">KmeansMetric</span></tt> object to be used for calculating distances between points. The default is
+the <tt class="xref py py-class docutils literal"><span class="pre">EuclideanMetric</span></tt>.</li>
+<li><strong>importer</strong> (<a class="reference internal" href="common.html#common_data_importer.CommonDataImporter" title="common_data_importer.CommonDataImporter"><tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt></a>) &#8211; A <a class="reference internal" href="common.html#common_data_importer.CommonDataImporter" title="common_data_importer.CommonDataImporter"><tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt></a> object to be used for importing the numerical data.</li>
+<li><strong>chunk_size</strong> (<em>int</em>) &#8211; The number of data points to be imported and processed at a time.</li>
+<li><strong>max_steps</strong> (<em>int</em>) &#8211; The maximum number of steps to run the algorithm for. If the iteration did not converge after
+this number of steps, the algorithm is terminated and the last result returned.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="kmeans.DefaultKmeans.calculate_centers">
+<tt class="descname">calculate_centers</tt><big>(</big><em>k</em>, <em>initial_centers=None</em>, <em>return_centers=False</em>, <em>save_history=False</em><big>)</big><a class="headerlink" href="#kmeans.DefaultKmeans.calculate_centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main method of the k-means algorithm. Computes k cluster centers from the data supplied by a
+<a class="reference internal" href="common.html#common_data_importer.CommonDataImporter" title="common_data_importer.CommonDataImporter"><tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt></a> object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>k</strong> (<em>int</em>) &#8211; Number of cluster centers to compute.</li>
+<li><strong>initial_centers</strong> (<em>numpy.array</em>) &#8211; Array of cluster centers to start the iteration with. If omitted, random data points
+from the first chunk of data are used.</li>
+<li><strong>return_centers</strong> (<em>bool</em>) &#8211; If set to True then the cluster centers are returned.</li>
+<li><strong>save_history</strong> (<em>bool</em>) &#8211; If this and return_centers is set to True then the cluster centers in each iteration step
+are returned.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">An array of integers <span class="math">\([c(x_i)]\)</span> where <span class="math">\(x_i\)</span> is the i-th data point and
+<span class="math">\(c(x_i)\)</span> is the index of the cluster center to which <span class="math">\(x_i\)</span> belongs.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">int[]</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">An array of the computed cluster centers.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">np.array</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A list of arrays of the cluster centers in each iteration step.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.array[]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="kmeans.Kmeans">
+<em class="property">class </em><tt class="descclassname">kmeans.</tt><tt class="descname">Kmeans</tt><big>(</big><em>metric=&lt;kmeans_metric.EuclideanMetric object at 0x7f1901016290&gt;</em>, <em>importer=None</em><big>)</big><a class="headerlink" href="#kmeans.Kmeans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract k-means algorithm. Implementations are expected to override the calculate_centers method.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-extension.c_kmeans">
+<span id="c-kmeans"></span><h2>c_kmeans<a class="headerlink" href="#module-extension.c_kmeans" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="extension.c_kmeans.CKmeans">
+<em class="property">class </em><tt class="descclassname">extension.c_kmeans.</tt><tt class="descname">CKmeans</tt><big>(</big><em>metric=&lt;kmeans_metric.EuclideanMetric object at 0x7f1900f60290&gt;</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#extension.c_kmeans.CKmeans" title="Permalink to this definition">¶</a></dt>
+<dd><p>An implementation of the k-means algorithm in C. Refer to the <a class="reference internal" href="#kmeans.DefaultKmeans" title="kmeans.DefaultKmeans"><tt class="xref py py-class docutils literal"><span class="pre">DefaultKmeans</span></tt></a> class for parameters and
+public methods.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="cuda-kmeans">
+<h2>cuda_kmeans<a class="headerlink" href="#cuda-kmeans" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="extension.c_kmeans.cuda.cuda_kmeans.CUDAKmeans">
+<em class="property">class </em><tt class="descclassname">cuda.cuda_kmeans.</tt><tt class="descname">CUDAKmeans</tt><big>(</big><em>metric=EuclideanMetric()</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#extension.c_kmeans.cuda.cuda_kmeans.CUDAKmeans" title="Permalink to this definition">¶</a></dt>
+<dd><p>An implementation of the k-means algorithm in CUDA. Refer to the <a class="reference internal" href="#kmeans.DefaultKmeans" title="kmeans.DefaultKmeans"><tt class="xref py py-class docutils literal"><span class="pre">DefaultKmeans</span></tt></a> class for parameters and
+public methods.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="opencl-kmeans">
+<h2>opencl_kmeans<a class="headerlink" href="#opencl-kmeans" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="extension.c_kmeans.opencl.opencl_kmeans.OpenCLKmeans">
+<em class="property">class </em><tt class="descclassname">opencl.opencl_kmeans.</tt><tt class="descname">OpenCLKmeans</tt><big>(</big><em>metric=EuclideanMetric()</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#extension.c_kmeans.opencl.opencl_kmeans.OpenCLKmeans" title="Permalink to this definition">¶</a></dt>
+<dd><p>An implementation of the k-means algorithm in OpenCL. Refer to the <a class="reference internal" href="#kmeans.DefaultKmeans" title="kmeans.DefaultKmeans"><tt class="xref py py-class docutils literal"><span class="pre">DefaultKmeans</span></tt></a> class for parameters and
+public methods.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-kmeans_data_generator">
+<span id="kmeans-data-generator"></span><h2>kmeans_data_generator<a class="headerlink" href="#module-kmeans_data_generator" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="kmeans_data_generator.KmeansDataGenerator">
+<em class="property">class </em><tt class="descclassname">kmeans_data_generator.</tt><tt class="descname">KmeansDataGenerator</tt><a class="headerlink" href="#kmeans_data_generator.KmeansDataGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract data generator. Implementations are expected to override the generate_data method.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="kmeans_data_generator.KmeansRandomDataGenerator">
+<em class="property">class </em><tt class="descclassname">kmeans_data_generator.</tt><tt class="descname">KmeansRandomDataGenerator</tt><big>(</big><em>size</em>, <em>dimension</em>, <em>centers_count</em><big>)</big><a class="headerlink" href="#kmeans_data_generator.KmeansRandomDataGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a test dataset for the k-means algorithm. The centers are generated uniformly.
+The other points are produced randomly near one of the centers with normal distribution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>size</strong> (<em>int</em>) &#8211; Number of data points to generate.</li>
+<li><strong>dimension</strong> (<em>int</em>) &#8211; Dimension of the euclidean space the data points will belong to.</li>
+<li><strong>centers_count</strong> (<em>int</em>) &#8211; Number of cluster centers around which the data points are to be generated.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="kmeans_data_generator.KmeansRandomDataGenerator.get_centers">
+<tt class="descname">get_centers</tt><big>(</big><big>)</big><a class="headerlink" href="#kmeans_data_generator.KmeansRandomDataGenerator.get_centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the generated cluster centers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list of numpy arrays representing the cluster centers.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">np.array[]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kmeans_data_generator.KmeansRandomDataGenerator.get_data">
+<tt class="descname">get_data</tt><big>(</big><big>)</big><a class="headerlink" href="#kmeans_data_generator.KmeansRandomDataGenerator.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the generated data points.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A numpy array of size <em>size*x*dimension</em>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">np.array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kmeans_data_generator.KmeansRandomDataGenerator.to_binary_file">
+<tt class="descname">to_binary_file</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#kmeans_data_generator.KmeansRandomDataGenerator.to_binary_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the generated data to a binary file using <tt class="xref py py-func docutils literal"><span class="pre">numpy.save()</span></tt> which can be read later using the
+respective <a class="reference internal" href="common.html#common_data_importer.CommonDataImporter" title="common_data_importer.CommonDataImporter"><tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt></a> object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) &#8211; The file name.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kmeans_data_generator.KmeansRandomDataGenerator.to_file">
+<tt class="descname">to_file</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#kmeans_data_generator.KmeansRandomDataGenerator.to_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the generated data to a text file using <tt class="xref py py-func docutils literal"><span class="pre">numpy.savetxt()</span></tt> which can be read later using the
+respective <a class="reference internal" href="common.html#common_data_importer.CommonDataImporter" title="common_data_importer.CommonDataImporter"><tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt></a> object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) &#8211; The file name.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">The k-means algorithm</a><ul>
+<li><a class="reference internal" href="#module-kmeans_main">kmeans_main</a></li>
+<li><a class="reference internal" href="#module-kmeans">kmeans</a></li>
+<li><a class="reference internal" href="#module-extension.c_kmeans">c_kmeans</a></li>
+<li><a class="reference internal" href="#cuda-kmeans">cuda_kmeans</a></li>
+<li><a class="reference internal" href="#opencl-kmeans">opencl_kmeans</a></li>
+<li><a class="reference internal" href="#module-kmeans_data_generator">kmeans_data_generator</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="common.html"
+                        title="previous chapter">Common modules</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/kmeans.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="common.html" title="Common modules"
+             >previous</a> |</li>
+        <li><a href="index.html">spscicomp beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, The Project Group.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

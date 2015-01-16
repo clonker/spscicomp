@@ -3,6 +3,9 @@ from kmeans import DefaultKmeans
 from kmeans_metric import EuclideanMetric
 import numpy as np
 import pyopencl as cl
+import kmeans_log
+
+LOG = kmeans_log.Logger(__name__).get()
 
 
 class OpenCLKmeans(DefaultKmeans):
@@ -25,10 +28,10 @@ class OpenCLKmeans(DefaultKmeans):
         centers_counter = np.asarray(k * [0] * self.n_work_groups, dtype=np.int32)
         new_centers = np.asarray(self.n_work_groups * [np.zeros(self._dimension) for _ in xrange(k)], dtype=np.float32)
         data_assigns = np.empty((len(data), 1), dtype=np.int32)
-        print "data="+str(data)
-        print "centers=" + str(centers)
-        print "k=" + str(k) + ", dim=" + str(dim)
-        print "n_work_groups=" + str(self.n_work_groups)
+        LOG.debug("data="+str(data))
+        LOG.debug("centers=" + str(centers))
+        LOG.debug("k=" + str(k) + ", dim=" + str(dim))
+        LOG.debug("n_work_groups=" + str(self.n_work_groups))
         # create buffers
         data_buf = cl.Buffer(self.ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=data)
         centers_buf = cl.Buffer(self.ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=centers)
@@ -61,10 +64,10 @@ class OpenCLKmeans(DefaultKmeans):
         new_centers = new_centers[:k]
 
         self._data_assigns.append(data_assigns)
-        print "cc=" + str(centers_counter)
-        print "new_centers=" + str(new_centers)
-        print "assigns=" + str(data_assigns)
-        print "out=" + str(out)
+        LOG.debug("cc=" + str(centers_counter))
+        LOG.debug("new_centers=" + str(new_centers))
+        LOG.debug("assigns=" + str(data_assigns))
+        LOG.debug("out=" + str(out))
 
         return new_centers
 

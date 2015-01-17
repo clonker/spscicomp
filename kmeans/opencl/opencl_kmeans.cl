@@ -50,7 +50,7 @@ __kernel void kmeans_chunk_center_cl(
         }
 
         for(unsigned int k = 0; k < get_local_size(0); k++) {
-            int assign = assigns[offset+k];
+            int assign = assigns[get_global_offset(0)+get_group_id(0)*get_local_size(0)+k];
             centersCounter[assign + offset] += 1;
             for(int d = 0; d < DIM; d++) {
                 newCenters[DIM*offset + DIM*assign + d] += data[DIM*offset+DIM*k+d];

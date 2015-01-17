@@ -34,15 +34,14 @@ __kernel void kmeans_chunk_center_cl(
     }
     assigns[gid] = closestCenter;
 
-    if (closestCenter > 10000 || closestCenter < 10000) {
-        out[0] = 123123123123;
-        out[1] = 32132132131;
-    }
-
+    /*
+        global_id(d) = global_offset(d) + local_id(d) + group_id(d) * local_size(d)
+        global_size(d) = local_size(d) * num_groups(d)
+    */
 
     barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
     if(lid == 0) {
-        unsigned int offset = get_group_id(0) * get_local_size(0);
+        unsigned int offset = get_group_id(0) * K;
         for(int k = 0; k < K; k++) {
             centersCounter[offset + k] = 0;
             for(int d = 0; d < DIM; d++) {
@@ -64,9 +63,9 @@ __kernel void kmeans_chunk_center_cl(
     if (gid == 0) {
         for(int i = 0; i < K; i++) {
             for(unsigned int g = 1; g < get_num_groups(0); g++) {
-                centersCounter[i] += centersCounter[i + g*get_local_size(0)];
+                centersCounter[i] += centersCounter[i + g*K];
                 for(int d = 0; d < DIM; d++) {
-                    newCenters[DIM*i+d] += newCenters[DIM*i + d + DIM*g*get_local_size(0)];
+                    newCenters[DIM*i+d] += newCenters[DIM*i + d + DIM*g*K];
                 }
             }
         }

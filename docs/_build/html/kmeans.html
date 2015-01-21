@@ -90,7 +90,7 @@ available, they are selected and initialized automatically in the above order. T
 <span id="kmeans"></span><h2>kmeans<a class="headerlink" href="#module-kmeans" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="kmeans.DefaultKmeans">
-<em class="property">class </em><tt class="descclassname">kmeans.</tt><tt class="descname">DefaultKmeans</tt><big>(</big><em>metric=&lt;kmeans_metric.EuclideanMetric object at 0x7f697758b7d0&gt;</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#kmeans.DefaultKmeans" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">kmeans.</tt><tt class="descname">DefaultKmeans</tt><big>(</big><em>metric=&lt;kmeans_metric.EuclideanMetric object at 0x7f01dc0aa690&gt;</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#kmeans.DefaultKmeans" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default implementation of the k-means algorithm. Once supplied with an <a class="reference internal" href="common.html#common_data_importer.CommonDataImporter" title="common_data_importer.CommonDataImporter"><tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt></a> object, use the
 calculate_centers method to compute k cluster centers.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -155,7 +155,7 @@ are returned.</li>
 
 <dl class="class">
 <dt id="kmeans.Kmeans">
-<em class="property">class </em><tt class="descclassname">kmeans.</tt><tt class="descname">Kmeans</tt><big>(</big><em>metric=&lt;kmeans_metric.EuclideanMetric object at 0x7f697758b350&gt;</em>, <em>importer=None</em><big>)</big><a class="headerlink" href="#kmeans.Kmeans" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">kmeans.</tt><tt class="descname">Kmeans</tt><big>(</big><em>metric=&lt;kmeans_metric.EuclideanMetric object at 0x7f01dc0aa210&gt;</em>, <em>importer=None</em><big>)</big><a class="headerlink" href="#kmeans.Kmeans" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract k-means algorithm. Implementations are expected to override the calculate_centers method.</p>
 </dd></dl>
 
@@ -164,9 +164,117 @@ are returned.</li>
 <span id="c-kmeans"></span><h2>c_kmeans<a class="headerlink" href="#module-extension.c_kmeans" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="extension.c_kmeans.CKmeans">
-<em class="property">class </em><tt class="descclassname">extension.c_kmeans.</tt><tt class="descname">CKmeans</tt><big>(</big><em>metric=&lt;kmeans_metric.EuclideanMetric object at 0x7f6977523350&gt;</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#extension.c_kmeans.CKmeans" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">extension.c_kmeans.</tt><tt class="descname">CKmeans</tt><big>(</big><em>metric=&lt;kmeans_metric.EuclideanMetric object at 0x7f01dbfe7910&gt;</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#extension.c_kmeans.CKmeans" title="Permalink to this definition">¶</a></dt>
 <dd><p>An implementation of the k-means algorithm in C. Refer to the <a class="reference internal" href="#kmeans.DefaultKmeans" title="kmeans.DefaultKmeans"><tt class="xref py py-class docutils literal"><span class="pre">DefaultKmeans</span></tt></a> class for parameters and
 public methods.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cal_chunk_centers">
+static PyObject* <tt class="descname">cal_chunk_centers</tt><big>(</big>PyObject<em>&nbsp;*dummy</em>, PyObject<em>&nbsp;*args</em><big>)</big><a class="headerlink" href="#c.cal_chunk_centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main function of the C extension.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> (<em>PyObject*</em>) &#8211; Pointer to parameters transported from Python.</li>
+<li><strong>dummy</strong> (<em>PyObject*</em>) &#8211; Not used here.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The new chunk centers.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">PyObject*</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises TypeError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last">Python Arguments parse error!</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.initkmeans_c_extension">
+void <tt class="descname">initkmeans_c_extension</tt><big>(</big><big>)</big><a class="headerlink" href="#c.initkmeans_c_extension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the extension module</p>
+</dd></dl>
+
+<dl class="var">
+<dt id="c.kmeans_c_extensionMethods">
+PyMethodDef <tt class="descname">kmeans_c_extensionMethods</tt><a class="headerlink" href="#c.kmeans_c_extensionMethods" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variable which stores the maps between functions in C and Python</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.closest_center">
+int <tt class="descname">closest_center</tt><big>(</big>PyArrayObject<em>&nbsp;*data</em>, int<em>&nbsp;data_lab</em>, PyArrayObject<em>&nbsp;*centers</em>, int<em>&nbsp;cluster_size</em>, int<em>&nbsp;dimension</em><big>)</big><a class="headerlink" href="#c.closest_center" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given the centers and one point and return which center is nearest to the point.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<em>PyArrayObject*</em>) &#8211; One point with related dimension.</li>
+<li><strong>data_lab</strong> (<em>int</em>) &#8211; Index of the point.</li>
+<li><strong>centers</strong> (<em>PyArrayObject*</em>) &#8211; Current centers.</li>
+<li><strong>cluster_size</strong> (<em>int</em>) &#8211; Number of clusters.</li>
+<li><strong>dimension</strong> (<em>int</em>) &#8211; Dimension of each point and center.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The index of the nearest center.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.kmeans_chunk_center">
+PyObject* <tt class="descname">kmeans_chunk_center</tt><big>(</big>PyArrayObject<em>&nbsp;*data</em>, PyArrayObject<em>&nbsp;*centers</em>, PyObject<em>&nbsp;*data_assigns</em><big>)</big><a class="headerlink" href="#c.kmeans_chunk_center" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record the nearest center of each point and renew the centers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<em>PyArrayObject*</em>) &#8211; Pointer to the point set to be calculated.</li>
+<li><strong>centers</strong> (<em>PyArrayObject*</em>) &#8211; Current centers.</li>
+<li><strong>data_assigns</strong> (<em>PyObject*</em>) &#8211; For each point record the index of the nearest center.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The updated centers.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">PyObject*</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises ValueError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">Parameters are of the wrong sizes.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises MemoryError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">RAM allocate error. The imported data chunk may be too large.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises MemoryError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">RAM release error.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises MemoryError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first last">Error occurs when creating a new PyArray</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -177,6 +285,117 @@ public methods.</p>
 <em class="property">class </em><tt class="descclassname">cuda.cuda_kmeans.</tt><tt class="descname">CUDAKmeans</tt><big>(</big><em>metric=EuclideanMetric()</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#extension.c_kmeans.cuda.cuda_kmeans.CUDAKmeans" title="Permalink to this definition">¶</a></dt>
 <dd><p>An implementation of the k-means algorithm in CUDA. Refer to the <a class="reference internal" href="#kmeans.DefaultKmeans" title="kmeans.DefaultKmeans"><tt class="xref py py-class docutils literal"><span class="pre">DefaultKmeans</span></tt></a> class for parameters and
 public methods.</p>
+</dd></dl>
+
+<dl class="function">
+<dt>
+static PyObject* <tt class="descname">cal_chunk_centers</tt><big>(</big>PyObject<em>&nbsp;*dummy</em>, PyObject<em>&nbsp;*args</em><big>)</big></dt>
+<dd><p>Refer to the <a class="reference internal" href="#c.cal_chunk_centers" title="cal_chunk_centers"><tt class="xref c c-func docutils literal"><span class="pre">cal_chunk_centers()</span></tt></a> in c_kmeans.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.initkmeans_c_extension_cuda">
+void <tt class="descname">initkmeans_c_extension_cuda</tt><big>(</big><big>)</big><a class="headerlink" href="#c.initkmeans_c_extension_cuda" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refer to the <a class="reference internal" href="#c.initkmeans_c_extension" title="initkmeans_c_extension"><tt class="xref c c-func docutils literal"><span class="pre">initkmeans_c_extension()</span></tt></a> in c_kmeans.</p>
+</dd></dl>
+
+<dl class="var">
+<dt>
+PyMethodDef <tt class="descname">kmeans_c_extensionMethods</tt></dt>
+<dd><p>Refer to the <tt class="xref c c-data docutils literal"><span class="pre">kmeans_c_extension_cudaMethods</span></tt> in c_kmeans.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.chunk_centers_sum_cuda">
+_global__ void <tt class="descname">chunk_centers_sum_cuda</tt><big>(</big>double<em>&nbsp;*cu_data</em>, double<em>&nbsp;*cu_centers</em>, int*<em>&nbsp;cu_centers_counter</em>, double*<em>&nbsp;cu_new_centers</em>, int*<em>&nbsp;cu_data_assigns</em>, int*<em>&nbsp;cluster_size</em>, int<em>&nbsp;*dimension</em>, int<em>&nbsp;*chunk_size</em><big>)</big><a class="headerlink" href="#c.chunk_centers_sum_cuda" title="Permalink to this definition">¶</a></dt>
+<dd><p>Divide the whole data set into several parts, each part is calculated by a Block in cuda.
+After calculating the index of the nearest center, select a thread to add up the related centers in one Block.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cu_data</strong> (<em>double*</em>) &#8211; A chunk of points, which are given pointwise.</li>
+<li><strong>cu_centers</strong> (<em>double*</em>) &#8211; Current centers.</li>
+<li><strong>cu_centers_counter</strong> (<em>int*</em>) &#8211; Count how many points are nearest to a given center, count blockwise.</li>
+<li><strong>cu_new_centers</strong> (<em>double*</em>) &#8211; Calculate the sum of the points which are nearest to a given center, add blockwise.</li>
+<li><strong>cu_data_assigns</strong> (<em>int*</em>) &#8211; The index of the center which is nearest to a given point.</li>
+<li><strong>cluster_size</strong> (<em>int*</em>) &#8211; Number of clusters</li>
+<li><strong>dimension</strong> (<em>int*</em>) &#8211; Dimension of the points.</li>
+<li><strong>chunk_size</strong> (<em>int*</em>) &#8211; Number of points in the chunk.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Return chunk_centers_sum_cuda:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">Summation of nearest centers in one block.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">double*</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.kmeans_chunk_center_cuda">
+PyObject* <tt class="descname">kmeans_chunk_center_cuda</tt><big>(</big>PyArrayObject<em>&nbsp;*data</em>, PyArrayObject<em>&nbsp;*centers</em>, PyObject<em>&nbsp;*data_assigns</em><big>)</big><a class="headerlink" href="#c.kmeans_chunk_center_cuda" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record the nearest center of each point and renew the centers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<em>PyArrayObject*</em>) &#8211; Pointer to the point set to be calculated.</li>
+<li><strong>centers</strong> (<em>PyArrayObject*</em>) &#8211; Current centers.</li>
+<li><strong>data_assigns</strong> (<em>PyObject*</em>) &#8211; For each point record the index of the nearest center.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The updated centers.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">PyObject*</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises Exception:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">No available device detected.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises Exception:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">Compute compacity of the graphic card is not enough.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises Exception:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">Only 1 device is supported currently.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises ValueError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">Parameters are of the wrong sizes.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises MemoryError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">RAM allocate Error. The imported data chunk may be too large.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises MemoryError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">RAM release error.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises MemoryError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">Graphic card RAM allocate error.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises MemoryError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">Graphic card RAM release error.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises MemoryError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last">Error occurs when creating a new PyArray</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>

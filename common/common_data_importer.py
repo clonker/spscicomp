@@ -132,6 +132,10 @@ class CommonBinaryFileDataImporter(CommonDataImporter):
         """
         super(CommonBinaryFileDataImporter, self).__init__()
         self._fileName = filename
+        self._fileNameOut = None
+        self._outFile = None
+        self._last_start_pos = None
+        self._last_end_pos = None
         self._file = None
         self._hasMoreData = True
         self._position = 0
@@ -152,12 +156,15 @@ class CommonBinaryFileDataImporter(CommonDataImporter):
         :return: A numpy array of data points.
         """
         start_position = self._position
-        end_position = start_position + size - 1
+        end_position = start_position + size
         if len(self._file) < end_position:
             end_position = len(self._file)
         self._position += size
-        if self._position > len(self._file):
+        if self._position >= len(self._file):
             self._hasMoreData = False
+
+        self._last_start_pos = start_position
+        self._last_end_pos = end_position
 
         return self._file[start_position:end_position]
 
@@ -175,3 +182,51 @@ class CommonBinaryFileDataImporter(CommonDataImporter):
         :return: True if there is more data after the pointer, and False if not.
         """
         return self._hasMoreData
+
+    def create_out_file(self, i_fileName):
+
+        self._fileNameOut = i_fileName
+        np.save(self._fileNameOut, self._file)
+        self._outFile = np.load(self._fileNameOut, mmap_mode='r+')
+
+    def write_data(self, i_data):
+
+        """
+	    Assumption: i_data has same size like data of the last get_data() call
+	    """
+
+        self._outFile[self._last_start_pos:self._last_end_pos] = i_data
+
+    def get_shape_outFile(self):
+
+	      return self._outFile.shape
+
+    def get_shape_inFile(self):
+
+	      return self._file.shape
+
+    def get_fileName_outFile(self):
+
+	      return self._fileNameOut
+
+    def get_outData(self, size):
+        """
+        Return a numpy array of floats where each data point occupies one row of the array. The data is read from
+        the current position of the pointer onwards. If the pointer reaches the end of the file, an array of all data
+        points up to the end of the file is returned and the hasMoreData flag is set to False.
+
+        :param size: Number of data points to be returned.
+        :return: A numpy array of data points.
+        """
+        start_position = self._position
+        end_position = start_position + size
+        if len(self._file) < end_position:
+            end_position = len(self._file)
+        self._position += size
+        if self._position >= len(self._file):
+            self._hasMoreData = False
+
+        self._last_start_pos = start_position
+        self._last_end_pos = end_position
+
+        return self._outFile[start_position:end_position]

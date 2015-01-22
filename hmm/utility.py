@@ -51,14 +51,14 @@ models['t2'] = (
     numpy.array(
         [[0.9, 0.05, 0.05],
          [0.45, 0.1, 0.45],
-         [0.45, 0.45, 0.1]], numpy.float32),
+         [0.45, 0.45, 0.1]], numpy.float64),
     numpy.array(
         [[ 0.5,  0.5],
          [0.75, 0.25],
-         [0.25, 0.75]], numpy.float32
+         [0.25, 0.75]], numpy.float64
     ),
     numpy.array(
-        [0.333, 0.333, 0.333], numpy.float32
+        [0.333, 0.333, 0.333], numpy.float64
     ),
 )
 models['tbm1'] = (
@@ -94,7 +94,7 @@ def compare_models(A1, B1, pi1, A2, B2, pi2, T, kernel=hmm.kernel.python):
     return 0.5 * (similarity1 + similarity2)
 
 def generate_startmodel(N, M, dtype=numpy.float64):
-	A  = numpy.zeros((N,N), dtype=dtype)
+	A  = numpy.ones( (N,N), dtype=dtype)
 	B  = numpy.ones( (N,M), dtype=dtype)
 	pi = numpy.ones(  N   , dtype=dtype)
 
@@ -104,7 +104,8 @@ def generate_startmodel(N, M, dtype=numpy.float64):
 				A[i,j] = 0.8
 			else:
 				A[i,j] = 0.2 / float(N-1)
-	
+
+	#A /= float(N)
 	B /= float(M)
 	pi /= float(N)
 	return (A, B, pi)

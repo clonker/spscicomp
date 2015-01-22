@@ -1,69 +1,36 @@
-
-# coding: utf-8
-
-# In[1]:
-
 import numpy as np
 import matplotlib.pyplot as plt
 np.set_printoptions(precision=3, suppress=True)
-
-
-# In[2]:
-
 import hmm.algorithms
 import hmm.utility
 import hmm.kernel.c
 
-
-# In[3]:
-
 models = hmm.utility.get_models()
 
+A, B, pi = models['t2']
+print 'A\n', A
+print 'B\n', B
+print 'pi\n', pi
 
-# In[4]:
+obs = np.loadtxt(
+	"/home/chris/git/spscicomp/hmm/data/t2.1000.dat",
+	dtype=np.int16)
 
-A, B, pi = models['tbm1']
-print A
-print B
-print pi
+print obs
 
-
-# In[5]:
-
-obs = hmm.utility.random_sequence(A, B, pi, 10, kernel=hmm.kernel.python)
-
-
-# In[6]:
-
-A, B, pi = hmm.utility.generate_startmodel(len(A),len(B[0]))
-
-
-# In[7]:
+A, B, pi = hmm.utility.generate_startmodel(len(A),len(B[0]),dtype=np.float64)
 
 A, B, pi, prob, it = hmm.algorithms.baum_welch(
     obs,
     A,
     B,
     pi,
-    accuracy=1e-3,
+    accuracy=-1.,
     maxit=1000,
-    kernel=hmm.kernel.python,
+    kernel=hmm.kernel.c,
     dtype=np.float64)
-
-
-# In[8]:
 
 print A 
 print B
 print pi
-
-
-# In[9]:
-
 print it
-
-
-# In[28]:
-
-
-

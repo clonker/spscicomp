@@ -81,7 +81,7 @@ class OpenCLKmeans(DefaultKmeans):
         new_centers = new_centers[:k]
         self._data_assigns.extend(data_assigns.flatten().tolist())
 
-        return new_centers
+        return new_centers.astype(dtype=np.float32)
 
 
     @staticmethod

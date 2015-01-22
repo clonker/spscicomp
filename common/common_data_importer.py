@@ -31,6 +31,7 @@ class CommonSimpleDataImporter(CommonDataImporter):
     def __init__(self, data):
         super(CommonSimpleDataImporter, self).__init__()
         self._data = data
+        self._idx = 0
 
     def get_data(self, size):
         """
@@ -41,7 +42,8 @@ class CommonSimpleDataImporter(CommonDataImporter):
         :return: All data.
         :rtype: numpy.array
         """
-        return self._data
+        self._idx += size
+        return self._data[(self._idx-size):(min(self._idx, len(self._data)))]
 
     def has_more_data(self):
         """
@@ -51,7 +53,10 @@ class CommonSimpleDataImporter(CommonDataImporter):
         :return: False since there never is any more data.
         :rtype: bool
         """
-        return False
+        return self._idx < len(self._data)
+
+    def rewind(self):
+        self._idx = 0
 
 
 class CommonFileDataImporter(CommonDataImporter):

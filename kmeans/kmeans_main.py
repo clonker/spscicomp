@@ -1,4 +1,7 @@
 from kmeans import DefaultKmeans
+from common.logger import Logger
+
+LOG = Logger(__name__).get()
 
 
 def kmeans(k, importer=None):
@@ -33,13 +36,13 @@ def kmeans(k, importer=None):
 
                     kmeans_implementation = CKmeans(importer=importer)
                 except:
-                    print 'Failed to initialize any of the optimized kmeans implementations, using default one'
+                    LOG.error('Failed to initialize any of the optimized kmeans implementations, using default one')
 
         if not kmeans_implementation:
             kmeans_implementation = DefaultKmeans(importer=importer)
     else:
-        print 'Needs data importer!'
-    print 'implementation chosen = ' + str(type(kmeans_implementation))
+        LOG.error('Needs data importer!')
+    LOG.debug('implementation chosen = ' + str(type(kmeans_implementation)))
     if kmeans_implementation and importer:
         data_assigns = kmeans_implementation.calculate_centers(k)
         return data_assigns

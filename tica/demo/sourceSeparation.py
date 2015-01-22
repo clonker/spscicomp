@@ -9,18 +9,24 @@ from time import time
 
 mixingImporter  = CommonBinaryFileDataImporter('../testdata/mixedSignalsBinary.npy')
 origImporter    = CommonBinaryFileDataImporter('../testdata/origSignalsBinary.npy')
-mixingData      = mixingImporter.get_data(len(mixingImporter._file)+1)
-origData        = origImporter.get_data(len(origImporter._file)+1)
+
+mixingData      = mixingImporter.get_data(len(mixingImporter._file))
+origData        = origImporter.get_data(len(origImporter._file))
+
 
 start = time()
 
-amuse = TicaAmuse(mixingData, i_addEps = 1e-16)
-ic = amuse.performAmuse(i_timeLag = 1, i_thresholdICs = 1)
+amuse = TicaAmuse('../testdata/mixedSignalsBinary.npy', '../testdata/tica_sepSignals.npy', i_addEps = 1e-16)
+amuse.performAmuse( i_thresholdICs = 1)
 
 elapsed = time() - start
 print(elapsed)
 
-x = np.arange(0.0, np.pi, np.pi/ic.shape[0])
+
+sepImporter  = CommonBinaryFileDataImporter('../testdata/tica_sepSignals.npy')
+sepData         = sepImporter.get_data(len(sepImporter._file))
+
+x = np.arange(0.0, np.pi, np.pi/sepData.shape[0])
 
 plt.subplot(2, 1, 1)
 line1, = plt.plot(x, origData[:, 0], label = '$\sin(10x)$')
@@ -39,8 +45,8 @@ plt.show()
 
 
 plt.subplot(2, 1, 1)
-plt.plot(x, ic[:, 0])
+plt.plot(x, sepData[:, 0])
 plt.title('Separated Signals')
 plt.subplot(2, 1, 2)
-plt.plot(x, ic[:, 1])
+plt.plot(x, sepData[:, 1])
 plt.show()

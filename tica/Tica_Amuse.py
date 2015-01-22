@@ -7,21 +7,25 @@ from common_data_importer import CommonBinaryFileDataImporter
 
 class TicaAmuse:
 
-    def __init__( self, i_fileName = None, i_outFileName = "../testdata/tica_indComp.npy", i_addEps = 1e-16 ):
+    def __init__( self, i_inFileName = None, i_outFileName = "../testdata/tica_independentComp.npy", i_addEps = 1e-16, i_timeLag = 1 ):
 
 
-        if  i_fileName is not None:
+        if  i_inFileName is not None:
 
-            self.m_prinCompInst    = ticaPrinComp.TicaPrinComp( i_fileName = i_fileName, i_addEpsilon = i_addEps )
-            self.m_prinCompTL      = ticaPrinComp.TicaPrinCompTimeLagged( self.m_prinCompInst.getOutFileName(), i_outFileName )
+            self.m_prinCompInst = ticaPrinComp.TicaPrinComp( i_inFileName = i_inFileName
+                                                            ,i_outFileName = i_outFileName
+                                                            ,i_addEpsilon = i_addEps
+                                                            ,i_timeLag = i_timeLag)
+            self.m_prinCompTL   = self.m_prinCompInst.getPrinCompTL(  )
+            # self.m_prinCompTL      = ticaPrinComp.TicaPrinCompTimeLagged( '../testdata/covTestBinary.npy', i_outFileName )
 
-    def performAmuse( self, i_timeLag = 1, i_thresholdICs = 1 ):
+    @profile
+    def performAmuse( self, i_thresholdICs = 1 ):
 
-        if np.isscalar( i_timeLag ):
+        if np.isscalar( self.m_prinCompInst.param_timeLag ):
 
-            self.m_prinCompInst.computePC()
-            self.m_prinCompInst.normalizPC()
-
-            self.m_prinCompTL.computePC(i_thresholdICs)
+            self.m_prinCompInst.computeCovariance( )
+            self.m_prinCompInst.computeEigenDecompCov( )
+            self.m_prinCompTL.computeICs( i_thresholdICs )
 
          # todo: adaption for several time steps

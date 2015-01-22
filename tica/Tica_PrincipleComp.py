@@ -4,35 +4,42 @@ import numpy as np
 import numpy.matlib as matlib
 import Tica_EigenDecomp as ticaEDecomp
 from common_data_importer import CommonBinaryFileDataImporter
-import ticaC
+#import ticaC
 import os
 
 
 class TicaPrinComp:
   """Naive class for computing principle components(PCs)."""
 
-  def __init__( self, i_fileName = None, i_outFileName = "../testdata/tica_tempOutPut.npy", i_addEpsilon = 1e-16 ):
+  def __init__( self, i_inFileName = None, i_outFileName = "../testdata/tica_tempOutput.npy", i_addEpsilon = 1e-16, i_timeLag = 1 ):
 
-    self.param_fileSizeThreshold = 1  # 200*1e+6 # file size in byte
-    self.param_outFileName = i_outFileName
+    self.param_fileSizeThreshold = 500*1e+6 # file size in byte
+    self.param_outFileName       = i_outFileName
 
-    if i_fileName is not None:
+    if i_inFileName is not None:
 
-      self.m_fileSize = os.path.getsize( i_fileName )
-      self.m_dataImporter = CommonBinaryFileDataImporter( i_fileName )
+      self.m_fileSize     = os.path.getsize( i_inFileName )
+      self.m_dataImporter = CommonBinaryFileDataImporter( i_inFileName )
       self.m_dataImporter.create_out_file( self.param_outFileName )
 
       self.param_addEpsilon = i_addEpsilon
-      self.param_chunkSize = 1# None
-      #self.computeChunkSize( )
-
-      self.m_covMat = np.array( [] )
+      self.param_chunkSize  = 1000#None
+      self.param_timeLag    = i_timeLag
+      self.computeChunkSize( )
+      print(self.param_chunkSize)
+      self.m_covMat      = np.array( [] )
       self.m_eigenDecomp = ticaEDecomp.TicaEigenDecomp( None )
-      self.m_colMeans = None
+      self.m_colMeans    = None
 
     else:
 
       self.m_eigenDecomp = ticaEDecomp.TicaEigenDecomp( None )
+
+  # ---------------------------------------------------------------------------------------------#
+
+  def getPrinCompTL( self ):
+
+    return self.TicaPrinCompTimeLagged( self )
 
   # ---------------------------------------------------------------------------------------------#
   def getTempFileName( self ):
@@ -44,7 +51,7 @@ class TicaPrinComp:
 
     if self.m_fileSize < self.param_fileSizeThreshold:
 
-      self.param_chunkSize = len( self.m_dataImporter._file )
+      self.param_chunkSize = self.m_dataImporter.get_shape_inFile()[0]
 
     else:
 
@@ -56,7 +63,7 @@ class TicaPrinComp:
 
       fileSize /= 2
 
-      dimData = len( self.m_dataImporter._file )
+      dimData = self.m_dataImporter.get_shape_inFile()[0]
       if dimData % 2 is not 0:
 
         self.param_chunkSize = ( dimData + 1 ) / 2
@@ -71,20 +78,20 @@ class TicaPrinComp:
         fileSize /= 2
 
   # ---------------------------------------------------------------------------------------------#
-  def computeChunkMeans( self ):
+  def computeColMeans( self ):
 
     self.m_dataImporter.rewind( )
 
     dataChunk = self.m_dataImporter.get_data( self.param_chunkSize )
     dataShape = dataChunk.shape
-    dimData = dataShape[0]
-    sumCol = np.sum( dataChunk[:, 0:dataShape[1]], dtype = np.float32, axis = 0 )
+    dimData   = dataShape[0]
+    sumCol    = np.sum( dataChunk[:, 0:dataShape[1]], dtype = np.float32, axis = 0 )
 
     while self.m_dataImporter.has_more_data( ):
 
       dataChunk = self.m_dataImporter.get_data( self.param_chunkSize )
-      dimData += len( dataChunk )
-      sumCol += np.sum( dataChunk[:, 0:dataShape[1]], dtype = np.float32, axis = 0 )
+      dimData  += len( dataChunk )
+      sumCol   += np.sum( dataChunk[:, 0:dataShape[1]], dtype = np.float32, axis = 0 )
 
     self.m_colMeans = 1.0 / dimData * sumCol
 
@@ -92,7 +99,7 @@ class TicaPrinComp:
   # ---------------------------------------------------------------------------------------------#
   def makeDataMeanFree( self ):
 
-    self.computeChunkMeans( )
+    self.computeColMeans( )
     self.m_dataImporter.rewind( )
 
     dataChunk = self.m_dataImporter.get_data( self.param_chunkSize )
@@ -109,37 +116,43 @@ class TicaPrinComp:
   # ----------------------------------------------------------------------------------------------#
   def computeCovariance( self ):
 
+    self.computeColMeans( )
     self.m_dataImporter.rewind( )
-    dataChunk = self.m_dataImporter.get_outData( self.param_chunkSize )
-    dimData = self.m_dataImporter.get_shape_outFile( )[0]
-    cov = np.dot( dataChunk.T, dataChunk )
+
+    dataShape = self.m_dataImporter.get_shape_inFile( )
+    #covMat = ticaC.computeCov(self.m_dataImporter.get_data,self.m_dataImporter.has_more_data,self.param_chunkSize,dataShape[0])
+
+    dataChunk     = self.m_dataImporter.get_data( self.param_chunkSize )
+    meanFreeChunk = dataChunk[:, 0:dataShape[1]] - self.m_colMeans
+    cov           = np.dot( meanFreeChunk.T, meanFreeChunk )
 
     while self.m_dataImporter.has_more_data( ):
 
-      dataChunk = self.m_dataImporter.get_outData( self.param_chunkSize )
-      cov += np.dot( dataChunk.T, dataChunk )
+      dataChunk     = self.m_dataImporter.get_data( self.param_chunkSize )
+      meanFreeChunk = dataChunk[:, 0:dataShape[1]] - self.m_colMeans
+      cov          += np.dot( meanFreeChunk.T, meanFreeChunk )
 
-    self.m_covMat = 1.0 / (dimData - 1.0) * cov
+    self.m_covMat = 1.0 / (dataShape[0] - 1.0) * cov
 
   #---------------------------------------------------------------------------------------------#
-  def performTransformation( self, i_domComp ):
+  def computePCs( self, i_dataChunk, i_domComp ):
 
-    self.m_dataImporter.rewind( )
+    if not 1 < i_dataChunk.shape[0]:
 
-    dataChunk = self.m_dataImporter.get_outData( self.param_chunkSize )
-    pc = np.dot( dataChunk, self.m_eigenDecomp.m_eigenVecReal[:, 0:i_domComp] )
-    self.m_dataImporter.write_data( pc )
+      meanFreeChunk = i_dataChunk[:, 0:i_dataChunk.shape[1]] - self.m_colMeans
+      pc = np.dot( matlib.asmatrix(meanFreeChunk), self.m_eigenDecomp.m_eigenVecReal[:, 0:i_domComp] )
 
-    while self.m_dataImporter.has_more_data( ):
+    else:
 
-      dataChunk = self.m_dataImporter.get_outData( self.param_chunkSize )
-      pc = np.dot( dataChunk, self.m_eigenDecomp.m_eigenVecReal[:, 0:i_domComp] )
-      self.m_dataImporter.write_data( pc )
+      meanFreeChunk = i_dataChunk[:, 0:i_dataChunk.shape[1]] - self.m_colMeans
+      pc = np.dot(  meanFreeChunk, self.m_eigenDecomp.m_eigenVecReal[:, 0:i_domComp] )
+
+    return pc
 
   #---------------------------------------------------------------------------------------------#
   def computePC( self, i_amountOfTotalVariance = 1.0 ):
 
-    self.makeDataMeanFree( )
+    self.makeDataMeanFree()
     self.computeCovariance( )
     self.m_eigenDecomp.computeEigenDecomp( self.m_covMat )
 
@@ -151,20 +164,24 @@ class TicaPrinComp:
     self.performTransformation( domComp )
 
   #---------------------------------------------------------------------------------------------#
-  def normalizPC( self ):
+  def computeEigenDecompCov( self ):
 
-    self.m_dataImporter.rewind( )
+      self.m_eigenDecomp.computeEigenDecomp( self.m_covMat )
 
-    dataChunk = self.m_dataImporter.get_outData( self.param_chunkSize )
+  #---------------------------------------------------------------------------------------------#
+  def normalizePCs( self, i_pcs ):
+
     lamb = 1.0 / np.sqrt( self.m_eigenDecomp.m_eigenValReal + self.param_addEpsilon )
-    pcNorm = np.dot( dataChunk, np.diag( lamb ) )
-    self.m_dataImporter.write_data( pcNorm )
 
-    while self.m_dataImporter.has_more_data( ):
+    if not 1 < i_pcs.shape[0]:
 
-      dataChunk = self.m_dataImporter.get_outData( self.param_chunkSize )
-      pcNorm = np.dot( dataChunk, np.diag( lamb ) )
-      self.m_dataImporter.write_data( pcNorm )
+      pcNorm = np.dot( matlib.asmatrix(i_pcs), np.diag( lamb ) )
+
+    else:
+
+      pcNorm = np.dot( i_pcs, np.diag( lamb ) )
+
+    return pcNorm
 
   #---------------------------------------------------------------------------------------------#
   def calcNumbOfDomComps( self, i_amountOfTotalVariance ):
@@ -185,90 +202,105 @@ class TicaPrinComp:
 
 ###################################################################################################
 
-class TicaPrinCompTimeLagged( TicaPrinComp ):
-  """Naive class for computing principle components(PCs)."""
+  class TicaPrinCompTimeLagged:
+    """Naive class for computing principle components(PCs)."""
 
-  def __init__( self, i_fileName = None, i_outFileName = None, i_timeLag = 1 ):
+    def __init__( self, i_ticaPrinComp ):
 
-    super().__init__( i_fileName = i_fileName, i_outFileName = i_outFileName )
+      self.m_prinComp         = i_ticaPrinComp
+      self.param_timeLag      = self.m_prinComp.param_timeLag
+      self.m_covMatTimeLag    = np.array( [] )
+      self.m_covMatTimeLagSym = np.array( [] )
+      self.m_eigenDecomp      = ticaEDecomp.TicaEigenDecomp( None )
 
-    self.param_timeLag = i_timeLag
-    self.m_covMatTimeLag = np.array( [] )
-    self.m_covMatTimeLagSym = np.array( [] )
+    #---------------------------------------------------------------------------------------------#
+    def computeCovariance( self ):
 
-  #---------------------------------------------------------------------------------------------#
-  def computeCovariance( self ):
+      self.m_prinComp.m_dataImporter.rewind( )
 
-    self.m_dataImporter.rewind( )
-    dataChunk = self.m_dataImporter.get_data( self.param_chunkSize )
-    dimData = self.m_dataImporter.get_shape_inFile( )[0]
-    dataShape = dataChunk.shape
-    m = dataShape[0]
+      dataChunk      = self.m_prinComp.m_dataImporter.get_data( self.m_prinComp.param_chunkSize )
+      dimData        = self.m_prinComp.m_dataImporter.get_shape_inFile( )
+      shapeDataChunk = dataChunk.shape
+      m              = shapeDataChunk[0]
 
-    if 1 < m:
-
-      cov = np.dot( dataChunk[0:m-self.param_timeLag, :].T, dataChunk[self.param_timeLag:m, :] )
-
-    else:
-
-      cov = matlib.zeros( [dataShape[1], dataShape[1]],dtype=np.float32 )
-
-    lastRowChunkBefore = dataChunk[m-1, :]
-
-    while self.m_dataImporter.has_more_data( ):
-
-      dataChunk = self.m_dataImporter.get_data( self.param_chunkSize )
-      dataShape = dataChunk.shape
-      m = dataShape[0]
-      cov += np.dot( lastRowChunkBefore.T, dataChunk[0, :] )
+      self.m_covMatTimeLag = matlib.zeros( [shapeDataChunk[1], shapeDataChunk[1]],dtype=np.float64 )
+      pcs                  = matlib.zeros( [shapeDataChunk[1], shapeDataChunk[1]],dtype=np.float64 )
+      normalizedPCs        = matlib.zeros( [shapeDataChunk[1], shapeDataChunk[1]],dtype=np.float64 )
 
       if 1 < m:
 
-        cov += np.dot( dataChunk[0:m-self.param_timeLag, :].T, dataChunk[self.param_timeLag:m, :] )
+        pcs                   = self.m_prinComp.computePCs( dataChunk, shapeDataChunk[1] )
+        normalizedPCs         = self.m_prinComp.normalizePCs( pcs )
+        self.m_covMatTimeLag += np.dot( normalizedPCs[0:(m-self.param_timeLag), :].T, normalizedPCs[self.param_timeLag:m, :] )
 
-      lastRowChunkBefore = dataChunk[m-1, :]
+      lastRowChunkBefore = normalizedPCs[m-1, :]
 
-    self.m_covMatTimeLag = 1.0 / (dimData - self.param_timeLag - 1.0) * cov
+      while self.m_prinComp.m_dataImporter.has_more_data( ):
 
-  #---------------------------------------------------------------------------------------------#
-  def symmetrizeCovariance( self ):
+        dataChunk      = self.m_prinComp.m_dataImporter.get_data( self.m_prinComp.param_chunkSize )
+        shapeDataChunk = dataChunk.shape
+        m              = shapeDataChunk[0]
 
-    self.m_covMatTimeLagSym = 0.5 * ( self.m_covMatTimeLag + self.m_covMatTimeLag.transpose( ) )
+        pcs                   = self.m_prinComp.computePCs( dataChunk, shapeDataChunk[1] )
+        normalizedPCs         = self.m_prinComp.normalizePCs( pcs )
+        self.m_covMatTimeLag += np.dot( matlib.asmatrix(lastRowChunkBefore).T, matlib.asmatrix(normalizedPCs[0, :]) )
 
-  #---------------------------------------------------------------------------------------------#
-  def setTimeLag( self, i_timeLag ):
+        if 1 < m:
 
-    self.param_timeLag = i_timeLag
+          self.m_covMatTimeLag += np.dot( normalizedPCs[0:(m-self.param_timeLag), :].T, normalizedPCs[self.param_timeLag:m, :] )
 
-  #---------------------------------------------------------------------------------------------#
-  def performTransformation( self, i_domComp ):
+        lastRowChunkBefore = normalizedPCs[m-1, :]
 
-    self.m_dataImporter.rewind( )
+      self.m_covMatTimeLag *= 1.0 / (dimData[0] - self.param_timeLag - 1.0)
 
-    dataChunk = self.m_dataImporter.get_data( self.param_chunkSize )
-    pc = np.dot( dataChunk, self.m_eigenDecomp.m_eigenVecReal[:, 0:i_domComp] )
-    self.m_dataImporter.write_data( pc )
+    #---------------------------------------------------------------------------------------------#
+    def symmetrizeCovariance( self ):
 
-    while self.m_dataImporter.has_more_data( ):
+      self.m_covMatTimeLagSym = 0.5 * ( self.m_covMatTimeLag + self.m_covMatTimeLag.transpose( ) )
 
-      dataChunk = self.m_dataImporter.get_data( self.param_chunkSize )
-      pc = np.dot( dataChunk, self.m_eigenDecomp.m_eigenVecReal[:, 0:i_domComp] )
-      self.m_dataImporter.write_data( pc )
+    #---------------------------------------------------------------------------------------------#
+    def setTimeLag( self, i_timeLag ):
 
-  #---------------------------------------------------------------------------------------------#
-  def computePC( self, i_amountOfTotalVariance = 1 ):
+      self.param_timeLag = i_timeLag
 
-    # self.m_data = self.makeDataMeanFree(self.m_data)
-    self.computeCovariance( )
-    self.symmetrizeCovariance( )
-    self.m_eigenDecomp.computeEigenDecomp( self.m_covMatTimeLagSym )
+    #---------------------------------------------------------------------------------------------#
+    def performTransformation( self, i_domComp ):
 
-    domComp = self.m_eigenDecomp.m_eigenVecReal.shape[1]
-    if 1 > i_amountOfTotalVariance:
+      self.m_prinComp.m_dataImporter.rewind( )
 
-      domComp = self.calcNumbOfDomComps( i_amountOfTotalVariance )
+      dataChunk      = self.m_prinComp.m_dataImporter.get_data( self.m_prinComp.param_chunkSize )
+      shapeDataChunk = dataChunk.shape
 
-    self.performTransformation( domComp )
+      pcs            = self.m_prinComp.computePCs( dataChunk, shapeDataChunk[1] )
+      normalizedPCs  = self.m_prinComp.normalizePCs( pcs )
+      ics            = np.dot( normalizedPCs, self.m_eigenDecomp.m_eigenVecReal[:, 0:i_domComp] )
+
+      self.m_prinComp.m_dataImporter.write_data( ics )
+
+      while self.m_prinComp.m_dataImporter.has_more_data( ):
+
+        dataChunk      = self.m_prinComp.m_dataImporter.get_data( self.m_prinComp.param_chunkSize )
+        shapeDataChunk = dataChunk.shape
+
+        pcs            = self.m_prinComp.computePCs( dataChunk, shapeDataChunk[1] )
+        normalizedPCs  = self.m_prinComp.normalizePCs( pcs )
+        ics            = np.dot( normalizedPCs, self.m_eigenDecomp.m_eigenVecReal[:, 0:i_domComp] )
+
+        self.m_prinComp.m_dataImporter.write_data( ics )
+
+    #---------------------------------------------------------------------------------------------#
+    def computeICs( self, i_amountOfTotalVariance = 1 ):
+
+      self.computeCovariance(  )
+      self.symmetrizeCovariance( )
+      self.m_eigenDecomp.computeEigenDecomp( self.m_covMatTimeLagSym )
+
+      domComp = self.m_eigenDecomp.m_eigenVecReal.shape[1]
+      if 1 > i_amountOfTotalVariance:
+
+        domComp = self.m_prinComp.calcNumbOfDomComps( i_amountOfTotalVariance )
+
+      self.performTransformation( domComp )
 
 
 

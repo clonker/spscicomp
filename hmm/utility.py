@@ -50,15 +50,15 @@ models['equi64'] = (
 models['t2'] = (
     numpy.array(
         [[0.9, 0.05, 0.05],
-         [0.45, 0.1, 0.45],
-         [0.45, 0.45, 0.1]], numpy.float64),
+         [0.1, 0.1, 0.9],
+         [1.0, 0.0, 0.0]], numpy.float32),
     numpy.array(
-        [[ 0.5,  0.5],
-         [0.75, 0.25],
-         [0.25, 0.75]], numpy.float64
+        [[ 1.0,  0.0],
+         [0., 1.0],
+         [0., 1.0]], numpy.float32
     ),
     numpy.array(
-        [0.333, 0.333, 0.333], numpy.float64
+        [0.333, 0.333, 0.333], numpy.float32
     ),
 )
 models['tbm1'] = (

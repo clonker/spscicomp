@@ -3,15 +3,15 @@
 import numpy    
 import hmm.kernel.c
 import hmm.kernel.python
-import hmm.kernel.fortran
+#import hmm.kernel.fortran
 import hmm.algorithms
 import hmm.concurrent
 import hmm.utility
 import time as t
 
 # initial conditions
-A, B, pi = hmm.utility.get_models()['t2']
-
+#A, B, pi = hmm.utility.get_models()['t2']
+A, B, pi = hmm.utility.generate_startmodel(3, 2, dtype=numpy.float32)
 print 'Read data ...'
 
 obs = [
@@ -21,16 +21,16 @@ obs = [
 ]
 
 obs2 = [
-	numpy.loadtxt('data/t1.100000.dat', dtype=numpy.int16),
+	numpy.loadtxt('data/t2.1000.dat', dtype=numpy.int16),
 ] * 10
  
 maxit = 50
-accuracy = 1e-3
+accuracy = -1.
 
 numpy.set_printoptions(suppress=True)
 
 
-kernels = [ hmm.kernel.fortran, hmm.kernel.c ] # hmm.kernel.python, hmm.kernel.c ]
+kernels = [ hmm.kernel.python, hmm.kernel.c ] # hmm.kernel.python, hmm.kernel.c ]
 
 print
 print 'perform Baum-Welch algorithm'

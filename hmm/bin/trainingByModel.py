@@ -18,7 +18,7 @@ obs = np.loadtxt(
 
 print obs
 
-A, B, pi = hmm.utility.generate_startmodel(len(A),len(B[0]),dtype=np.float64)
+A, B, pi = hmm.utility.generate_startmodel(len(A),len(B[0]),dtype=np.float32)
 
 A, B, pi, prob, it = hmm.algorithms.baum_welch(
     obs,
@@ -26,9 +26,9 @@ A, B, pi, prob, it = hmm.algorithms.baum_welch(
     B,
     pi,
     accuracy=-1.,
-    maxit=1000,
-    kernel=hmm.kernel.c,
-    dtype=np.float64)
+    maxit=50,
+    kernel=hmm.kernel.python,
+    dtype=np.float32)
 
 print A 
 print B

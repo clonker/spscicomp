@@ -1,4 +1,4 @@
-import hmm.kernel.python_chunked
+import hmm.kernel.python
 import hmm.utility
 import unittest
 import numpy
@@ -7,7 +7,7 @@ import numpy
 
 class TestCounts(unittest.TestCase):
 
-    kernel = hmm.kernel.python_chunked
+    kernel = hmm.kernel.python
     ob = numpy.array([1, 0, 1, 1], dtype=numpy.int16)
     A, B, pi = hmm.utility.get_models()['equi32']
     dtype = numpy.float32
@@ -23,7 +23,7 @@ class TestCounts(unittest.TestCase):
                 B[i, k] = 0.0
                 for t in range(len(self.ob)):
                     if self.ob[t] == k:
-                        B[i, k] += gamma.get(t)[i]
+                        B[i, k] += gamma[t, i]
         numpy.testing.assert_almost_equal(B, symbol_counts)
 
     def test_state_counts_is_same_as_sum_of_state_probs(self):

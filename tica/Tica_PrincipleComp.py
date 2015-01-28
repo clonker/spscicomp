@@ -4,8 +4,15 @@ import numpy as np
 import numpy.matlib as matlib
 import Tica_EigenDecomp as ticaEDecomp
 from common_data_importer import CommonBinaryFileDataImporter
-#import ticaC
 import os
+
+try:
+    from extension.ticaC import ticaC
+    use_extension = True
+    print('TICA: Using C extension')
+except:
+    use_extension = False
+    print('TICA: C extension not found, using Python implementation')
 
 
 class TicaPrinComp:
@@ -120,19 +127,23 @@ class TicaPrinComp:
     self.m_dataImporter.rewind( )
 
     dataShape = self.m_dataImporter.get_shape_inFile( )
-    #covMat = ticaC.computeCov(self.m_dataImporter.get_data,self.m_dataImporter.has_more_data,self.param_chunkSize,dataShape[0])
+    if use_extension is True:
+        self.m_covMat = ticaC.computeCov(self.m_dataImporter.get_data,
+                                         self.m_dataImporter.has_more_data,
+                                         self.param_chunkSize,
+                                         dataShape[0])
+    else:
+        dataChunk     = self.m_dataImporter.get_data( self.param_chunkSize )
+        meanFreeChunk = dataChunk[:, 0:dataShape[1]] - self.m_colMeans
+        cov           = np.dot( meanFreeChunk.T, meanFreeChunk )
 
-    dataChunk     = self.m_dataImporter.get_data( self.param_chunkSize )
-    meanFreeChunk = dataChunk[:, 0:dataShape[1]] - self.m_colMeans
-    cov           = np.dot( meanFreeChunk.T, meanFreeChunk )
+        while self.m_dataImporter.has_more_data( ):
 
-    while self.m_dataImporter.has_more_data( ):
+          dataChunk     = self.m_dataImporter.get_data( self.param_chunkSize )
+          meanFreeChunk = dataChunk[:, 0:dataShape[1]] - self.m_colMeans
+          cov          += np.dot( meanFreeChunk.T, meanFreeChunk )
 
-      dataChunk     = self.m_dataImporter.get_data( self.param_chunkSize )
-      meanFreeChunk = dataChunk[:, 0:dataShape[1]] - self.m_colMeans
-      cov          += np.dot( meanFreeChunk.T, meanFreeChunk )
-
-    self.m_covMat = 1.0 / (dataShape[0] - 1.0) * cov
+        self.m_covMat = 1.0 / (dataShape[0] - 1.0) * cov
 
   #---------------------------------------------------------------------------------------------#
   def computePCs( self, i_dataChunk, i_domComp ):

@@ -19,7 +19,7 @@ class TicaAmuse:
             self.m_prinCompTL   = self.m_prinCompInst.getPrinCompTL(  )
             # self.m_prinCompTL      = ticaPrinComp.TicaPrinCompTimeLagged( '../testdata/covTestBinary.npy', i_outFileName )
 
-    @profile
+    #@profile
     def performAmuse( self, i_thresholdICs = 1 ):
 
         if np.isscalar( self.m_prinCompInst.param_timeLag ):

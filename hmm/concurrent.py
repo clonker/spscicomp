@@ -39,6 +39,7 @@ def baum_welch_multiple(obs, A, B, pi,
     nomsB   = numpy.zeros((K,N,M), dtype=B.dtype)
     denomsB = numpy.zeros((K,N),   dtype=B.dtype)
     weights = numpy.zeros(K,       dtype=pi.dtype)
+    gamma   = numpy.zeros((K,N),   dtype=A.dtype)
 
     # creating Thread pool here
     num_threads = multiprocessing.cpu_count()
@@ -57,11 +58,11 @@ def baum_welch_multiple(obs, A, B, pi,
         for k in xrange(K):
             tasks.put(Task(A, B, pi, obs[k]))
         for k in xrange(K):
-            weights[k], nomsA[k], denomsA[k], nomsB[k], denomsB[k] \
+            weights[k], nomsA[k], denomsA[k], nomsB[k], denomsB[k], gamma[k] \
                 = results.get()
             
-        A, B = hmm.algorithms.update_multiple(
-            weights, nomsA, denomsA, nomsB, denomsB)
+        A, B, pi = hmm.algorithms.update_multiple(
+            weights, nomsA, denomsA, nomsB, denomsB, gamma)
 
         if (it == 0):
             old_eps = 0

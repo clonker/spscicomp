@@ -1,5 +1,6 @@
 import numpy 
 import hmm.kernel.python
+import os
 
 def random_sequence(A, B, pi, T, kernel=hmm.kernel.python):
     obs = kernel.random_sequence(A, B, pi, T)
@@ -79,6 +80,19 @@ def compare_models(A1, B1, pi1, A2, B2, pi2, T, kernel=hmm.kernel.python):
     return 0.5 * (similarity1 + similarity2)
 
 
+def get_observation_part(filename, observation_length, observation_count, dtype=numpy.float32):
+    observation_file = open(filename, 'r')
+    observation_file.seek(observation_length * observation_count * numpy.dtype(dtype).itemsize, os.SEEK_SET)
+    return numpy.fromfile(observation_file, count=observation_length, dtype=dtype)
+
+
+def write_test_array(filename, array_size, dtype=numpy.float32):
+    myarray = numpy.zeros((array_size), dtype)
+    for i in range(array_size):
+        myarray[i] = i
+    myarray.tofile(filename)
+
+
 class ChunkedArray(object):
 
     def __init__(self, array_size, chunk_size):
@@ -105,3 +119,6 @@ class ChunkedArray(object):
 
     def get_array_size(self):
         return self.array_size
+
+print get_observation_part('data/observation_1000.dat', 10, 21, dtype=numpy.float64)
+

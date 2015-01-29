@@ -49,17 +49,31 @@ models['equi64'] = (
 )
 models['t2'] = (
     numpy.array(
-        [[0.9, 0.05, 0.05],
-         [0.1, 0.1, 0.9],
-         [1.0, 0.0, 0.0]], numpy.float32),
+        [[0.7, 0.2, 0.1],
+         [0.5, 0.3, 0.2],
+         [0.8, 0.1, 0.1]], numpy.float32),
     numpy.array(
-        [[ 1.0,  0.0],
-         [0., 1.0],
-         [0., 1.0]], numpy.float32
+        [[ 0.5,  0.5],
+         [0.5, 0.5],
+         [0.5, 0.5]], numpy.float32
     ),
     numpy.array(
         [0.333, 0.333, 0.333], numpy.float32
     ),
+)
+models['t3'] = (
+    numpy.array(
+        [[0.4, 0.3, 0.3],
+         [0.5, 0.3, 0.2],
+         [0.8, 0.1, 0.1]], numpy.float32),
+    numpy.array(
+        [[ 0.5,  0.5],
+         [0.5, 0.5],
+         [0.5, 0.5]], numpy.float32
+    ),
+    numpy.array(
+        [0.333, 0.333, 0.333], numpy.float32
+    )
 )
 models['tbm1'] = (
 	numpy.array(

@@ -3,7 +3,8 @@
 import numpy    
 import hmm.kernel.c
 import hmm.kernel.python
-import hmm.kernel.fortran
+#import hmm.kernel.fortran
+import hmm.kernel.python_memmap
 import hmm.algorithms
 import hmm.concurrent
 import hmm.utility
@@ -16,21 +17,21 @@ print 'Read data ...'
 
 obs = [
 #     numpy.loadtxt('data/hmm1.1000000.dat', dtype=numpy.int16),
-#    numpy.loadtxt('data/hmm1.100.dat'),
-    numpy.array([1, 0, 1, 0, 1], dtype=numpy.int16)
+    numpy.loadtxt('data/hmm1.100.dat', dtype=numpy.int16),
+#    numpy.array([1, 0, 1, 0, 1], dtype=numpy.int16)
 ]
 
 obs2 = [
-	numpy.loadtxt('data/t1.100000.dat', dtype=numpy.int16),
+	numpy.loadtxt('data/hmm1.100.dat', dtype=numpy.int16),
 ] * 10
  
 maxit = 50
-accuracy = 1e-3
+accuracy = -1
 
 numpy.set_printoptions(suppress=True)
 
 
-kernels = [ hmm.kernel.fortran, hmm.kernel.c ] # hmm.kernel.python, hmm.kernel.c ]
+kernels = [ hmm.kernel.c ]
 
 print
 print 'perform Baum-Welch algorithm'

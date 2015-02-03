@@ -275,10 +275,9 @@ def state_counts(gamma, T, dtype=numpy.float32):
 
     Parameters
     ----------
-    alpha : numpy.array shape (T,N)
-            forward coefficients
-    beta : numpy.array shape (T,N)
-           backward coefficients
+    gamma : numpy.array shape (T,N)
+            gamma[t,i] is the probabilty at time t to be in state i !
+    T : number of observationsymbols
     dtype : item datatype [optional]
 
     Returns
@@ -304,17 +303,15 @@ def symbol_counts(gamma, ob, M, dtype=numpy.float32):
 
     Parameters
     ----------
-    alpha : numpy.array shape (T,N)
-            forward coefficients
-    beta : numpy.array shape (T,N)
-           backward coefficients
+    gamma : numpy.array shape (T,N)
+            gamma[t,i] is the probabilty at time t to be in state i !
     ob : numpy.array shape (T)
-    M : integer
+    M : integer. number of possible observationsymbols
     dtype : item datatype, optional
 
     Returns
     -------
-    counts : ...
+    counts : numpy.array shape (N,M)
 
     Notes
     -----
@@ -353,7 +350,7 @@ def transition_probabilities(alpha, beta, A, B, ob, dtype=numpy.float32):
 
     Returns
     -------
-    xi : numpy.array shape (T, N, N)
+    xi : numpy.array shape (T-1, N, N)
          xi[t, i, j] is the probability to transition from i to j at time t.
 
     Notes
@@ -441,6 +438,8 @@ def random_sequence(A, B, pi, T):
         symbol probability matrix of the model
     pi : numpy.array shape (N)
          starting probability vector of the model
+    T : integer
+        length of generated observation sequence
 
     Returns
     -------
@@ -466,6 +465,17 @@ def random_sequence(A, B, pi, T):
     return obs
 
 def draw_state(distr):
+    """ helper function for random_sequence to get the state to a given probability
+
+    Parameters
+    ----------
+    distr : array with probabilities where state are the indices
+
+    Returns
+    -------
+    state : integer
+            which randomly chosen with given distribution
+    """
     x = numpy.random.random()
     D = len(distr)
     for state in range(D):

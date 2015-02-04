@@ -1,4 +1,3 @@
-__author__ = 'rickwg'
 from matplotlib import pyplot as plt
 from matplotlib.legend_handler import HandlerLine2D
 import numpy as np
@@ -17,7 +16,7 @@ origData        = origImporter.get_data(len(origImporter._file))
 start = time()
 
 amuse = TicaAmuse('../testdata/mixedSignalsBinary.npy', '../testdata/tica_sepSignals.npy', i_addEps = 1e-16)
-amuse.performAmuse( i_thresholdICs = 1)
+amuse.performAmuse( i_numDomComp = 2 )
 
 elapsed = time() - start
 print(elapsed)

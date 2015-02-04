@@ -63,7 +63,7 @@ for k in range(0, len(X_t)):
 '''
 
 # I) Use TICA to find the relevant subspace of slow processes (should essentially invert the rotation
-#    matrix above)
+# matrix above)
 
 binary_file = 'data.npy'
 out_file = 'data_out.npy'
@@ -73,12 +73,12 @@ amuse = TicaAmuse(binary_file, out_file, i_addEps=1e-16)
 amuse.performAmuse(i_thresholdICs=1)
 
 # II) Use k-means to discretize the data (must separate the two Gaussian distributions in order to
-#     work well)
+# work well)
 k = 20
 data_assigns = kmeans(k, importer=CommonBinaryFileDataImporter(filename=out_file))
 
 # III) Use HMM with 2 hidden states. You should be able to recover the transition matrix
-#A, B, pi = hmm.utility.get_models()['equi32']
+# A, B, pi = hmm.utility.get_models()['equi32']
 A = np.array([[0.7, 0.3], [0.3, 0.7]], dtype=np.float32)
 B = np.array(
     [
@@ -92,5 +92,5 @@ print "Transition matrix:"
 print A
 
 # cleanup
-#os.remove(binary_file)
-#os.remove(out_file)
+# os.remove(binary_file)
+# os.remove(out_file)

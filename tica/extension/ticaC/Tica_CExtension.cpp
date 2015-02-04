@@ -36,7 +36,7 @@ PyObject *computeChunkCov( PyArrayObject *i_data )
     
     */
     int i, j, k, mCov, nCov, nData, mData;
-    int dimCov[2];   
+    npy_intp dimCov[2];   
     double *rowCov, *colData1, *colData2;
 
     ticaC_numpyArrayDim dimData = NULL;
@@ -86,7 +86,7 @@ PyObject *computeChunkCov( PyArrayObject *i_data )
 PyObject *matrixMulti(PyArrayObject *i_data, double tmp)
 {
 	int i, j, mCov, nCov, nData, mData;
-	int dimCov[2];
+	npy_intp dimCov[2];
 	double *rowCov;
 
 	ticaC_numpyArrayDim dimData = NULL;
@@ -141,7 +141,7 @@ PyObject *computeFullMatrix(PyArrayObject *matrix)
 
 	*/
 	int i, j, mCov, nCov, nData, mData;
-	int dimCov[2];
+	npy_intp dimCov[2];
 	double *colData1, *colData2;
 
 	ticaC_numpyArrayDim dimData = NULL;

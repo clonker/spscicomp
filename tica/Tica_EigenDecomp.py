@@ -1,10 +1,16 @@
-__author__ = 'rickwg'
-
 from numpy import linalg as lina
 import numpy as np
 import numpy.matlib as matlib
 
 class TicaEigenDecomp:
+    """
+    A class that post processes the results of the eigen decomposition of :class:`.numpy.linalg.eig`.
+    Performs a reordering of the eigen values and the corresponding eigen vectors.
+    Here are considered only real eigen values.
+
+    :param i_matrix: A matrix from which the eigen decomposition will realized.
+    :type i_matrix: numpy.array[]
+    """
 
     def __init__(self, i_matrix):
 
@@ -30,8 +36,10 @@ class TicaEigenDecomp:
 
     #---------------------------------------------------------------------------------------------#
     def reorderingEigenV(self):
-        """ Reordering of eigenvalues and corresponding eigenvectors by the largest eigenvalue.
-            Ordering only for real eigenvalues."""
+        """ 
+        Reordering of eigenvalues and corresponding eigenvectors by the largest eigenvalue.
+        Ordering only for real eigenvalues.
+        """
 
         reOrdIndex          = np.argsort(self.m_eigenVal)
         self.m_eigenValReal = self.m_eigenVal[reOrdIndex[::-1]]
@@ -39,6 +47,10 @@ class TicaEigenDecomp:
 
     #---------------------------------------------------------------------------------------------#
     def computeEigenDecomp(self, i_matrix):
+        """
+        Performs the eigen decomposition of :class:`.numpy.linalg` and rearrange(see :func:`.reorderingEigenV`)
+        the eigenvalues if they are real.
+        """
 
         self.m_matrix = np.asmatrix(i_matrix, dtype=np.float32)
         self.m_eigenVal, self.m_eigenVec = lina.eig(self.m_matrix)

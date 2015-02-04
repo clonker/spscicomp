@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.abspath('../'))
 sys.path.insert(0, os.path.abspath('../kmeans/'))
 sys.path.insert(0, os.path.abspath('../common/'))
 sys.path.insert(0, os.path.abspath('../hmm/'))
+sys.path.insert(0, os.path.abspath('../tica/'))
 
 # -- General configuration ------------------------------------------------
 

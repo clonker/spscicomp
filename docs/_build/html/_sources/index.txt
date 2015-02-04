@@ -14,6 +14,7 @@ Contents:
    common
    kmeans
    hmm
+   tica
 
 
 ==============================

@@ -1,13 +1,14 @@
-import hmm.kernel.python
+import hmm.kernel.python_memmap
 import hmm.utility
 import unittest
 import numpy
 
 # Observation Sequence
 
+
 class TestCounts(unittest.TestCase):
 
-    kernel = hmm.kernel.python
+    kernel = hmm.kernel.python_memmap
     ob = numpy.array([1, 0, 1, 1], dtype=numpy.int16)
     A, B, pi = hmm.utility.get_models()['equi32']
     dtype = numpy.float32
@@ -17,7 +18,7 @@ class TestCounts(unittest.TestCase):
         beta = self.kernel.backward_no_scaling(self.A, self.B, self.ob, self.dtype)
         gamma = self.kernel.state_probabilities(alpha, beta, self.dtype)
         symbol_counts = self.kernel.symbol_counts(gamma, self.ob, len(self.B[0]), self.dtype)
-        B  = numpy.zeros((len(self.B),len(self.B[0])), self.dtype)
+        B = numpy.zeros((len(self.B), len(self.B[0])), self.dtype)
         for i in range(len(B)):
             for k in range(len(B[0])):
                 B[i, k] = 0.0
@@ -45,7 +46,7 @@ class TestCounts(unittest.TestCase):
 
 class TestScaling(unittest.TestCase):
 
-    kernel = hmm.kernel.python
+    kernel = hmm.kernel.python_memmap
     ob = numpy.array([1, 0, 1, 1])
     A, B, pi = hmm.utility.get_models()['equi32']
     dtype = numpy.float32
@@ -88,25 +89,26 @@ class TestForward(unittest.TestCase):
     ob = numpy.array([1, 0, 1, 1, 0, 1, 1, 1])
     A, B, pi = hmm.utility.get_models()['equi32']
     dtype = numpy.float32
-    kernel = hmm.kernel.python
+    kernel = hmm.kernel.python_memmap
 
     def test_induction_no_scaling(self):
         ob = self.ob
         T, N = len(self.ob), len(self.A)
         p, alpha = self.kernel.forward_no_scaling(self.A, self.B, self.pi, self.ob, self.dtype)
         # initial condition
-        for i in range(1,N):
+        for i in range(1, N):
             self.assertAlmostEqual(alpha[0,i], self.pi[i]*self.B[i, ob[0]])
         # induction
-        for t in range(1,T):
-            for j in range(1,N):
+        for t in range(1, T):
+            for j in range(1, N):
                 self.assertAlmostEqual(
-                    alpha[t,j],
-                    numpy.sum(alpha[t-1,:]*self.A[:,j]) * self.B[j,ob[t]])
+                    alpha[t, j],
+                    numpy.sum(alpha[t-1, :]*self.A[:, j]) * self.B[j, ob[t]])
+
 
 class TestCallErrors(unittest.TestCase):
     dtype = numpy.float64
-    kernel = hmm.kernel.python
+    kernel = hmm.kernel.python_memmap
     ob = numpy.array([1, 0, 1, 1])
     A, B, pi = hmm.utility.get_models()['equi32']
 

@@ -20,10 +20,10 @@ class TestCounts(unittest.TestCase):
         B  = numpy.zeros((len(self.B),len(self.B[0])), self.dtype)
         for i in range(len(B)):
             for k in range(len(B[0])):
-                B[i, k] = 0.0
+                B[i,k] = 0.0
                 for t in range(len(self.ob)):
                     if self.ob[t] == k:
-                        B[i, k] += gamma[t, i]
+                        B[i,k] += gamma[t,i]
         numpy.testing.assert_almost_equal(B, symbol_counts)
 
     def test_state_counts_is_same_as_sum_of_state_probs(self):

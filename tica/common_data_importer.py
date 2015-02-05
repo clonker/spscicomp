@@ -175,6 +175,15 @@ class CommonBinaryFileDataImporter(CommonDataImporter):
         self._position = 0
         self._hasMoreData = True
 
+    def rewindPatch(self):
+        """
+        Reset the file pointer to the beginning and set the hasMoreData flag to True.
+        """
+        self._position = 0
+        self._hasMoreData = True
+        del self._file
+        self.init_file_input_stream()
+
     def has_more_data(self):
         """
         Test if the pointer is at the end of the file or not.
@@ -183,19 +192,20 @@ class CommonBinaryFileDataImporter(CommonDataImporter):
         """
         return self._hasMoreData
 
-    def create_out_file(self, i_fileName):
+    def create_out_file(self, i_fileName, i_shape):
 
         self._fileNameOut = i_fileName
-        np.save(self._fileNameOut, self._file)
+        np.save(self._fileNameOut, self._file[0:i_shape[0], 0:i_shape[1]])
         del self._file
         self.init_file_input_stream()
-        #self._outFile = np.load(self._fileNameOut, mmap_mode='r+')
+        self._outFile = np.load(self._fileNameOut, mmap_mode='r+')
 
     def write_data(self, i_data):
 
         """
         Assumption: i_data has same size like data of the last get_data() call
         """
+
         if self._outFile is None:
             self._outFile = np.load(self._fileNameOut, mmap_mode='r+')
 

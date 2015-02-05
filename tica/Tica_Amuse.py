@@ -35,7 +35,11 @@ class TicaAmuse:
     #@profile
     def performAmuse( self, i_numDomComp = 1 ):
         """
-        Runs the AMUSE-Algorithm and stores the results in a binary file with the stated filename(see above `i_outFileName`).
+        Runs the AMUSE-Algorithm and stores the results in a binary file with
+        the stated filename(see above `i_outFileName`).
+        Performs the hole algorithm only for one given time-lag.
+        If needed you can run the method again for another time-lag by setting the time-lag
+        with the function :func:`.setTimeLag`.
 
         :param i_numDomComp: Number of independent components which are needed.
         :type i_numDomComp: int
@@ -46,3 +50,12 @@ class TicaAmuse:
             self.m_prinCompInst.computeCovariance( )
             self.m_prinCompInst.computeEigenDecompCov( )
             self.m_prinCompTL.computeICs( i_numDomComp )
+
+    def setTimeLag(self, i_timeLag):
+        """
+        Set the time-lag.
+        :param i_timeLag: New time-lag.
+        :type i_timeLag: int
+        """
+
+        self.m_prinCompTL.setTimeLag(i_timeLag)

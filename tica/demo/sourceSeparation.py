@@ -23,7 +23,7 @@ print(elapsed)
 
 
 sepImporter  = CommonBinaryFileDataImporter('../testdata/tica_sepSignals.npy')
-sepData         = sepImporter.get_data(len(sepImporter._file))
+sepData      = sepImporter.get_data(len(sepImporter._file))
 
 x = np.arange(0.0, np.pi, np.pi/sepData.shape[0])
 

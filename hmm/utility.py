@@ -123,3 +123,30 @@ def generate_startmodel(N, M, dtype=numpy.float64):
 	B /= float(M)
 	pi /= float(N)
 	return (A, B, pi)
+
+class ChunkedArray(object):
+
+    def __init__(self, array_size, chunk_size):
+        self.chunk_size = chunk_size
+        self.array_size = array_size
+        self.num_chunks = int((array_size - 1) / chunk_size + 1)
+        self.data = numpy.zeros((self.num_chunks, chunk_size))
+
+    def get(self, index):
+        chunk = int((index + 1) / self.chunk_size)
+        chunk_index = int(index % self.chunk_size)
+        return self.data[chunk, chunk_index]
+
+    def set(self, index, chunk_object):
+        chunk = int((index + 1) / self.chunk_size)
+        chunk_index = int(index % self.chunk_size)
+        self.data[chunk, chunk_index] = chunk_object
+
+    def get_num_chunks(self):
+        return self.num_chunks
+
+    def get_chunk_size(self):
+        return self.chunk_size
+
+    def get_array_size(self):
+        return self.array_size

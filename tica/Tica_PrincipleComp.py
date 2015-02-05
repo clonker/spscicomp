@@ -6,7 +6,7 @@ from array import array
 import os
 
 try:
-    from extension.ticaC import ticaC
+    import ticaC
 
     use_extension = True
     print('TICA: Using C extension')
@@ -110,6 +110,9 @@ class TicaPrinComp:
 
     # ---------------------------------------------------------------------------------------------#
     def computeColMeans(self):
+        """
+        Computes mean per column of the input data.
+        """
 
         self.m_dataImporter.rewind()
 
@@ -163,20 +166,20 @@ class TicaPrinComp:
                                              self.param_chunkSize,
                                              shapeData[0])
         else:
-            dataChunk = np.asarray(self.m_dataImporter.get_data(self.param_chunkSize), dtype=np.float32)
+            dataChunk = np.asarray(self.m_dataImporter.get_data(self.param_chunkSize)[:, :], dtype=np.float32)
             #dataChunk = self.m_dataImporter.get_data(self.param_chunkSize)
-            dataChunk -= self.m_colMeans
-
-            #meanFreeChunk = dataChunk[:, 0:shapeData[1]] - self.m_colMeans
-            self.m_covMat = np.dot(dataChunk.transpose(), dataChunk)
+            #dataChunk[:, 0:shapeData[1]] -= self.m_colMeans
+            meanFreeChunk = dataChunk[:, 0:shapeData[1]] - self.m_colMeans
             del dataChunk
+            self.m_covMat = np.dot(meanFreeChunk.transpose(), meanFreeChunk)
+            del meanFreeChunk
 
             while self.m_dataImporter.has_more_data():
 
-                dataChunk = np.asarray(self.m_dataImporter.get_data(self.param_chunkSize), dtype=np.float32)
-                dataChunk -= self.m_colMeans
-                self.m_covMat += np.dot(dataChunk.transpose(), dataChunk)
+                meanFreeChunk = dataChunk[:, 0:shapeData[1]] - self.m_colMeans
+                self.m_covMat = np.dot(meanFreeChunk.transpose(), meanFreeChunk)
                 del dataChunk
+                del meanFreeChunk
 
             self.m_covMat *= 1.0 / (shapeData[0] - 1.0)
 
@@ -198,13 +201,15 @@ class TicaPrinComp:
 
         if not 1 < i_dataChunk.shape[0]:
 
-            i_dataChunk[:, 0:i_dataChunk.shape[1]] -= self.m_colMeans
-            o_pc = np.dot(matlib.asmatrix(i_dataChunk), self.m_eigenDecomp.m_eigenVecReal[:, 0:i_domComp])
+            meanFreeChunk = i_dataChunk[:, 0:i_dataChunk.shape[1]] - self.m_colMeans
+            o_pc = np.dot(matlib.asmatrix(meanFreeChunk), self.m_eigenDecomp.m_eigenVecReal[:, 0:i_domComp])
+            del meanFreeChunk
 
         else:
 
-            i_dataChunk[:, 0:i_dataChunk.shape[1]] -= self.m_colMeans
-            o_pc = np.dot( i_dataChunk, self.m_eigenDecomp.m_eigenVecReal[:, 0:i_domComp])
+            meanFreeChunk = i_dataChunk[:, 0:i_dataChunk.shape[1]] - self.m_colMeans
+            o_pc = np.dot( meanFreeChunk, self.m_eigenDecomp.m_eigenVecReal[:, 0:i_domComp])
+            del meanFreeChunk
 
         return o_pc
 
@@ -309,7 +314,6 @@ class TicaPrinComp:
             """
             Computes the time-lagged covariance matrix :math:`C^{\\tau}` with
             :math:`c_{ij}^{\\tau} = \\frac{1}{N-\\tau-1}\\sum_{t=1}^{N-\\tau}x_{it}x_{jt+\\tau}`
-
             """
 
             self.m_prinComp.m_dataImporter.rewind()
@@ -368,11 +372,21 @@ class TicaPrinComp:
 
         #---------------------------------------------------------------------------------------------#
         def setTimeLag(self, i_timeLag):
+            """
+            Set a new time-lag value.
+            :param i_timeLag:
+            :type: int
+            """
 
             self.param_timeLag = i_timeLag
 
         #---------------------------------------------------------------------------------------------#
         def performTransformation(self, i_domComp):
+            """
+            Computes the independent components and saves needed components in a output numpy binary file.
+            :param i_domComp: Needed components of TICA
+            :type i_domComp: int
+            """
 
             outFileShape = [self.m_prinComp.m_dataImporter.get_shape_inFile()[0], i_domComp]
             self.m_prinComp.m_dataImporter.create_out_file(self.m_prinComp.param_outFileName, outFileShape)
@@ -411,7 +425,7 @@ class TicaPrinComp:
         def computeICs(self, i_numDomComp = 1):
             '''
             Main method in the class :class:`.TicaPrinCompTimeLagged`.
-            Computes the independent components n the basis of normalized principle components supplied by
+            Computes the independent components on the basis of normalized principle components supplied by
             :class:`.TicaPrinComp`.
 
             :param i_numDumComp: Number of needed independent components.

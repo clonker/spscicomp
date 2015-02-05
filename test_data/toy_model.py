@@ -1,8 +1,8 @@
 import numpy as np
-from Tica_Amuse import TicaAmuse
-from algorithms import baum_welch
-from common_data_importer import CommonBinaryFileDataImporter
-from kmeans_main import kmeans
+from tica.Tica_Amuse import TicaAmuse
+from hmm.algorithms import baum_welch
+from common.common_data_importer import CommonBinaryFileDataImporter
+from kmeans.kmeans_main import kmeans
 
 '''
     So far generated output:

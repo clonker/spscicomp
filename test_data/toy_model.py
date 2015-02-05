@@ -5,6 +5,16 @@ from common_data_importer import CommonBinaryFileDataImporter
 from kmeans_main import kmeans
 
 '''
+    So far generated output:
+
+    TICA: C extension not found, using Python implementation
+    15001
+    19:23:23 DEBUG kmeans_main: implementation chosen = <class 'opencl.opencl_kmeans.OpenCLKmeans'>
+    Transition matrix:
+    [[ 0.70012271  0.29997399]
+     [ 0.29997399  0.70012271]]
+'''
+'''
 Generate data for a toy model (for testing).
 '''
 
@@ -26,7 +36,7 @@ for _ in range(0, 15000):
 # 3) Define an output probability distribution for each state i of P, e.g. a Gaussian
 # with mean mu_i and covariance matrix C_i
 mean_0, cov_0 = [0, 0], [[1.00, 0.50], [0.50, 1.00]]
-mean_1, cov_1 = [1, 0], [[0.75, 0.25], [0.25, 0.75]]
+mean_1, cov_1 = [5, 5], [[0.75, 0.25], [0.25, 0.75]]
 normal_params = [[mean_0, cov_0], [mean_1, cov_1]]
 
 # 4) For each time t, generate an output x(t) ~ G(mu_s(t), C_s(t))
@@ -70,13 +80,13 @@ out_file = 'data_out.npy'
 np.save(binary_file, X_t)
 
 amuse = TicaAmuse(binary_file, out_file, i_addEps=1e-16)
-amuse.performAmuse(i_thresholdICs=1)
+amuse.performAmuse()
 
 # II) Use k-means to discretize the data (must separate the two Gaussian distributions in order to
 # work well)
-k = 20
+k = 2
 data_assigns = kmeans(k, importer=CommonBinaryFileDataImporter(filename=out_file))
-
+print data_assigns
 # III) Use HMM with 2 hidden states. You should be able to recover the transition matrix
 # A, B, pi = hmm.utility.get_models()['equi32']
 A = np.array([[0.7, 0.3], [0.3, 0.7]], dtype=np.float32)

@@ -1,0 +1,70 @@
+dim = 5
+k = 100
+#{Data points} = 123450
+Chunk size = 5000
+
+c_kmeans:         35.3567831516 seconds
+opencl_kmeans:    8.10813498497 seconds
+c_kmeans:         44.1534152031 seconds
+opencl_kmeans:    7.73106503487 seconds
+
+--------------------------------------------------------------------------------
+
+dim = 5
+k = 100
+#{Data points} = 200000
+Chunk size = 10000
+
+c_kmeans:         103.465627909 seconds
+opencl_kmeans:    12.0906560421 seconds
+c_kmeans:         92.0247781277 seconds
+opencl_kmeans:    11.6374850273 seconds
+
+
+
+--------------------------------------------------------------------------------
+
+
+
+Timer unit: 1e-06 s
+
+Total time: 2.59364 s
+File: kmeans/opencl/opencl_kmeans.py
+Function: kmeans_chunk_center at line 17
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    17                                               @profile
+    18                                               def kmeans_chunk_center(self, data, centers):
+    19       750         1255      1.7      0.0          k = len(centers)
+    20       750         4578      6.1      0.2          centers_counter = np.zeros(k, dtype=np.int32)
+    21     75750       188971      2.5      7.3          new_centers = np.asarray([np.zeros(self._dimension) for _ in xrange(k)], dtype=np.float32)
+    22       750         2718      3.6      0.1          data_assigns = np.empty((len(data), 1), dtype=np.int32)
+    23       750         4085      5.4      0.2          dim = np.asarray([centers.ndim], dtype=np.int32)
+    24       750         2539      3.4      0.1          n_centers = np.asarray([k], dtype=np.int32)
+    25
+    26                                                   # create buffers
+    27       750        30120     40.2      1.2          data_buf = cl.Buffer(self.ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=data)
+    28       750        15132     20.2      0.6          centers_buf = cl.Buffer(self.ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=centers)
+    29       750         6051      8.1      0.2          assigns_buf = cl.Buffer(self.ctx, cl.mem_flags.WRITE_ONLY, data_assigns.nbytes)
+    30       750         4159      5.5      0.2          new_centers_buf = cl.Buffer(self.ctx, cl.mem_flags.WRITE_ONLY, new_centers.nbytes)
+    31       750         3946      5.3      0.2          centers_counter_buf = cl.Buffer(self.ctx, cl.mem_flags.WRITE_ONLY, centers_counter.nbytes)
+    32
+    33                                                   # run opencl extension
+    34       750       375920    501.2     14.5          self.prg.kmeans_chunk_center_cl(self.queue, (len(data), 1), None,
+    35       750          646      0.9      0.0                                          data_buf,
+    36       750          500      0.7      0.0                                          centers_buf,
+    37       750          517      0.7      0.0                                          assigns_buf,
+    38       750          515      0.7      0.0                                          new_centers_buf,
+    39       750          551      0.7      0.0                                          centers_counter_buf,
+    40       750         1611      2.1      0.1                                          np.int32(dim),
+    41       750      1543747   2058.3     59.5                                          np.int32(n_centers)
+    42                                                   ).wait()
+    43
+    44                                                   # wait for it to finish and read out buffers
+    45       750       193434    257.9      7.5          cl.enqueue_read_buffer(self.queue, assigns_buf, data_assigns).wait()
+    46       750       116620    155.5      4.5          cl.enqueue_read_buffer(self.queue, new_centers_buf, new_centers).wait()
+    47       750        93835    125.1      3.6          cl.enqueue_read_buffer(self.queue, centers_counter_buf, centers_counter).wait()
+    48
+    49       750         1635      2.2      0.1          self._data_assigns.append(data_assigns)
+    50       750          552      0.7      0.0          return new_centers

@@ -2,7 +2,7 @@ import unittest
 import timeit
 
 from kmeans import *
-from kmeans_data_importer import *
+from common.common_data_importer import *
 from kmeans_data_generator import *
 from kmeans_plot import *
 
@@ -16,8 +16,8 @@ class TestKmeansTimed(unittest.TestCase):
         print timeit.timeit('kmeans.calculate_centers(3, initial_centers=initial_centers)',
                             setup="import numpy as np;"
                                   "from kmeans import DefaultKmeans;"
-                                  "from kmeans_data_importer import KmeansFileDataImporter;"
-                                  "importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt');"
+                                  "from common.common_data_importer import CommonFileDataImporter;"
+                                  "importer = CommonFileDataImporter(filename='test_kmeans_random_data_generator.txt');"
                                   "kmeans = DefaultKmeans(importer=importer);"
                                   "initial_centers = [np.array([11.36545498, 32.76316854]),"
                                   "np.array([44.56166088, 3.98325672]),np.array([3.70092085, 36.24628609])]",
@@ -34,8 +34,8 @@ class TestCextensionTimed(unittest.TestCase):
         print timeit.timeit('kmeans.calculate_centers(50)',
                             setup="import numpy as np;"
                                   "from kmeans import DefaultKmeans;"
-                                  "from kmeans_data_importer import KmeansFileDataImporter;"
-                                  "importer = KmeansFileDataImporter(filename='test_kmeans_performance.txt');"
+                                  "from common.common_data_importer import CommonFileDataImporter;"
+                                  "importer = CommonFileDataImporter(filename='test_kmeans_performance.txt');"
                                   "kmeans = DefaultKmeans(importer=importer);",
                             number=10)
 
@@ -44,8 +44,8 @@ class TestCextensionTimed(unittest.TestCase):
         print timeit.timeit('kmeans.calculate_centers(50)',
                             setup="import numpy as np;"
                                   "from kmeans import DefaultKmeans;"
-                                  "from kmeans_data_importer import KmeansFileDataImporter;"
-                                  "importer = KmeansFileDataImporter(filename='test_kmeans_performance.txt');"
+                                  "from common.common_data_importer import CommonFileDataImporter;"
+                                  "importer = CommonFileDataImporter(filename='test_kmeans_performance.txt');"
                                   "kmeans = DefaultKmeans(importer=importer, c_extension=True);",
                             number=10)
 
@@ -68,7 +68,7 @@ class TestKmeans(unittest.TestCase):
         pass
 
     def test_default_kmeans(self):
-        importer = KmeansFileDataImporter(filename='test_kmeans_random_data_generator.txt')
+        importer = CommonFileDataImporter(filename='test_kmeans_random_data_generator.txt')
         kmeans = DefaultKmeans(importer=importer, chunk_size=100)
         initial_centers = [np.array([11.36545498, 32.76316854]),
                            np.array([44.56166088, 3.98325672]),

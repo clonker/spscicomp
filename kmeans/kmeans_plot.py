@@ -9,7 +9,8 @@ from kmeans import DefaultKmeans
 class KmeansPlot:
     def __init__(self, centers=None):
         self._centers = centers
-        self._colors = cm.rainbow(np.linspace(0, 1, len(centers)))
+        if centers is not None:
+            self._colors = cm.rainbow(np.linspace(0, 1, len(centers)))
         self._kmeans = DefaultKmeans()
         plt.figure()
 
@@ -18,9 +19,11 @@ class KmeansPlot:
             if type(center) is list:
                 center = center[0]
             plt.plot(center[0], center[1], linestyle='None', marker='o', color=self._colors[i, :])
-
+    def plot_pure_data(self,data):
+        for _,p in enumerate(data):
+             plt.plot(p[0], p[1], linestyle='None', marker='.', color='b')
     def plot_data(self, data):
-        for i, p in enumerate(data):
+        for _,p in enumerate(data):
             j = self._kmeans.closest_center(p, self._centers)
             plt.plot(p[0], p[1], linestyle='None', marker='.', color=self._colors[j])
 

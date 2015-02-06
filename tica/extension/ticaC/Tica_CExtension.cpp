@@ -1,4 +1,5 @@
 #include "Tica_CExtension.h"
+//#include <omp.h>
 
 #define PY_INITERROR return NULL
 #define TICA_ARRAY_DIMENSION 2
@@ -18,7 +19,7 @@ static sTica_state _state;
 #define INITERROR return
 
 
-PyObject *computeChunkCov( PyArrayObject *i_data )
+PyObject *computeChunkCov(PyArrayObject *i_data, PyObject *colMean)
 {
     /* Output matrix:
 
@@ -31,11 +32,12 @@ PyObject *computeChunkCov( PyArrayObject *i_data )
     */
     int i, j, k, mCov, nCov, nData, mData;
     npy_intp dimCov[2];   
-    double *rowCov, *colData1, *colData2;
+	double *rowCov, *colData1, *colData2, *colMean1, *colMean2;
 
     ticaC_numpyArrayDim dimData = NULL;
     PyObject *o_cov             = NULL;
     PyArrayObject *cov          = NULL;
+	PyArrayObject *colMeanArray = NULL;
 
     dimData = PyArray_DIMS( i_data );
     dimCov[0] = dimData[1];
@@ -48,6 +50,8 @@ PyObject *computeChunkCov( PyArrayObject *i_data )
 
     o_cov = PyArray_SimpleNew( TICA_ARRAY_DIMENSION, dimCov, NPY_DOUBLE );
     cov = (PyArrayObject*)PyArray_FROM_OTF( o_cov, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY );
+
+	colMeanArray = (PyArrayObject*)PyArray_FROM_OTF(colMean, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
     if (NULL == o_cov)
     {
@@ -62,10 +66,12 @@ PyObject *computeChunkCov( PyArrayObject *i_data )
       {
         colData1 = (double*)PyArray_GETPTR2( i_data, TICA_FIRST_ROW, i );
         colData2 = (double*)PyArray_GETPTR2( i_data, TICA_FIRST_ROW, j );
+		colMean1 = (double*)PyArray_GETPTR2 (colMeanArray, i, 0);
+		colMean2 = (double*)PyArray_GETPTR2( colMeanArray, j, 0);
 
         for (k = 0; k < nData; k++, colData1 += mData, colData2 += mData)
         {
-          *rowCov += (*colData1) * (*colData2);
+			*rowCov += ((*colData1) - (*colMean1)) * ((*colData2) - (*colMean2));
         }
       }
     }
@@ -79,7 +85,7 @@ PyObject *computeChunkCov( PyArrayObject *i_data )
 
 PyObject *matrixMulti(PyArrayObject *i_data, double tmp)
 {
-	int i, j, mCov, nCov, nData, mData;
+	int i, j, mCov, nCov;
 	npy_intp dimCov[2];
 	double *rowCov;
 
@@ -94,8 +100,6 @@ PyObject *matrixMulti(PyArrayObject *i_data, double tmp)
 
 	mCov = dimCov[0];
 	nCov = dimCov[1];
-	nData = dimData[0];
-	mData = dimData[1];
 
 	o_cov = PyArray_SimpleNew(TICA_ARRAY_DIMENSION, dimCov, NPY_DOUBLE);
 	cov = (PyArrayObject*)PyArray_FROM_OTF(o_cov, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
@@ -127,18 +131,9 @@ PyObject *matrixMulti(PyArrayObject *i_data, double tmp)
 
 PyObject *computeFullMatrix(PyArrayObject *matrix)
 {
-	/* Output matrix:
-
-	| * * * * * |
-	| 0 * * * * |
-	| 0 0 * * * |
-	| 0 0 0 * * |
-	| 0 0 0 0 * |
-
-	*/
-	int i, j, mCov, nCov, nData, mData;
+	int i, j, mCov, nCov;
 	npy_intp dimCov[2];
-	double *colData1, *colData2;
+	double *colData1;
 	double *rowCov, *rowCov2;
 
 	ticaC_numpyArrayDim dimData = NULL;
@@ -151,8 +146,6 @@ PyObject *computeFullMatrix(PyArrayObject *matrix)
 
 	mCov = dimCov[0];
 	nCov = dimCov[1];
-	nData = dimData[0];
-	mData = dimData[1];
 
 	o_cov = PyArray_SimpleNew(TICA_ARRAY_DIMENSION, dimCov, NPY_DOUBLE);
 	cov = (PyArrayObject*)PyArray_FROM_OTF(o_cov, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
@@ -181,7 +174,7 @@ PyObject *computeFullMatrix(PyArrayObject *matrix)
 
 PyObject *addMatrixPiecewise(PyObject *matrix, PyObject *matrix2)
 {
-	int i, j, mCov, nCov, nData, mData;
+	int i, j, mCov, nCov;
 	int dimCov[2];
 	double *matrixData1, *matrixData2;
 	double *outMatrixDat;
@@ -199,8 +192,6 @@ PyObject *addMatrixPiecewise(PyObject *matrix, PyObject *matrix2)
 
 	mCov = dimCov[0];
 	nCov = dimCov[1];
-	nData = dimData[0];
-	mData = dimData[1];
 
 	outMatrix = PyArray_SimpleNew(TICA_ARRAY_DIMENSION, dimCov, NPY_DOUBLE);
 	outMatrixArray = (PyArrayObject*)PyArray_FROM_OTF(outMatrix, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
@@ -216,7 +207,7 @@ PyObject *addMatrixPiecewise(PyObject *matrix, PyObject *matrix2)
 		{
 			outMatrixDat = (double*)PyArray_GETPTR2(outMatrixArray, i, j);
 			matrixData1 = (double*)PyArray_GETPTR2(matrixArray, i, j);
-			matrixData2 = (double*)PyArray_GETPTR2(matrixArray, i, j);
+			matrixData2 = (double*)PyArray_GETPTR2(matrixArray2, i, j);
 			*outMatrixDat = *matrixData1 + *matrixData2;
 		}
 	}
@@ -334,37 +325,35 @@ fail:
 	abort();   // Change to something more appropriate
 }
 
-PyObject *computeCov( PyObject *i_funGetData
-                      , PyObject *i_funHasMoreData
-                      , double i_chunkSize
-					  , double dimData)
+PyObject *computeCov(PyObject *i_funGetData
+	, PyObject *i_funHasMoreData
+	, PyObject *i_colMeans
+	, double i_chunkSize
+	, double dimData)
 {
 	PyObject *o_covMat = NULL, *chunkCovMat = NULL;
 	PyArrayObject *chunk = NULL;
 	PyArrayObject *covArr = NULL;
-	PyArrayObject *retval = NULL;
-	bool moreData;
+	//PyArrayObject *retval = NULL;
+	//bool moreData;
 	double tmp;
-	double* test;
+	int whileIter = 0;
 
-	ticaC_numpyArrayDim dimData2 = NULL;
-	PyObject *o_cov = NULL;
-	PyArrayObject *cov = NULL;
 
-	chunk = call_funGetData(i_funGetData, i_chunkSize);
-	o_covMat = computeChunkCov(chunk);
-
-	retval = (PyArrayObject*)PyArray_FROM_OTF(o_covMat, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-	test = (double*)PyArray_GETPTR2(retval, 0, 0);
-
-	moreData = call_funHasMoreData(i_funHasMoreData);
-	
-	while (moreData == true)
+	while (call_funHasMoreData(i_funHasMoreData))
 	{
-		chunk = call_funGetData(i_funGetData, i_chunkSize);
-		chunkCovMat = computeChunkCov(chunk);
-		o_covMat = addMatrixPiecewise(o_covMat, chunkCovMat);
-		moreData = call_funHasMoreData(i_funHasMoreData);
+		whileIter++;
+		if (1 == whileIter)
+		{
+			chunk = call_funGetData(i_funGetData, i_chunkSize);
+			o_covMat = computeChunkCov(chunk, i_colMeans);
+		}
+		if (1 != whileIter)
+		{
+			chunk = call_funGetData(i_funGetData, i_chunkSize);
+			chunkCovMat = computeChunkCov(chunk, i_colMeans);
+			o_covMat = addMatrixPiecewise(o_covMat, chunkCovMat);
+		}
 	}
 
 	covArr = (PyArrayObject*)PyArray_FROM_OTF(o_covMat, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
@@ -475,12 +464,12 @@ PyObject *computeColMeans( PyObject *i_funGetData
 
 }
 
-
+/*
 static PyObject *ticaC_computeChunkCov( PyObject *self, PyObject *args )
 {
   PyObject *inData = NULL;
   PyArrayObject *inDataArr = NULL;
-  PyObject *o_covMat = NULL;
+  //PyObject *o_covMat = NULL;
 
   if (!PyArg_ParseTuple( args, "O!", &PyArray_Type, &inData ))
   {
@@ -489,41 +478,218 @@ static PyObject *ticaC_computeChunkCov( PyObject *self, PyObject *args )
 
   inDataArr = (PyArrayObject*)PyArray_FROM_OTF( inData, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY );
 
-  o_covMat = computeChunkCov( inDataArr );
-  Py_INCREF( o_covMat );
+  //o_covMat = computeChunkCov( inDataArr );
+  //Py_INCREF( o_covMat );
 
   //return o_covMat;
-  return Py_BuildValue( "O", o_covMat );
-
+  //return Py_BuildValue( "O", o_covMat );
+  return NULL;
 }
+*/
 
 static PyObject *ticaC_computeCov( PyObject *self, PyObject *args )
 {
     PyObject *funGetData = NULL;
     PyObject *funHasMoreData = NULL;
+	PyObject *colMeans = NULL;
     double chunkSize;
 	double dimData;
-	double *test, *test2, *test3, *test4;
 
-	PyArrayObject *inDataArr = NULL, *covArr;
+	//PyArrayObject *covArr;
     PyObject *o_covMat = NULL;
 
-    if (!PyArg_ParseTuple( args, "OOdd", &funGetData, &funHasMoreData, &chunkSize, &dimData))
+    if (!PyArg_ParseTuple( args, "OOOdd", &funGetData, &funHasMoreData, &colMeans, &chunkSize, &dimData))
     {
         return NULL;
     }
 
-    o_covMat = computeCov( funGetData, funHasMoreData, chunkSize, dimData);
+	o_covMat = computeCov(funGetData, funHasMoreData, colMeans, chunkSize, dimData);
     //Py_INCREF( o_covMat );
 
-	covArr = (PyArrayObject*)PyArray_FROM_OTF(o_covMat, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-	test = (double*)PyArray_GETPTR2(covArr, 0, 0);
-	test2 = (double*)PyArray_GETPTR2(covArr, 1, 1);
-	test3 = (double*)PyArray_GETPTR2(covArr, 0, 1);
-	test4 = (double*)PyArray_GETPTR2(covArr, 1, 0);
+	//covArr = (PyArrayObject*)PyArray_FROM_OTF(o_covMat, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
     return o_covMat;
     //return Py_BuildValue( "d", o_covMat);
+	//return NULL;
+}
+
+PyObject *computeTimeLagCov(PyArrayObject *i_data, int timeLag)
+{
+	/* Output matrix:
+
+	| * * * * * |
+	| 0 * * * * |
+	| 0 0 * * * |
+	| 0 0 0 * * |
+	| 0 0 0 0 * |
+
+	*/
+	int i, j, k, mCov, nCov, nData, mData;
+	npy_intp dimCov[2];
+	double *rowCov, *colData1, *colData2, *colMean1, *colMean2;
+
+	ticaC_numpyArrayDim dimData = NULL;
+	PyObject *o_cov = NULL;
+	PyArrayObject *cov = NULL;
+	PyArrayObject *colMeanArray = NULL;
+
+	dimData = PyArray_DIMS(i_data);
+	dimCov[0] = dimData[1];
+	dimCov[1] = dimData[1];
+
+	mCov = dimCov[0];
+	nCov = dimCov[1];
+	nData = dimData[0];
+	mData = dimData[1];
+
+	o_cov = PyArray_SimpleNew(TICA_ARRAY_DIMENSION, dimCov, NPY_DOUBLE);
+	cov = (PyArrayObject*)PyArray_FROM_OTF(o_cov, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+	
+	if (NULL == o_cov)
+	{
+		return NULL;
+	}
+
+	for (i = 0; i < mCov; i++)
+	{
+		rowCov = (double*)PyArray_GETPTR2(cov, i, i);
+
+		for (j = i; j < nCov; j++, rowCov++)
+		{
+			colData1 = (double*)PyArray_GETPTR2(i_data, TICA_FIRST_ROW, i);
+			colData2 = (double*)PyArray_GETPTR2(i_data, TICA_FIRST_ROW, j);
+			colData2 += mData * timeLag;
+
+			for (k = 0; k < nData - timeLag; k++, colData1 += mData, colData2 += mData)
+			{
+				*rowCov += (*colData1) * (*colData2);
+			}
+		}
+	}
+
+
+	o_cov = (PyObject*)cov;
+	Py_INCREF(cov);
+	return  o_cov;
+}
+/*
+PyObject *computeTimeLagCov(PyObject *i_funGetData
+	, PyObject *i_funHasMoreData
+	, PyObject *i_colMeans
+	, double i_chunkSize
+	, double dimData
+	, int timeLag)
+{
+	PyObject *o_covMat = NULL, *chunkCovMat = NULL, *lastRow = NULL, *lastRowCov = NULL;
+	PyArrayObject *chunk = NULL;
+	PyArrayObject *covArr = NULL;
+	PyArrayObject *lastRowChunk = NULL, *lastRowCovChunk = NULL;
+	//PyArrayObject *retval = NULL;
+	//bool moreData;
+	double tmp, *lastRowChunkBefore, *ChunkDouble, *lastRowCovDouble, *lastRowCovDouble2;
+	int whileIter = 0;
+	ticaC_numpyArrayDim dimChunk = NULL;
+	int nDataChunk, mDataChunk, i, j;
+	npy_intp dimLastRow[2], dimLastRowCov[2];
+
+
+	while (call_funHasMoreData(i_funHasMoreData))
+	{
+		whileIter++;
+		if (1 == whileIter)
+		{
+			chunk = call_funGetData(i_funGetData, i_chunkSize);
+			o_covMat = computeChunkTimeLagCov(chunk, i_colMeans, timeLag);
+			dimChunk = PyArray_DIMS(chunk);
+			nDataChunk = dimChunk[0];
+			mDataChunk = dimChunk[1];
+			dimLastRow[0] = timeLag;
+			dimLastRow[1] = dimChunk[1];
+			dimLastRowCov[0] = timeLag * 2;
+			dimLastRowCov[1] = dimChunk[1];
+			lastRow = PyArray_SimpleNew(TICA_ARRAY_DIMENSION, dimLastRow, NPY_DOUBLE);
+			lastRowChunk = (PyArrayObject*)PyArray_FROM_OTF(lastRow, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+			lastRowCov = PyArray_SimpleNew(TICA_ARRAY_DIMENSION, dimLastRowCov, NPY_DOUBLE);
+			lastRowCovChunk = (PyArrayObject*)PyArray_FROM_OTF(lastRowCov, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+			for (i = nDataChunk - timeLag; i < nDataChunk; i++)
+			{
+				for (j = 0; j < mDataChunk; j++)
+				{
+					lastRowChunkBefore = (double*)PyArray_GETPTR2(lastRowChunk, i - nDataChunk + timeLag, j);
+					ChunkDouble = (double*)PyArray_GETPTR2(chunk, i, j);
+					*lastRowChunkBefore = *ChunkDouble;
+				}
+			}
+		}
+		if (1 != whileIter)
+		{
+			chunk = call_funGetData(i_funGetData, i_chunkSize);
+
+			for (i = 0; i < timeLag; i++)
+			{
+				for (j = 0; j < dimLastRowCov[1]; j++)
+				{
+					lastRowCovDouble = (double*)PyArray_GETPTR2(lastRowCovChunk, i, j);
+					lastRowCovDouble2 = (double*)PyArray_GETPTR2(lastRowCovChunk, i + timeLag, j);
+					lastRowChunkBefore = (double*)PyArray_GETPTR2(lastRowChunk, i, j);
+					ChunkDouble = (double*)PyArray_GETPTR2(chunk, i, j);
+					*lastRowCovDouble = *lastRowChunkBefore;
+					*lastRowCovDouble2 = *ChunkDouble;
+				}
+			}
+
+			chunkCovMat = computeChunkTimeLagCov(lastRowCovChunk, i_colMeans, timeLag);
+			o_covMat = addMatrixPiecewise(o_covMat, chunkCovMat);
+
+			chunkCovMat = computeChunkTimeLagCov(chunk, i_colMeans, timeLag);
+			o_covMat = addMatrixPiecewise(o_covMat, chunkCovMat);
+			dimChunk = PyArray_DIMS(chunk);
+			nDataChunk = dimChunk[0];
+			mDataChunk = dimChunk[1];
+			for (i = nDataChunk - timeLag - 1; i < nDataChunk; i++)
+			{
+				for (j = 0; j < mDataChunk; j++)
+				{
+					lastRowChunkBefore = (double*)PyArray_GETPTR2(lastRowChunk, i - nDataChunk + timeLag, j);
+					ChunkDouble = (double*)PyArray_GETPTR2(chunk, i, j);
+					*lastRowChunkBefore = *ChunkDouble;
+				}
+			}
+		}
+	}
+
+	covArr = (PyArrayObject*)PyArray_FROM_OTF(o_covMat, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+	tmp = 1.0 / (dimData - timeLag - 1.0);
+	o_covMat = matrixMulti(covArr, tmp);
+	covArr = (PyArrayObject*)PyArray_FROM_OTF(o_covMat, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+	o_covMat = computeFullMatrix(covArr);
+
+	//o_covMat = tmp * covArr;
+
+	return o_covMat;
+	//Py_BuildValue("O", o_covMat);
+}
+*/
+
+static PyObject *ticaC_computeTimeLagCov(PyObject *self, PyObject *args)
+{
+	PyObject *i_data = NULL;
+	int timeLag;
+	PyObject *o_covMat = NULL;
+	PyArrayObject *i_dataArr = NULL;
+
+	if (!PyArg_ParseTuple(args, "Oi", &i_data, &timeLag))
+	{
+		return NULL;
+	}
+
+	i_dataArr = (PyArrayObject*)PyArray_FROM_OTF(i_data, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+
+	o_covMat = computeTimeLagCov(i_dataArr, timeLag);
+	//Py_INCREF( o_covMat );
+
+	return o_covMat;
+	//return Py_BuildValue( "d", o_covMat);
 	//return NULL;
 }
 
@@ -533,7 +699,6 @@ static PyObject *ticaC_computeColMeans( PyObject *self, PyObject *args )
   PyObject *funHasMoreData = NULL;
   double chunkSize;
 
-  PyArrayObject *inDataArr = NULL;
   PyObject *o_colMeans = NULL;
 
   if (!PyArg_ParseTuple( args, "OOd", &funGetData, &funHasMoreData, &chunkSize ))
@@ -550,9 +715,10 @@ static PyObject *ticaC_computeColMeans( PyObject *self, PyObject *args )
 
 static PyMethodDef TicaCMethods[] =
 {
-    { "computeChunkCov", (PyCFunction)ticaC_computeChunkCov, METH_VARARGS, "Compute the chunk covariance matrix of given data chunk." },
+    //{ "computeChunkCov", (PyCFunction)ticaC_computeChunkCov, METH_VARARGS, "Compute the chunk covariance matrix of given data chunk." },
     { "computeCov", (PyCFunction)ticaC_computeCov, METH_VARARGS, "Compute the chunk covariance matrix of given data chunk." },
     { "computeColMeans", (PyCFunction)ticaC_computeColMeans, METH_VARARGS, "Compute the column means of given data chunk." },
+	{ "computeTimeLagCov", (PyCFunction)ticaC_computeTimeLagCov, METH_VARARGS, "Compute the chunk Timelagged covariance matrix of given data chunk." },
     { NULL, NULL, 0, NULL }
 };
 

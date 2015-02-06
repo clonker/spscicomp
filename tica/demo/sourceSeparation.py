@@ -15,7 +15,7 @@ origData        = origImporter.get_data(len(origImporter._file))
 
 start = time()
 
-amuse = TicaAmuse('../testdata/mixedSignalsBinary.npy', '../testdata/tica_sepSignals.npy', i_addEps = 1e-16)
+amuse = TicaAmuse('../testdata/mixedSignalsBinary.npy', '../testdata/tica_sepSignals.npy', i_addEps = 1e-16, i_timeLag=1)
 amuse.performAmuse( i_numDomComp = 2 )
 
 elapsed = time() - start

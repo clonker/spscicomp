@@ -14,6 +14,8 @@ except:
     use_extension = False
     print('TICA: C extension not found, using Python implementation')
 
+# short patch
+use_extension = False
 
 class TicaPrinComp:
     """
@@ -160,9 +162,11 @@ class TicaPrinComp:
         self.m_dataImporter.rewind()
 
         shapeData = self.m_dataImporter.get_shape_inFile()
+        #use_extension = False
         if use_extension is True:
             self.m_covMat = ticaC.computeCov(self.m_dataImporter.get_data,
                                              self.m_dataImporter.has_more_data,
+                                             self.m_colMeans,
                                              self.param_chunkSize,
                                              shapeData[0])
         else:
@@ -176,9 +180,10 @@ class TicaPrinComp:
 
             while self.m_dataImporter.has_more_data():
 
+                dataChunk = np.asarray(self.m_dataImporter.get_data(self.param_chunkSize)[:, :], dtype=np.float32)
                 meanFreeChunk = dataChunk[:, 0:shapeData[1]] - self.m_colMeans
-                self.m_covMat = np.dot(meanFreeChunk.transpose(), meanFreeChunk)
                 del dataChunk
+                self.m_covMat += np.dot(meanFreeChunk.transpose(), meanFreeChunk)
                 del meanFreeChunk
 
             self.m_covMat *= 1.0 / (shapeData[0] - 1.0)
@@ -335,7 +340,7 @@ class TicaPrinComp:
                 self.m_covMatTimeLag += np.dot(normalizedPCs[0:(m - self.param_timeLag), :].T,
                                                normalizedPCs[self.param_timeLag:m, :])
 
-            lastRowChunkBefore = normalizedPCs[m - 1, :]
+            lastRowsChunkBefore = normalizedPCs[(m-self.param_timeLag):m, :]
             del normalizedPCs
 
             while self.m_prinComp.m_dataImporter.has_more_data():
@@ -348,15 +353,15 @@ class TicaPrinComp:
                 del dataChunk
                 normalizedPCs = self.m_prinComp.normalizePCs(pcs)
                 del pcs
-                self.m_covMatTimeLag += np.dot(matlib.asmatrix(lastRowChunkBefore).T,
-                                               matlib.asmatrix(normalizedPCs[0, :]))
+                self.m_covMatTimeLag += np.dot(matlib.asmatrix(lastRowsChunkBefore).T,
+                                               matlib.asmatrix(normalizedPCs[0:self.param_timeLag, :]))
 
                 if 1 < m:
 
                     self.m_covMatTimeLag += np.dot(normalizedPCs[0:(m - self.param_timeLag), :].T,
                                                    normalizedPCs[self.param_timeLag:m, :])
 
-                lastRowChunkBefore = normalizedPCs[m - 1, :]
+                lastRowsChunkBefore = normalizedPCs[(m-self.param_timeLag):m, :]
                 del normalizedPCs
 
             self.m_covMatTimeLag *= 1.0 / (dimData[0] - self.param_timeLag - 1.0)

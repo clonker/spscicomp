@@ -22,17 +22,17 @@ def kmeans(k, importer=None):
     kmeans_implementation = None
     if importer:
         try:
-            from cuda.cuda_kmeans import CUDAKmeans
+            from cuda_kmeans import CUDAKmeans
 
             kmeans_implementation = CUDAKmeans(importer=importer)
         except:
             try:
-                from opencl.opencl_kmeans import OpenCLKmeans
+                from opencl_kmeans import OpenCLKmeans
 
                 kmeans_implementation = OpenCLKmeans(importer=importer)
             except:
                 try:
-                    from extension.c_kmeans import CKmeans
+                    from c_kmeans import CKmeans
 
                     kmeans_implementation = CKmeans(importer=importer)
                 except:

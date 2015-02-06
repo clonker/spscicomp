@@ -80,8 +80,8 @@ binary_file = 'data.npy'
 out_file = 'data_out.npy'
 np.save(binary_file, X_t)
 
-amuse = TicaAmuse(binary_file, out_file, i_addEps=1e-16)
-amuse.performAmuse()
+amuse = TicaAmuse(binary_file, out_file, i_addEps=1e-14)
+amuse.performAmuse(2)
 
 # II) Use k-means to discretize the data (must separate the two Gaussian distributions in order to
 # work well)

@@ -1,5 +1,5 @@
-from extension import kmeans_c_extension as kmc
-from kmeans import DefaultKmeans
+import kmeans_c_extension as kmc
+from kmeans.kmeans import DefaultKmeans
 from kmeans_metric import EuclideanMetric
 
 

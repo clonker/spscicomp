@@ -1,6 +1,7 @@
 import numpy as np
 from tica.Tica_Amuse import TicaAmuse
-from hmm.algorithms import baum_welch
+from hmm.algorithms import baum_welch_multiple
+import hmm.kernel.c
 from common.common_data_importer import CommonBinaryFileDataImporter
 from kmeans.kmeans_main import kmeans
 
@@ -84,7 +85,7 @@ amuse.performAmuse()
 
 # II) Use k-means to discretize the data (must separate the two Gaussian distributions in order to
 # work well)
-k = 2
+k = 4
 data_assigns = kmeans(k, importer=CommonBinaryFileDataImporter(filename=out_file))
 print data_assigns
 # III) Use HMM with 2 hidden states. You should be able to recover the transition matrix
@@ -92,11 +93,14 @@ print data_assigns
 A = np.array([[0.7, 0.3], [0.3, 0.7]], dtype=np.float32)
 B = np.array(
     [
-        [0.5 for n in range(0, k)],
-        [0.5 for m in range(0, k)]
+        [0.5/(0.5*k) for n in range(0, k)],
+        [0.5/(0.5*k) for m in range(0, k)]
     ], dtype=np.float32)
 pi = np.array([0.5, 0.5], dtype=np.float32)
-A, B, pi, eps, it = baum_welch(ob=np.asarray(data_assigns), A=A, B=B, pi=pi, maxit=100000)
+data_assings = np.array(data_assigns)
+d = len(data_assigns)/10
+obs = np.array([ data_assigns[ x*d : x*d + d -1] for x in range(10)])
+A, B, pi, eps, it = baum_welch_multiple(obs=obs, A=A, B=B, pi=pi, kernel=hmm.kernel.c, dtype=np.float32, maxit=100000)
 
 print "Transition matrix:"
 print A

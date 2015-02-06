@@ -10,6 +10,7 @@ closely related to Rabiners [1] paper.
 """
 import numpy
 
+
 def forward_no_scaling(A, B, pi, ob, dtype=numpy.float32):
     """Compute P(ob|A,B,pi) and all forward coefficients. No scaling done.
 
@@ -27,7 +28,7 @@ def forward_no_scaling(A, B, pi, ob, dtype=numpy.float32):
     Returns
     -------
     prob : floating number
-           The probability to observe the sequence `ob` with the model given 
+           The probability to observe the sequence `ob` with the model given
            by `A`, `B` and `pi`.
     alpha : numpy.array of floating numbers and shape (T,N)
             alpha[t,i] is the ith forward coefficient of time t. These can be
@@ -38,20 +39,22 @@ def forward_no_scaling(A, B, pi, ob, dtype=numpy.float32):
     forward : Compute forward coefficients and scaling factors
     """
     T, N = len(ob), len(A)
-    alpha = numpy.zeros((T,N), dtype=dtype)
+    # alpha = numpy.zeros((T,N), dtype=dtype)
+    alpha = numpy.memmap('alpha.tmp', dtype=dtype, mode='w+', shape=(T, N))
 
     # initial values
     for i in range(N):
-        alpha[0,i] = pi[i]*B[i,ob[0]]
+        alpha[0, i] = pi[i]*B[i, ob[0]]
     # induction
     for t in range(T-1):
         for j in range(N):
-            alpha[t+1,j] = 0.0
+            alpha[t+1, j] = 0.0
             for i in range(N):
-                alpha[t+1,j] += alpha[t,i] * A[i,j]
-            alpha[t+1,j] *= B[j,ob[t+1]]
+                alpha[t+1, j] += alpha[t, i] * A[i, j]
+            alpha[t+1, j] *= B[j, ob[t+1]]
     prob = alpha[T-1].sum()
     return (prob, alpha)
+
 
 def backward_no_scaling(A, B, ob, dtype=numpy.float32):
     """Compute all backward coefficients. No scaling.
@@ -75,18 +78,20 @@ def backward_no_scaling(A, B, ob, dtype=numpy.float32):
     backward : Compute backward coefficients using given scaling factors.
     """
     T, N = len(ob), len(A)
-    beta = numpy.zeros((T,N), dtype=dtype)
+    # beta = numpy.zeros((T,N), dtype=dtype)
+    beta = numpy.memmap('beta.tmp', dtype=dtype, mode='w+', shape=(T, N))
 
     # initital value
     for i in range(N):
-        beta[T-1,i] = 1
+        beta[T-1, i] = 1
     # induction
     for t in range(T-2, -1, -1):
         for i in range(N):
-            beta[t,i] = 0.0
+            beta[t, i] = 0.0
             for j in range(N):
-                beta[t,i] += A[i,j] * beta[t+1,j] * B[j,ob[t+1]]
+                beta[t, i] += A[i, j] * beta[t+1, j] * B[j, ob[t+1]]
     return beta
+
 
 def forward(A, B, pi, ob, dtype=numpy.float32):
     """Compute P(ob|A,B,pi) and all forward coefficients. With scaling!
@@ -105,7 +110,7 @@ def forward(A, B, pi, ob, dtype=numpy.float32):
     Returns
     -------
     prob : floating number
-           The probability to observe the sequence `ob` with the model given 
+           The probability to observe the sequence `ob` with the model given
            by `A`, `B` and `pi`.
     alpha : np.array of floating numbers and shape (T,N)
             alpha[t,i] is the ith forward coefficient of time t. These can be
@@ -119,25 +124,28 @@ def forward(A, B, pi, ob, dtype=numpy.float32):
     forward_no_scaling : Compute forward coefficients without scaling
     """
     T, N = len(ob), len(A)
-    alpha = numpy.zeros((T,N), dtype=dtype)
-    scale = numpy.zeros(T, dtype=dtype)
+    # alpha = numpy.zeros((T,N), dtype=dtype)
+    alpha = numpy.memmap('alpha.tmp', dtype=dtype, mode='w+', shape=(T, N))
+    # scale = numpy.zeros(T, dtype=dtype)
+    scale = numpy.memmap('scale.tmp', dtype=dtype, mode='w+', shape=(T))
     # initial values
+    scale[0] = 0
     for i in range(N):
-        alpha[0,i] = pi[i] * B[i,ob[0]]
-        scale[0] += alpha[0,i]
+        alpha[0, i] = pi[i] * B[i, ob[0]]
+        scale[0] += alpha[0, i]
     for i in range(N):
-        alpha[0,i] /= scale[0]
+        alpha[0, i] /= scale[0]
 
     # induction
     for t in range(T-1):
         for j in range(N):
-            alpha[t+1,j] = 0.0
+            alpha[t+1, j] = 0.0
             for i in range(N):
-                alpha[t+1,j] += alpha[t,i] * A[i,j]
-            alpha[t+1,j] *= B[j, ob[t+1]]
-            scale[t+1] += alpha[t+1,j]
+                alpha[t+1, j] += alpha[t, i] * A[i, j]
+            alpha[t+1, j] *= B[j, ob[t+1]]
+            scale[t+1] += alpha[t+1, j]
         for j in range(N):
-            alpha[t+1,j] /= scale[t+1]
+            alpha[t+1, j] /= scale[t+1]
     logprob = 0.0
     for t in range(T):
         logprob += numpy.log(scale[t])
@@ -167,15 +175,17 @@ def backward(A, B, ob, scaling, dtype=numpy.float32):
     backward_no_scaling : Compute backward coefficients without scaling
     """
     T, N = len(ob), len(A)
-    beta = numpy.zeros((T,N), dtype=dtype)
+    # beta = numpy.zeros((T,N), dtype=dtype)
+    beta = numpy.memmap('beta.tmp', dtype=dtype, mode='w+', shape=(T, N))
     for i in range(N):
-        beta[T-1,i] = 1.0 / scaling[T-1]
+        beta[T-1, i] = 1.0 / scaling[T-1]
     for t in range(T-2, -1, -1):
         for i in range(N):
-            beta[t,i] = 0.0
+            beta[t, i] = 0.0
             for j in range(N):
-                beta[t,i] += A[i,j] * beta[t+1,j] * B[j,ob[t+1]] / scaling[t]
+                beta[t, i] += A[i, j] * beta[t+1, j] * B[j, ob[t+1]] / scaling[t]
     return beta
+
 
 def update(gamma, xi, ob, M, dtype=numpy.float32):
     """ Return an updated model for given state and transition counts.
@@ -183,7 +193,7 @@ def update(gamma, xi, ob, M, dtype=numpy.float32):
     Parameters
     ----------
     gamma : numpy.array shape (T,N)
-            state probabilities for each t 
+            state probabilities for each t
     xi : numpy.array shape (T,N,N)
          transition probabilities for each t
     ob : numpy.array shape (T)
@@ -209,29 +219,30 @@ def update(gamma, xi, ob, M, dtype=numpy.float32):
     transition_probabilities : to calculate `xi`
 
     """
-    T,N = len(ob), len(gamma[0])
+    T, N = len(ob), len(gamma[0])
     pi = numpy.zeros((N), dtype=dtype)
-    A  = numpy.zeros((N,N), dtype=dtype)
-    B  = numpy.zeros((N,M), dtype=dtype)
+    A = numpy.zeros((N, N), dtype=dtype)
+    B = numpy.zeros((N, M), dtype=dtype)
     for i in range(N):
-        pi[i] = gamma[0,i]
+        pi[i] = gamma[0, i]
     for i in range(N):
         gamma_sum = 0.0
         for t in range(T-1):
-            gamma_sum += gamma[t,i]
+            gamma_sum += gamma[t, i]
         for j in range(N):
-            A[i,j] = 0.0
+            A[i, j] = 0.0
             for t in range(T-1):
-                A[i,j] += xi[t,i,j]
-            A[i,j] /= gamma_sum
+                A[i, j] += xi[t, i, j]
+            A[i, j] /= gamma_sum
         gamma_sum += gamma[T-1, i]
         for k in range(M):
-            B[i,k] = 0.0
+            B[i, k] = 0.0
             for t in range(T):
                 if ob[t] == k:
-                    B[i,k] += gamma[t,i]
-            B[i,k] /= gamma_sum
+                    B[i, k] += gamma[t, i]
+            B[i, k] /= gamma_sum
     return (A, B, pi)
+
 
 def state_probabilities(alpha, beta, dtype=numpy.float32):
     """ Calculate the (T,N)-probabilty matrix for being in state i at time t.
@@ -260,24 +271,26 @@ def state_probabilities(alpha, beta, dtype=numpy.float32):
     backward, backward_no_scaling : to calculate `beta`
     """
     T, N = len(alpha), len(alpha[0])
-    gamma = numpy.zeros((T,N), dtype=dtype)
+    gamma = numpy.zeros((T, N), dtype=dtype)
     for t in range(T):
-        sum = 0.0
+        gamma_sum = 0.0
         for i in range(N):
-            gamma[t,i] = alpha[t,i]*beta[t,i]
-            sum += gamma[t,i]
+            gamma[t, i] = alpha[t, i] * beta[t, i]
+            gamma_sum += gamma[t, i]
         for i in range(N):
-            gamma[t,i] /= sum
+            gamma[t, i] /= gamma_sum
     return gamma
+
 
 def state_counts(gamma, T, dtype=numpy.float32):
     """ Sum the probabilities of being in state i to time t
 
     Parameters
     ----------
-    gamma : numpy.array shape (T,N)
-            gamma[t,i] is the probabilty at time t to be in state i !
-    T : number of observationsymbols
+    alpha : numpy.array shape (T,N)
+            forward coefficients
+    beta : numpy.array shape (T,N)
+           backward coefficients
     dtype : item datatype [optional]
 
     Returns
@@ -303,15 +316,17 @@ def symbol_counts(gamma, ob, M, dtype=numpy.float32):
 
     Parameters
     ----------
-    gamma : numpy.array shape (T,N)
-            gamma[t,i] is the probabilty at time t to be in state i !
+    alpha : numpy.array shape (T,N)
+            forward coefficients
+    beta : numpy.array shape (T,N)
+           backward coefficients
     ob : numpy.array shape (T)
-    M : integer. number of possible observationsymbols
+    M : integer
     dtype : item datatype, optional
 
     Returns
     -------
-    counts : numpy.array shape (N,M)
+    counts : ...
 
     Notes
     -----
@@ -324,10 +339,10 @@ def symbol_counts(gamma, ob, M, dtype=numpy.float32):
     backward, backward_no_scaling : to calculate `beta`
     """
     T, N = len(gamma), len(gamma[0])
-    counts = numpy.zeros((N,M), dtype=type)
+    counts = numpy.zeros((N, M), dtype=type)
     for t in range(T):
         for i in range(N):
-            counts[i,ob[t]] += gamma[t,i]
+            counts[i, ob[t]] += gamma[t, i]
     return counts
 
 
@@ -337,7 +352,7 @@ def transition_probabilities(alpha, beta, A, B, ob, dtype=numpy.float32):
     Parameters
     ----------
     alpha : numpy.array shape (T,N)
-            forward coefficients 
+            forward coefficients
     beta : numpy.array shape (T,N)
            backward coefficients
     A : numpy.array shape (N,N)
@@ -350,7 +365,7 @@ def transition_probabilities(alpha, beta, A, B, ob, dtype=numpy.float32):
 
     Returns
     -------
-    xi : numpy.array shape (T-1, N, N)
+    xi : numpy.array shape (T, N, N)
          xi[t, i, j] is the probability to transition from i to j at time t.
 
     Notes
@@ -366,17 +381,19 @@ def transition_probabilities(alpha, beta, A, B, ob, dtype=numpy.float32):
 
     """
     T, N = len(ob), len(A)
-    xi = numpy.zeros((T-1,N,N), dtype=dtype)
+    # xi = numpy.zeros((T-1,N,N), dtype=dtype)
+    xi = numpy.memmap('xi.tmp', dtype=dtype, mode='w+', shape=(T-1, N, N))
     for t in range(T-1):
-        sum = 0.0
+        xi_sum = 0.0
         for i in range(N):
             for j in range(N):
-                xi[t,i,j] = alpha[t,i] * A[i,j] * B[j,ob[t+1]] * beta[t+1,j]
-                sum += xi[t,i,j]
+                xi[t, i, j] = alpha[t, i] * A[i, j] * B[j, ob[t+1]] * beta[t+1, j]
+                xi_sum += xi[t, i, j]
         for i in range(N):
             for j in range(N):
-                xi[t,i,j] /= sum
+                xi[t, i, j] /= xi_sum
     return xi
+
 
 def transition_counts(alpha, beta, A, B, ob, dtype=numpy.float32):
     """ Sum for all t the probability to transition from state i to state j.
@@ -384,7 +401,7 @@ def transition_counts(alpha, beta, A, B, ob, dtype=numpy.float32):
     Parameters
     ----------
     alpha : numpy.array shape (T,N)
-            forward coefficients 
+            forward coefficients
     beta : numpy.array shape (T,N)
            backward coefficients
     A : numpy.array shape (N,N)
@@ -398,7 +415,7 @@ def transition_counts(alpha, beta, A, B, ob, dtype=numpy.float32):
     Returns
     -------
     counts : numpy.array shape (N, N)
-         counts[i, j] is the summed probability to transition from i to j 
+         counts[i, j] is the summed probability to transition from i to j
          int time [0,T)
 
     Notes
@@ -413,19 +430,20 @@ def transition_counts(alpha, beta, A, B, ob, dtype=numpy.float32):
     backward : calculate backward coefficients `beta`
     """
     T, N = len(ob), len(A)
-    xi = numpy.zeros((N,N), dtype=dtype)
+    xi = numpy.zeros((N, N), dtype=dtype)
     counts = numpy.zeros_like(xi)
     for t in range(T-1):
-        sum = 0.0
+        xi_sum = 0.0
         for i in range(N):
             for j in range(N):
-                xi[i,j] = alpha[t,i] * A[i,j] * B[j,ob[t+1]] * beta[t+1,j]
-                sum += xi[i,j]
+                xi[i, j] = alpha[t, i] * A[i, j] * B[j, ob[t+1]] * beta[t+1, j]
+                xi_sum += xi[i, j]
         for i in range(N):
             for j in range(N):
-                xi[i,j] /= sum
+                xi[i, j] /= xi_sum
         counts += xi
     return counts
+
 
 def random_sequence(A, B, pi, T):
     """ Generate an observation sequence of length T from the model A, B, pi.
@@ -438,8 +456,6 @@ def random_sequence(A, B, pi, T):
         symbol probability matrix of the model
     pi : numpy.array shape (N)
          starting probability vector of the model
-    T : integer
-        length of generated observation sequence
 
     Returns
     -------
@@ -449,33 +465,23 @@ def random_sequence(A, B, pi, T):
     Notes
     -----
     This function relies on the function draw_state(distr).
- 
+
     See Also
     --------
     draw_state : draw the index of the state, obeying the probability
                  distribution vector distr
 
     """
-    obs    = numpy.zeros(T, dtype=numpy.int16)
-    state  = draw_state(pi)
+    obs = numpy.zeros(T, dtype=numpy.int16)
+    state = draw_state(pi)
     obs[0] = state
-    for t in range(1,T):
-        state  = draw_state( A[state] )
-        obs[t] = draw_state( B[state] )
+    for t in range(1, T):
+        state = draw_state(A[state])
+        obs[t] = draw_state(B[state])
     return obs
 
+
 def draw_state(distr):
-    """ helper function for random_sequence to get the state to a given probability
-
-    Parameters
-    ----------
-    distr : array with probabilities where state are the indices
-
-    Returns
-    -------
-    state : integer
-            which randomly chosen with given distribution
-    """
     x = numpy.random.random()
     D = len(distr)
     for state in range(D):
@@ -484,4 +490,3 @@ def draw_state(distr):
         else:
             x -= distr[state]
     return state
-

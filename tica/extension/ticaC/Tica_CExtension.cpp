@@ -182,7 +182,7 @@ PyObject *computeFullMatrix(PyArrayObject *matrix)
 PyObject *addMatrixPiecewise(PyObject *matrix, PyObject *matrix2)
 {
 	int i, j, mCov, nCov, nData, mData;
-	int dimCov[2];
+	npy_intp dimCov[2];
 	double *matrixData1, *matrixData2;
 	double *outMatrixDat;
 
@@ -389,7 +389,7 @@ PyObject *computeColMeans( PyObject *i_funGetData
   double factor = 0;
   int whileIter = 0;
 
-  int colMeansDim[2];
+  npy_intp colMeansDim[2];
 
   void *ptrBuffer;
 

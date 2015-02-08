@@ -4,6 +4,7 @@ from hmm.algorithms import baum_welch_multiple
 import hmm.kernel.c
 from common.common_data_importer import CommonBinaryFileDataImporter
 from kmeans.kmeans_main import kmeans
+import hmm.use_hmm
 
 '''
     So far generated output:
@@ -26,7 +27,7 @@ P = [[p11, 1 - p11], [1 - p22, p22]]
 
 # 2) Generate a discrete trajectory (Markov chain) s(t) using P
 s_t = [0]
-for _ in range(0, 15000):
+for _ in range(0, 1500):
     r = np.random.random()
     state = s_t[-1]
     if r < P[state][state]:
@@ -90,17 +91,18 @@ data_assigns = kmeans(k, importer=CommonBinaryFileDataImporter(filename=out_file
 print data_assigns
 # III) Use HMM with 2 hidden states. You should be able to recover the transition matrix
 # A, B, pi = hmm.utility.get_models()['equi32']
-A = np.array([[0.7, 0.3], [0.3, 0.7]], dtype=np.float32)
-B = np.array(
-    [
-        [0.5/(0.5*k) for n in range(0, k)],
-        [0.5/(0.5*k) for m in range(0, k)]
-    ], dtype=np.float32)
-pi = np.array([0.5, 0.5], dtype=np.float32)
+#A = np.array([[0.7, 0.3], [0.3, 0.7]], dtype=np.float32)
+#B = np.array(
+#    [
+#        [0.5/(0.5*k) for n in range(0, k)],
+#        [0.5/(0.5*k) for m in range(0, k)]
+#    ], dtype=np.float32)
+#pi = np.array([0.5, 0.5], dtype=np.float32)
 data_assings = np.array(data_assigns)
 d = len(data_assigns)/10
 obs = np.array([ data_assigns[ x*d : x*d + d -1] for x in range(10)])
-A, B, pi, eps, it = baum_welch_multiple(obs=obs, A=A, B=B, pi=pi, kernel=hmm.kernel.c, dtype=np.float32, maxit=100000)
+A, B, pi = hmm.use_hmm.use_hmm(observations=obs, state_count=2, symbol_count=k)
+#A, B, pi, eps, it = baum_welch_multiple(obs=obs, A=A, B=B, pi=pi, kernel=hmm.kernel.c, dtype=np.float32, maxit=100000)
 
 print "Transition matrix:"
 print A

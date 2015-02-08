@@ -1,7 +1,7 @@
 import numpy
 import multiprocessing
 import hmm.algorithms
-import hmm.kernel.c
+import hmm.kernel.python
 
 
 class Thread(multiprocessing.Process):
@@ -30,9 +30,9 @@ class Task(object):
         self.pi = pi 
     def __call__(self):
         return hmm.algorithms.noms_and_denoms(
-            self.A, self.B, self.pi, self.ob, kernel=hmm.kernel.c)
+            self.A, self.B, self.pi, self.ob, kernel=hmm.kernel.python)
 
-def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.c):
+def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.python):
     K, N, M = len(obs), len(A), len(B[0])
     nomsA   = numpy.zeros((K,N,N), dtype=A.dtype)
     denomsA = numpy.zeros((K,N),   dtype=A.dtype)

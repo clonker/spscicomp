@@ -101,13 +101,86 @@ def get_observation_part(filename, observation_length, observation_count, dtype=
     return numpy.fromfile(observation_file, count=observation_length, dtype=dtype)
 
 
-def write_test_array(filename, array_size, dtype=numpy.float32):
-    myarray = numpy.zeros((array_size), dtype)
-    for i in range(array_size):
-        myarray[i] = i
-    myarray.tofile(filename)
+def generate_random_matrice(state_count, symbol_count, dtype=numpy.float32):
+    """ generate a numpy array with shape (state_count, symbol_count)
+    each line is normalized to 1
+    useful to generate a random matrice for A or B
+    """
+    B = numpy.zeros((state_count, symbol_count), dtype=dtype)
+    for x in range(state_count):
+        rowsum = 0.0
+        for y in range(symbol_count):
+            r = numpy.random.random()
+            rowsum += r
+            B[x, y] = r
+        B[x] /= rowsum
+    return B
 
 
+def generate_random_array(state_count, dtype=numpy.float32):
+    """ generate a numpy array with shape (state_count)
+    array is normalized to 1
+    useful to generate a random array for pi
+    """
+    pi = numpy.zeros((state_count), dtype=dtype)
+    rowsum = 0.0
+    for x in range(state_count):
+        r = numpy.random.random()
+        rowsum += r
+        pi[x] = r
+    pi /= rowsum
+    return pi
+
+
+def available_cpu_count():
+    """ Number of available virtual or physical CPUs on this system, i.e.
+    user/real as output by time(1) when called with an optimally scaling
+    userspace-only program
+    taken from: http://stackoverflow.com/questions/1006289/how-to-find-out-the-number-of-cpus-using-python
+    """
+
+    # cpuset
+    # cpuset may restrict the number of *available* processors
+    try:
+        m = re.search(r'(?m)^Cpus_allowed:\s*(.*)$',
+                      open('/proc/self/status').read())
+        if m:
+            res = bin(int(m.group(1).replace(',', ''), 16)).count('1')
+            if res > 0:
+                return res
+    except IOError:
+        pass
+
+    # Python 2.6+
+    try:
+        import multiprocessing
+        return multiprocessing.cpu_count()
+    except (ImportError, NotImplementedError):
+        pass
+
+
+class Tarjan(object):
+
+    def __init__(self, adjacence_matrice):
+        self.adjacence_matrice = adjacence_matrice
+        self.dfs = numpy.zeros((len(adjacence_matrice)))
+        self.lowlink = numpy.zeros((len(adjacence_matrice)))
+        self.maxdfs = 0
+        self.stack = numpy.array()
+        self.unvisited = numpy.array()
+        for i in len(adjacence_matrice):
+            self.unvisited.append(i)
+        while len(self.unvisited)>0:
+            tarjan(self.unvisited.pop())
+
+    def tarjan(self, node):
+        self.dfs[node] = self.maxdfs
+        self.lowlink[node] = self.maxdfs
+        self.maxdfs += 1
+        
+        
+        
+    
 
 class ChunkedArray(object):
     """ Chunks an Array into several small arrays

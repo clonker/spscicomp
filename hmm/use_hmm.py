@@ -1,13 +1,15 @@
 #!/usr/bin/python
+import os
+import re
+import subprocess
 import numpy
 import hmm.algorithms
 import hmm.concurrent
 import hmm.utility
 import hmm.kernel.python
-import hmm.kernel.c
 
 
-def hmm_baum_welch(A, B, pi, observation, maxit=1000, kernel=hmm.kernel.c, accuracy=-1, dtype=numpy.float32):
+def hmm_baum_welch(A, B, pi, observation, maxit=1000, kernel=hmm.kernel.python, accuracy=-1, dtype=numpy.float32):
     """ update the model (A, B, pi) with the observation
 
     Parameters
@@ -34,7 +36,7 @@ def hmm_baum_welch(A, B, pi, observation, maxit=1000, kernel=hmm.kernel.c, accur
     return A, B, pi
 
 
-def hmm_baum_welch_file(A, B, pi, observation_file, observation_length, observation_count, observation_dtype=numpy.int16, maxit=1000, kernel=hmm.kernel.c, accuracy=-1, dtype=numpy.float32):
+def hmm_baum_welch_file(A, B, pi, observation_file, observation_length, observation_count, observation_dtype=numpy.int16, maxit=1000, kernel=hmm.kernel.python, accuracy=-1, dtype=numpy.float32):
     """ updates the model (A, B, pi) with observation_count observations stored in observation_file
     different orders in observationsequences result in different model
 
@@ -70,7 +72,7 @@ def hmm_baum_welch_file(A, B, pi, observation_file, observation_length, observat
     return A1, B1, pi1
 
 
-def hmm_baum_welch_multiple(A, B, pi, observations, maxit=1000, kernel=hmm.kernel.c, accuracy=-1, dtype=numpy.float32):
+def hmm_baum_welch_multiple(A, B, pi, observations, maxit=1000, kernel=hmm.kernel.python, accuracy=-1, dtype=numpy.float32):
     """ update the model (A, B, pi) with the observationslist
     all optimisation are done with the original model
 
@@ -103,7 +105,7 @@ def hmm_baum_welch_multiple(A, B, pi, observations, maxit=1000, kernel=hmm.kerne
     return A1, B1, pi1
 
 
-def hmm_baum_welch_multiple_file(A, B, pi, observation_file, observation_length, observation_count, observation_dtype=numpy.int16, maxit=1000, kernel=hmm.kernel.c, accuracy=-1, dtype=numpy.float32):
+def hmm_baum_welch_multiple_file(A, B, pi, observation_file, observation_length, observation_count, observation_dtype=numpy.int16, maxit=1000, kernel=hmm.kernel.python, accuracy=-1, dtype=numpy.float32):
     """ updates the model (A, B, pi) with observation_count observations stored in observation_file
     different orders in observationsequences result in different model
 
@@ -158,6 +160,44 @@ def hmm_baum_welch_multiple_file(A, B, pi, observation_file, observation_length,
         it += 1
 
     return A, B, pi
+
+
+
+
+
+
+def use_hmm(observations, state_count, symbol_count, maxit=1000, accuracy=-1, dtype=numpy.float32):
+
+    A = hmm.utility.generate_random_matrice(state_count, state_count)
+    B = hmm.utility.generate_random_matrice(state_count, symbol_count)
+    pi = hmm.utility.generate_random_array(state_count)
+
+    try:
+        __import__('hmm.kernel.opencl')
+        A, B, pi, eps, it = hmm.algorithms.baum_welch_multiple(obs=observations, A=A, B=B, pi=pi, kernel=hmm.kernel.opencl, dtype=numpy.float32, maxit=maxit)
+        print 'OpenCL-Kernel used'
+        return A, B, pi
+    except (ImportError, NotImplementedError):
+        print 'OpenCL-Kernel not available'
+
+    try:
+        __import__('hmm.kernel.c')
+        A, B, pi, eps, it = hmm.algorithms.baum_welch_multiple(obs=observations, A=A, B=B, pi=pi, kernel=hmm.kernel.c, dtype=numpy.float32, maxit=maxit)
+        print 'C-Kernel used'
+        return A, B, pi
+    except:
+        print 'C-Kernel not available'
+    
+    print 'Using Python-Kernel'
+    A, B, pi, eps, it = hmm.algorithms.baum_welch_multiple(obs=observations, A=A, B=B, pi=pi, kernel=hmm.kernel.python, dtype=numpy.float32, maxit=maxit)
+    return A, B, pi
+
+
+#use_hmm([], 5, 3)
+
+#    if (hmm.utility.available_cpu_count()>4):
+        
+
 
 
 #obs = numpy.loadtxt('data/hmm1.10000.dat', dtype=numpy.int16)

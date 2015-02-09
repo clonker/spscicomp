@@ -1,10 +1,10 @@
-import hmm.kernel.opencl
-import hmm.kernel.fortran
-import hmm.kernel.python
-import hmm.kernel.c
-import hmm.algorithms
-import hmm.utility
-import hmm.lib.c
+import spscicomp.hmm.kernel.opencl
+import spscicomp.hmm.kernel.fortran
+import spscicomp.hmm.kernel.python
+import spscicomp.hmm.kernel.c
+import spscicomp.hmm.algorithms
+import spscicomp.hmm.utility
+import spscicomp.hmm.lib.c
 import numpy
 import pyopencl
 import time as t
@@ -12,7 +12,7 @@ import time as t
 N, M = 3, 2
 
 
-transition_matrix, symbol_probablity, initial_distribution = hmm.utility.get_models()['t2']
+transition_matrix, symbol_probablity, initial_distribution = spscicomp.hmm.utility.get_models()['t2']
 
 numpy.set_printoptions(precision=3, suppress=True)
 
@@ -31,7 +31,7 @@ maxit = 100
 
 print 'start opencl'
 start = t.time()
-print hmm.kernel.opencl.baum_welch(
+print spscicomp.hmm.kernel.opencl.baum_welch(
 		obs[0],
 		transition_matrix,
 		symbol_probablity,
@@ -43,9 +43,9 @@ print 'opencl baum welch', end-start
 
 print 'start c'
 start = t.time()
-print hmm.algorithms.baum_welch_multiple([obs[0]], transition_matrix,
+print spscicomp.hmm.algorithms.baum_welch_multiple([obs[0]], transition_matrix,
 	symbol_probablity, initial_distribution,
-	maxit=maxit, kernel=hmm.kernel.c, accuracy=-1, dtype=numpy.float32)	
+	maxit=maxit, kernel=spscicomp.hmm.kernel.c, accuracy=-1, dtype=numpy.float32)
 end = t.time()
 print 'c baum welch:', end-start
 

@@ -1,5 +1,5 @@
 import numpy as np
-import Tica_PrincipleComp as ticaPrinComp
+import spscicomp.tica.Tica_PrincipleComp as ticaPrinComp
 import numpy.matlib as matlib
 from common_data_importer import CommonBinaryFileDataImporter
 

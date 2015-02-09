@@ -1,6 +1,6 @@
 import unittest
 import numpy
-from hmm.utility import ChunkedArray
+from spscicomp.hmm.utility import ChunkedArray
 
 
 

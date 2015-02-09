@@ -1,6 +1,6 @@
-import kmeans_c_extension as kmc
-from kmeans.kmeans import DefaultKmeans
-from kmeans_metric import EuclideanMetric
+import spscicomp.kmeans.extension.kmeans_c_extension as kmc
+from spscicomp.kmeans.kmeans import DefaultKmeans
+from spscicomp.kmeans.kmeans_metric import EuclideanMetric
 
 
 class CKmeans(DefaultKmeans):

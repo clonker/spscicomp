@@ -1,10 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-from common_data_importer import CommonFileDataImporter
-from kmeans import DefaultKmeans
-from kmeans_data_generator import KmeansRandomDataGenerator
-from opencl.opencl_kmeans import OpenCLKmeans
+from spscicomp.common.common_data_importer import CommonFileDataImporter
+from spscicomp.kmeans import DefaultKmeans
+from spscicomp.kmeans.kmeans_data_generator import KmeansRandomDataGenerator
+from spscicomp.kmeans.opencl.opencl_kmeans import OpenCLKmeans
 
 
 #data_generator = KmeansRandomDataGenerator(100000, 2, 3)

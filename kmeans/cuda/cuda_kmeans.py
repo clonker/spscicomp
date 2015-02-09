@@ -1,6 +1,6 @@
-from extension.c_kmeans import CKmeans
-from cuda import kmeans_c_extension_cuda as kmc_cuda
-from kmeans_metric import EuclideanMetric
+from spscicomp.kmeans.extension.c_kmeans import CKmeans
+from spscicomp.kmeans.cuda import kmeans_c_extension_cuda as kmc_cuda
+from spscicomp.kmeans.kmeans_metric import EuclideanMetric
 
 
 class CUDAKmeans(CKmeans):

@@ -1,8 +1,8 @@
 import numpy 
-import hmm.kernel.python
+import spscicomp.hmm.kernel.python
 import os
 
-def random_sequence(A, B, pi, T, kernel=hmm.kernel.python):
+def random_sequence(A, B, pi, T, kernel=spscicomp.hmm.kernel.python):
     obs = kernel.random_sequence(A, B, pi, T)
     return obs
 
@@ -67,7 +67,7 @@ models['t2'] = (
 def get_models():
     return models
 
-def compare_models(A1, B1, pi1, A2, B2, pi2, T, kernel=hmm.kernel.python):
+def compare_models(A1, B1, pi1, A2, B2, pi2, T, kernel=spscicomp.hmm.kernel.python):
     """ Give a measure for the similarity of two models."""
     obs = kernel.random_sequence(A2, B2, pi2, T)
     logprob1, _, _ = kernel.forward(A1, B1, pi1, obs)

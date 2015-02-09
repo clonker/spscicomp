@@ -1,17 +1,17 @@
 #!/usr/bin/python
 
 import numpy    
-import hmm.kernel.c
-import hmm.kernel.python
+import spscicomp.hmm.kernel.c
+import spscicomp.hmm.kernel.python
 #import hmm.kernel.fortran
-import hmm.kernel.python_memmap
-import hmm.algorithms
-import hmm.concurrent
-import hmm.utility
+import spscicomp.hmm.kernel.python_memmap
+import spscicomp.hmm.algorithms
+import spscicomp.hmm.concurrent
+import spscicomp.hmm.utility
 import time as t
 
 # initial conditions
-A, B, pi = hmm.utility.get_models()['t2']
+A, B, pi = spscicomp.hmm.utility.get_models()['t2']
 
 print 'Read data ...'
 
@@ -31,7 +31,7 @@ accuracy = -1
 numpy.set_printoptions(suppress=True)
 
 
-kernels = [ hmm.kernel.c ]
+kernels = [ spscicomp.hmm.kernel.c ]
 
 print
 print 'perform Baum-Welch algorithm'
@@ -46,7 +46,7 @@ for kernel in kernels:
         print 'observation length: ', len(ob)
         start = t.time()
         A1, B1, pi1, prob, it = \
-            hmm.algorithms.baum_welch(
+            spscicomp.hmm.algorithms.baum_welch(
                 ob, A, B, pi, 
                 maxit=maxit, kernel=kernel, accuracy=accuracy, dtype=numpy.float32
             )
@@ -69,7 +69,7 @@ for kernel in kernels:
     print 'kernel: ', kernel
     start = t.time()
     A1, B1, pi1, prob, it = \
-        hmm.algorithms.baum_welch_multiple(
+        spscicomp.hmm.algorithms.baum_welch_multiple(
             obs2, A, B, pi, 
             maxit=maxit, kernel=kernel, accuracy=accuracy, dtype=numpy.float32
         )
@@ -91,7 +91,7 @@ for kernel in kernels:
     print 'kernel: ', kernel
     start = t.time()
     A1, B1, pi1, prob, it = \
-        hmm.concurrent.baum_welch_multiple(
+        spscicomp.hmm.concurrent.baum_welch_multiple(
             obs2, A, B, pi, 
             maxit=maxit, kernel=kernel, accuracy=accuracy
         )

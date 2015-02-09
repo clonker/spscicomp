@@ -1,7 +1,7 @@
-import hmm.kernel.python
+import spscicomp.hmm.kernel.python
 import numpy
 
-def noms_and_denoms(A, B, pi, ob, kernel=hmm.kernel.python, dtype=numpy.float32):
+def noms_and_denoms(A, B, pi, ob, kernel=spscicomp.hmm.kernel.python, dtype=numpy.float32):
     T = len(ob)
     weight, alpha, scaling = kernel.forward(A, B, pi, ob, dtype)
     beta   = kernel.backward(A, B, ob, scaling, dtype)
@@ -42,7 +42,8 @@ def update_multiple(weights, noms_A, denoms_A, noms_B, denoms_B, gamma_0, dtype=
     return A, B, pi
 
 
-def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.python, dtype=numpy.float32):
+def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=spscicomp.hmm.kernel.python,
+                        dtype=numpy.float32):
     K, N, M = len(obs), len(A), len(B[0])
     nomsA   = numpy.zeros((K,N,N), dtype=dtype)
     denomsA = numpy.zeros((K,N),   dtype=dtype)
@@ -71,7 +72,7 @@ def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.ker
 
     return A, B, pi, new_probability, it
 
-def baum_welch(ob, A, B, pi, accuracy=1e-3, maxit=1000, kernel=hmm.kernel.python, dtype=numpy.float32):
+def baum_welch(ob, A, B, pi, accuracy=1e-3, maxit=1000, kernel=spscicomp.hmm.kernel.python, dtype=numpy.float32):
     """ Perform an optimization iteration with a given initial model.
 
     Locally maximize P(O|A,B,pi) in a neighborhood of (A,B,pi) by iterating

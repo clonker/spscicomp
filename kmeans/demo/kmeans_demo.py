@@ -1,6 +1,6 @@
-from kmeans import DefaultKmeans
-from common.common_data_importer import *
-from kmeans_plot import *
+from spscicomp.kmeans import DefaultKmeans
+from spscicomp.common.common_data_importer import *
+from spscicomp.kmeans.kmeans_plot import *
 
 
 def plot_data(data):

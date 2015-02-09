@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 from matplotlib.legend_handler import HandlerLine2D
 import numpy as np
 
-from Tica_Amuse import TicaAmuse
+from spscicomp.tica.Tica_Amuse import TicaAmuse
 from common_data_importer import CommonBinaryFileDataImporter
 from time import time
 

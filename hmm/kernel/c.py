@@ -1,4 +1,4 @@
-import hmm.lib.c as ext
+import spscicomp.hmm.lib.c as ext
 import numpy
 
 def forward_no_scaling(A, B, pi, ob, dtype=numpy.float32):

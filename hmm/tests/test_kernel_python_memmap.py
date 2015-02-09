@@ -1,5 +1,5 @@
-import hmm.kernel.python_memmap
-import hmm.utility
+import spscicomp.hmm.kernel.python_memmap
+import spscicomp.hmm.utility
 import unittest
 import numpy
 
@@ -8,9 +8,9 @@ import numpy
 
 class TestCounts(unittest.TestCase):
 
-    kernel = hmm.kernel.python_memmap
+    kernel = spscicomp.hmm.kernel.python_memmap
     ob = numpy.array([1, 0, 1, 1], dtype=numpy.int16)
-    A, B, pi = hmm.utility.get_models()['equi32']
+    A, B, pi = spscicomp.hmm.utility.get_models()['equi32']
     dtype = numpy.float32
 
     def test_symbol_counts_is_same_as_per_hand(self):
@@ -46,9 +46,9 @@ class TestCounts(unittest.TestCase):
 
 class TestScaling(unittest.TestCase):
 
-    kernel = hmm.kernel.python_memmap
+    kernel = spscicomp.hmm.kernel.python_memmap
     ob = numpy.array([1, 0, 1, 1])
-    A, B, pi = hmm.utility.get_models()['equi32']
+    A, B, pi = spscicomp.hmm.utility.get_models()['equi32']
     dtype = numpy.float32
 
     def test_transition_counts_independ(self):
@@ -87,9 +87,9 @@ class TestScaling(unittest.TestCase):
 
 class TestForward(unittest.TestCase):
     ob = numpy.array([1, 0, 1, 1, 0, 1, 1, 1])
-    A, B, pi = hmm.utility.get_models()['equi32']
+    A, B, pi = spscicomp.hmm.utility.get_models()['equi32']
     dtype = numpy.float32
-    kernel = hmm.kernel.python_memmap
+    kernel = spscicomp.hmm.kernel.python_memmap
 
     def test_induction_no_scaling(self):
         ob = self.ob
@@ -108,9 +108,9 @@ class TestForward(unittest.TestCase):
 
 class TestCallErrors(unittest.TestCase):
     dtype = numpy.float64
-    kernel = hmm.kernel.python_memmap
+    kernel = spscicomp.hmm.kernel.python_memmap
     ob = numpy.array([1, 0, 1, 1])
-    A, B, pi = hmm.utility.get_models()['equi32']
+    A, B, pi = spscicomp.hmm.utility.get_models()['equi32']
 
     def test_forward(self):
         self.kernel.forward(self.A, self.B, self.pi, self.ob, self.dtype)

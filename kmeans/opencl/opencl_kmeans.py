@@ -4,12 +4,12 @@ import string
 import numpy as np
 import pyopencl as cl
 
-from kmeans import DefaultKmeans
-from kmeans_metric import EuclideanMetric
-import logger
+from spscicomp.kmeans.kmeans import DefaultKmeans
+from spscicomp.kmeans.kmeans_metric import EuclideanMetric
+from spscicomp.common.logger import Logger
 
 
-LOG = logger.Logger(__name__).get()
+LOG = Logger(__name__).get()
 
 
 class OpenCLKmeans(DefaultKmeans):

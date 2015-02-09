@@ -2,9 +2,9 @@ import unittest
 import pyopencl
 import string
 import numpy
-import hmm.utility
-import hmm.kernel.python as pyhmm
-import hmm.kernel.c as chmm
+import spscicomp.hmm.utility
+import spscicomp.hmm.kernel.python as pyhmm
+import spscicomp.hmm.kernel.c as chmm
 import time as t
 
 platform = pyopencl.get_platforms()[0]
@@ -472,7 +472,7 @@ class TestOpenCLMatchesPython(TestTemplateKernel):
 class TestSameAsMatrixMult(unittest.TestCase):
 
     def test_forward_same_as_matrix_mult(self):
-        A, B, pi = hmm.utility.get_models()['t2']
+        A, B, pi = spscicomp.hmm.utility.get_models()['t2']
         ob = numpy.array([1, 0, 1, 0, 1], numpy.int16)
         T = len(ob)
         N,M = B.shape

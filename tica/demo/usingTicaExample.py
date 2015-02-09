@@ -1,5 +1,5 @@
 
-from Tica_Amuse import TicaAmuse
+from spscicomp.tica.Tica_Amuse import TicaAmuse
 from time import time
 
 start = time()

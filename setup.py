@@ -110,7 +110,7 @@ setup(
     package_data={'spscicomp.kmeans.opencl': ['opencl_kmeans.cl']},
     url="https://github.com/florianlitzinger/spscicomp",
     include_dirs=[numpy.get_include()], 
-    requires=['numpy', 'pyopencl'],
+    requires=['numpy'],
     ext_modules=[
         Extension('spscicomp.hmm.lib.c', 
             sources=['hmm/lib/c/extension.c', 'hmm/lib/c/hmm.c', 'hmm/lib/c/hmm32.c']),

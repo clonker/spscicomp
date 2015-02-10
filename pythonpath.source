@@ -1,3 +1,0 @@
-export SPSCICOMP=`pwd`
-export PYTHONPATH=$SPSCICOMP:$SPSCICOMP/hmm:$SPSCICOMP/tica:$SPSCICOMP/kmeans:$SPSCICOMP/common:$SPSCICOMP/kmeans/extension:$SPSCICOMP/tica/extension/ticaC:$SPSCICOMP/hmm/kernel
-

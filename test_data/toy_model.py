@@ -1,30 +1,28 @@
 import numpy as np
+import argparse
 from spscicomp.common.logger import Logger
 from spscicomp.tica.Tica_Amuse import TicaAmuse
 from spscicomp.common.common_data_importer import CommonBinaryFileDataImporter
 from spscicomp.kmeans.kmeans_main import kmeans
 from spscicomp.hmm.use_hmm import use_hmm
 
-'''
-    So far generated output:
 
-    TICA: C extension not found, using Python implementation
-    15001
-    19:23:23 DEBUG kmeans_main: implementation chosen = <class 'opencl.opencl_kmeans.OpenCLKmeans'>
-    Transition matrix:
-    [[ 0.70012271  0.29997399]
-     [ 0.29997399  0.70012271]]
-'''
 '''
 Generate data for a toy model (for testing).
 '''
 
 LOG = Logger(__name__).get()
 
-# TODO configure this from the command line instead setting it in the code?
-generate_plots = True
-n_random_walk_steps = 1500
-kmeans_k = 4
+parser = argparse.ArgumentParser(description='Test the pipeline of algorithms using a random toy model.')
+parser.add_argument('--plot', action='store_true', help='show plots')
+parser.add_argument('-s', '--steps', default='1500', type=int, help='number of random walk steps (default: 1500)')
+parser.add_argument('-k', default='4', type=int, help='number of clusters for the k-means algorithm (default: 4)')
+args = parser.parse_args()
+LOG.debug("Options given: " + str(args))
+
+generate_plots = args.plot
+n_random_walk_steps = args.steps
+kmeans_k = args.k
 
 if generate_plots:
     try:
@@ -144,24 +142,13 @@ if generate_plots:
     matplotlib.pyplot.show()
 
 
-# print data_assigns
 # III) Use HMM with 2 hidden states. You should be able to recover the transition matrix
-# A, B, pi = hmm.utility.get_models()['equi32']
-# A = np.array([[0.7, 0.3], [0.3, 0.7]], dtype=np.float32)
-#B = np.array(
-#    [
-#        [0.5/(0.5*k) for n in range(0, k)],
-#        [0.5/(0.5*k) for m in range(0, k)]
-#    ], dtype=np.float32)
-#pi = np.array([0.5, 0.5], dtype=np.float32)
 data_assigns = np.array(data_assigns)
 d = len(data_assigns) / 10
 obs = np.array([data_assigns[x * d: x * d + d - 1] for x in range(10)])
 A, B, pi = use_hmm(observations=obs, state_count=2, symbol_count=kmeans_k)
-#A, B, pi, eps, it = baum_welch_multiple(obs=obs, A=A, B=B, pi=pi, kernel=hmm.kernel.c, dtype=np.float32, maxit=100000)
 
-LOG.debug("Transition matrix:")
-LOG.debug(A)
+LOG.debug("Transition matrix:\n" + str(A))
 
 # cleanup
 # os.remove(binary_file)

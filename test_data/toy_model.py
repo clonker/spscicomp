@@ -157,11 +157,11 @@ if generate_plots:
 data_assigns = np.array(data_assigns)
 d = len(data_assigns) / 10
 obs = np.array([data_assigns[x * d: x * d + d - 1] for x in range(10)])
-A, B, pi = use_hmm(observations=obs, state_count=2, symbol_count=k)
+A, B, pi = use_hmm(observations=obs, state_count=2, symbol_count=kmeans_k)
 #A, B, pi, eps, it = baum_welch_multiple(obs=obs, A=A, B=B, pi=pi, kernel=hmm.kernel.c, dtype=np.float32, maxit=100000)
 
-print "Transition matrix:"
-print A
+LOG.debug("Transition matrix:")
+LOG.debug(A)
 
 # cleanup
 # os.remove(binary_file)

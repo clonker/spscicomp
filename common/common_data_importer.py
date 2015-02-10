@@ -1,5 +1,9 @@
 from abc import ABCMeta, abstractmethod
 import numpy as np
+from spscicomp.common.logger import Logger
+
+
+LOG = Logger(__name__).get()
 
 
 class CommonDataImporter:
@@ -172,18 +176,22 @@ class CommonBinaryFileDataImporter(CommonDataImporter):
         :return: A numpy array of data points.
         :rtype: numpy.array
         """
-        start_position = self._position
-        end_position = start_position + size
-        if len(self._file) < end_position:
-            end_position = len(self._file)
-        self._position += size
-        if self._position >= len(self._file):
-            self._hasMoreData = False
+        try:
+            start_position = self._position
+            end_position = start_position + size
+            if len(self._file) < end_position:
+                end_position = len(self._file)
+            self._position += size
+            if self._position >= len(self._file):
+                self._hasMoreData = False
 
-        self._last_start_pos = start_position
-        self._last_end_pos = end_position
+            self._last_start_pos = start_position
+            self._last_end_pos = end_position
 
-        return self._file[start_position:end_position]
+            return self._file[start_position:end_position]
+        finally:
+            if not self._hasMoreData:
+                self.close_file()
 
     def rewind(self):
         """
@@ -191,6 +199,7 @@ class CommonBinaryFileDataImporter(CommonDataImporter):
         """
         self._position = 0
         self._hasMoreData = True
+        self.init_file_input_stream()
 
     def has_more_data(self):
         """
@@ -208,11 +217,9 @@ class CommonBinaryFileDataImporter(CommonDataImporter):
         self._outFile = np.load(self._fileNameOut, mmap_mode='r+')
 
     def write_data(self, i_data):
-
         """
-	    Assumption: i_data has same size like data of the last get_data() call
-	    """
-
+        Assumption: i_data has same size like data of the last get_data() call
+        """
         self._outFile[self._last_start_pos:self._last_end_pos] = i_data
 
     def get_shape_outFile(self):
@@ -248,3 +255,13 @@ class CommonBinaryFileDataImporter(CommonDataImporter):
         self._last_end_pos = end_position
 
         return self._outFile[start_position:end_position]
+
+    def close_file(self):
+        """Close the file handle if it is open."""
+        try:
+            if self._file is not None:
+                # See http://docs.scipy.org/doc/numpy/reference/generated/numpy.memmap.html:
+                # Delete the memmap instance to close.
+                del self._file
+        except AttributeError:
+            LOG.debug("Failed to close mmap file since it was closed/deleted already.")

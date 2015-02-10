@@ -125,7 +125,7 @@ setup(
                 ] + cuda_ext_modules,
     extras_require={
         'OpenCL': ['pyopencl'],
-        'Plots': ['matplotlib']
+        'Plots': ['matplotlib', 'pylab']
     },
     cmdclass=cuda_cmdclass
 )

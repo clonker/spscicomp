@@ -15,6 +15,7 @@ def find_in_path(name, path):
             return os.path.abspath(binpath)
     return None
 
+
 def locate_cuda():
     """Locate the CUDA environment on the system
 
@@ -34,10 +35,10 @@ def locate_cuda():
         nvcc = find_in_path('nvcc', os.environ['PATH'])
         if nvcc is None:
             raise EnvironmentError('The nvcc binary could not be '
-                'located in your $PATH. Either add it to your path, or set $CUDAHOME')
+                                   'located in your $PATH. Either add it to your path, or set $CUDAHOME')
         home = os.path.dirname(os.path.dirname(nvcc))
 
-    cudaconfig = {'home':home, 'nvcc':nvcc,
+    cudaconfig = {'home': home, 'nvcc': nvcc,
                   'include': pjoin(home, 'include'),
                   'lib64': pjoin(home, 'lib64')}
     for k, v in cudaconfig.iteritems():
@@ -45,6 +46,7 @@ def locate_cuda():
             raise EnvironmentError('The CUDA %s path could not be located in %s' % (k, v))
 
     return cudaconfig
+
 
 def compiler_for_nvcc(self):
     """
@@ -74,6 +76,7 @@ def compiler_for_nvcc(self):
     # inject our redefined _compile method into the class
     self._compile = _compile
 
+
 # run the customized_compiler
 class custom_build_ext(build_ext):
     def build_extensions(self):
@@ -83,41 +86,46 @@ class custom_build_ext(build_ext):
 
 try:
     CUDA = locate_cuda()
-    cuda_ext_modules=[
-            Extension('kmeans_c_extension_cuda',
-                sources=['kmeans_c_extension.cpp', 'kmeans_chunk_center_cuda.cu'],
-                library_dirs=[CUDA['lib64']],
-                libraries=['cudart'],
-                runtime_library_dirs=[CUDA['lib64']],
-                extra_compile_args={'nvcc': ['-arch=sm_20', '--ptxas-options=-v', '-c', '--compiler-options', "'-fPIC'"]},
-                include_dirs=[numpy.get_include(), CUDA['include'], 'src'])
+    cuda_ext_modules = [
+        Extension('kmeans_c_extension_cuda',
+                  sources=['kmeans_c_extension.cpp', 'kmeans_chunk_center_cuda.cu'],
+                  library_dirs=[CUDA['lib64']],
+                  libraries=['cudart'],
+                  runtime_library_dirs=[CUDA['lib64']],
+                  extra_compile_args={
+                      'nvcc': ['-arch=sm_20', '--ptxas-options=-v', '-c', '--compiler-options', "'-fPIC'"]},
+                  include_dirs=[numpy.get_include(), CUDA['include'], 'src'])
     ]
-    cuda_cmdclass={'build_ext': custom_build_ext}
+    cuda_cmdclass = {'build_ext': custom_build_ext}
 except:
-    cuda_ext_modules=[]
-    cuda_cmdclass={}
-
+    cuda_ext_modules = []
+    cuda_cmdclass = {}
 
 setup(
     name='spscicomp',
     version='1.0',
-    packages=['spscicomp', 
-              'spscicomp.common', 
-              'spscicomp.hmm', 'spscicomp.hmm.kernel', 'spscicomp.hmm.lib', 
-              'spscicomp.kmeans', 'spscicomp.kmeans.extension', 'spscicomp.kmeans.opencl', 'spscicomp.kmeans.cuda', 
+    packages=['spscicomp',
+              'spscicomp.common',
+              'spscicomp.hmm', 'spscicomp.hmm.kernel', 'spscicomp.hmm.lib',
+              'spscicomp.kmeans', 'spscicomp.kmeans.extension', 'spscicomp.kmeans.opencl', 'spscicomp.kmeans.cuda',
               'spscicomp.tica', 'spscicomp.tica.extension', 'spscicomp.tica.extension.ticaC'],
     package_dir={'spscicomp': './'},
     package_data={'spscicomp.kmeans.opencl': ['opencl_kmeans.cl']},
     url="https://github.com/florianlitzinger/spscicomp",
-    include_dirs=[numpy.get_include()], 
+    include_dirs=[numpy.get_include()],
     requires=['numpy'],
     ext_modules=[
-        Extension('spscicomp.hmm.lib.c', 
-            sources=['hmm/lib/c/extension.c', 'hmm/lib/c/hmm.c', 'hmm/lib/c/hmm32.c']),
-        Extension('spscicomp.kmeans.extension.kmeans_c_extension', 
-            sources=['kmeans/extension/kmeans_c_extension.cpp', 'kmeans/extension/kmeans_chunk_center.cpp']),
-        Extension('spscicomp.tica.extension.ticaC.ticaC',
-            sources = ['tica/extension/ticaC/Tica_CExtension.cpp']),
-    ] + cuda_ext_modules,
+                    Extension('spscicomp.hmm.lib.c',
+                              sources=['hmm/lib/c/extension.c', 'hmm/lib/c/hmm.c', 'hmm/lib/c/hmm32.c']),
+                    Extension('spscicomp.kmeans.extension.kmeans_c_extension',
+                              sources=['kmeans/extension/kmeans_c_extension.cpp',
+                                       'kmeans/extension/kmeans_chunk_center.cpp']),
+                    Extension('spscicomp.tica.extension.ticaC.ticaC',
+                              sources=['tica/extension/ticaC/Tica_CExtension.cpp']),
+                ] + cuda_ext_modules,
+    extras_require={
+        'OpenCL': ['pyopencl'],
+        'Plots': ['matplotlib']
+    },
     cmdclass=cuda_cmdclass
 )

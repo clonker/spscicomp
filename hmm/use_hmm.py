@@ -1,6 +1,3 @@
-import os
-import re
-import subprocess
 import numpy
 import spscicomp.hmm.algorithms
 import spscicomp.hmm.concurrent
@@ -36,7 +33,7 @@ def hmm_baum_welch(A, B, pi, observation, maxit=1000, kernel=spscicomp.hmm.kerne
     -------
     new model (A, B, pi) optimized by observation
     """
-    A, B, pi, prob, it = spscicomp.hmm.algorithms.baum_welch(obs, A, B, pi, maxit=maxit, kernel=kernel,
+    A, B, pi, prob, it = spscicomp.hmm.algorithms.baum_welch(observation, A, B, pi, maxit=maxit, kernel=kernel,
                                                              accuracy=accuracy, dtype=dtype)
     return A, B, pi
 
@@ -185,7 +182,7 @@ def use_hmm(observations, state_count, symbol_count, maxit=1000, accuracy=-1, dt
         __import__('spscicomp.hmm.kernel.opencl')
         A, B, pi, eps, it = spscicomp.hmm.algorithms.baum_welch_multiple(obs=observations, A=A, B=B, pi=pi,
                                                                          kernel=spscicomp.hmm.kernel.opencl,
-                                                                         dtype=numpy.float32, maxit=maxit)
+                                                                         dtype=dtype, maxit=maxit, accuracy=accuracy)
         LOG.debug('OpenCL-Kernel used')
         return A, B, pi
     except:
@@ -193,9 +190,13 @@ def use_hmm(observations, state_count, symbol_count, maxit=1000, accuracy=-1, dt
 
     try:
         __import__('spscicomp.hmm.kernel.c')
+        if numpy.result_type(observations) != numpy.int16:
+            LOG.debug('Observations data type was not int16, thus casting it for c-extension.')
+            observations = numpy.array(observations, dtype=numpy.int16)
+
         A, B, pi, eps, it = spscicomp.hmm.algorithms.baum_welch_multiple(obs=observations, A=A, B=B, pi=pi,
-                                                               kernel=spscicomp.hmm.kernel.c, dtype=numpy.float32,
-                                                               maxit=maxit)
+                                                               kernel=spscicomp.hmm.kernel.c, dtype=dtype,
+                                                               maxit=maxit, accuracy=accuracy)
         LOG.debug('C-Kernel used')
         return A, B, pi
     except:
@@ -204,7 +205,8 @@ def use_hmm(observations, state_count, symbol_count, maxit=1000, accuracy=-1, dt
     LOG.debug('Using Python-Kernel')
     A, B, pi, eps, it = spscicomp.hmm.algorithms.baum_welch_multiple(obs=observations, A=A, B=B, pi=pi,
                                                                      kernel=spscicomp.hmm.kernel.python,
-                                                                     dtype=numpy.float32, maxit=maxit)
+                                                                     dtype=numpy.float32, maxit=maxit,
+                                                                     accuracy=accuracy)
     return A, B, pi
 
 

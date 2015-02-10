@@ -5,17 +5,17 @@ from common_data_importer import CommonBinaryFileDataImporter
 from array import array
 import os
 
-try:
-    import ticaC
-
-    use_extension = True
-    print('TICA: Using C extension')
-except:
-    use_extension = False
-    print('TICA: C extension not found, using Python implementation')
-
-# short patch
+#short patch while extension be work in progress
 use_extension = False
+print('TICA: C extension work in progress, using Python implementation')
+# try:
+#     import ticaC
+#
+#     use_extension = True
+#     print('TICA: Using C extension')
+# except:
+#     use_extension = False
+#     print('TICA: C extension not found, using Python implementation')
 
 class TicaPrinComp:
     """
@@ -34,10 +34,18 @@ class TicaPrinComp:
 
     :param i_timeLag: In this setting the data has time-dependencies where i_timeLag is some lag constant.
     :type i_timeLag: int
+
+    :param i_useDampingAdapt: A Boolean flag to use a method for adapting the damping parameter `i_addEps`.
+    Default setting is `True`
+    :type bool
     """
 
-    def __init__(self, i_inFileName = None, i_outFileName = "../testdata/tica_tempOutput.npy", i_addEpsilon = 1e-16,
-                 i_timeLag = 1):
+    def __init__(self
+                 , i_inFileName = None
+                 , i_outFileName = "../testdata/tica_tempOutput.npy"
+                 , i_addEpsilon = 1e-9
+                 , i_timeLag = 1
+                 , i_useDampingAdapt = True):
 
         self.param_fileSizeThreshold = 500 * 1e+6  # file size in byte
         self.param_outFileName = i_outFileName
@@ -46,14 +54,14 @@ class TicaPrinComp:
 
             self.m_fileSize = os.path.getsize(i_inFileName)
             self.m_dataImporter = CommonBinaryFileDataImporter(i_inFileName)
-            # self.m_dataImporter.create_out_file(self.param_outFileName)
 
+            self.param_useDampingAdapt = i_useDampingAdapt
             self.param_addEpsilon = i_addEpsilon
             self.param_chunkSize = None
             self.param_timeLag = i_timeLag
             self.computeChunkSize()
-            print("Chunk Size")
-            print(self.param_chunkSize)
+            # print("Chunk Size")
+            # print(self.param_chunkSize)
             self.m_covMat = np.array([])
             self.m_eigenDecomp = ticaEDecomp.TicaEigenDecomp(None)
             self.m_colMeans = None
@@ -238,6 +246,31 @@ class TicaPrinComp:
         self.m_eigenDecomp.computeEigenDecomp(self.m_covMat)
 
     # ---------------------------------------------------------------------------------------------#
+    def naiveDampingParamAdapt(self):
+        """
+        This function adapts possible singular eigenvalues of the covariance matrix.
+        This is done in a naive way by adding small constants to the effect that small negative eigenvalues
+        become positive and eigenvalues which are `nan` will be set on a small not negative number.
+        :return:
+        """
+
+        temp = self.m_eigenDecomp.m_eigenValReal + self.param_addEpsilon
+
+        if ( any(temp < 0) or any(np.isnan(temp)) ):
+
+            iter = 1
+            while ( any(temp < 0) or any(np.isnan(temp)) ):
+
+                temp = self.m_eigenDecomp.m_eigenValReal + self.param_addEpsilon * 10**iter
+                iter += 1
+
+            return 1.0 / np.sqrt(temp)
+
+        else:
+
+            return 1.0 / np.sqrt(temp)
+
+    # ---------------------------------------------------------------------------------------------#
     def normalizePCs(self, i_pcsChunk):
         """
         This function computes the normalizes the principle components :math:`Y` of the input data :math:`X`.
@@ -252,7 +285,15 @@ class TicaPrinComp:
         :rtype: numpy.array
         """
 
-        lamb = 1.0 / np.sqrt(self.m_eigenDecomp.m_eigenValReal + self.param_addEpsilon)
+        temp = self.m_eigenDecomp.m_eigenValReal + self.param_addEpsilon
+
+        if ( any(temp < 0) or any(np.isnan(temp)) ) and self.param_useDampingAdapt:
+
+            lamb = self.naiveDampingParamAdapt()
+
+        else:
+
+            lamb = 1.0 / np.sqrt(self.m_eigenDecomp.m_eigenValReal + self.param_addEpsilon)
 
         if not 1 < i_pcsChunk.shape[0]:
 

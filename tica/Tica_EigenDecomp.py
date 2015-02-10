@@ -50,6 +50,8 @@ class TicaEigenDecomp:
         """
         Performs the eigen decomposition of :class:`.numpy.linalg` and rearrange(see :func:`.reorderingEigenV`)
         the eigenvalues if they are real.
+        If the eigenvalues have a imaginary part a warning will logged, the imaginary parts will be set to zero
+        and the real parts will be rearranged.
         """
 
         self.m_matrix = np.asmatrix(i_matrix, dtype=np.float32)
@@ -57,4 +59,12 @@ class TicaEigenDecomp:
 
         if not any( 1e-15 < self.m_eigenVal.imag ):
 
+            self.reorderingEigenV()
+
+        else:
+
+            print('TICA: Warning: eigenvalues of covariance matrix have imaginary part!')
+            im = np.asarray(self.m_eigenVal.imag)
+            im.fill(0.0)
+            self.m_eigenVal.imag = im;
             self.reorderingEigenV()

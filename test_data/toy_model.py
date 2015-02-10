@@ -98,7 +98,7 @@ data_assigns = kmeans(k, importer=CommonBinaryFileDataImporter(filename=out_file
 #        [0.5/(0.5*k) for m in range(0, k)]
 #    ], dtype=np.float32)
 #pi = np.array([0.5, 0.5], dtype=np.float32)
-data_assigns = np.array(data_assigns)
+data_assigns = np.array(data_assigns, np.int16)
 d = len(data_assigns)/10
 obs = np.array([ data_assigns[ x*d : x*d + d -1] for x in range(10)])
 A, B, pi = use_hmm(observations=obs, state_count=2, symbol_count=k)

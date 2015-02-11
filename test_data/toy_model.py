@@ -1,5 +1,6 @@
 import numpy as np
 import argparse
+import sys
 from spscicomp.common.logger import Logger
 from spscicomp.tica.Tica_Amuse import TicaAmuse
 from spscicomp.common.common_data_importer import CommonBinaryFileDataImporter
@@ -20,13 +21,15 @@ parser.add_argument('-k', default='4', type=int, help='number of clusters for th
 args = parser.parse_args()
 LOG.debug("Options given: " + str(args))
 
-generate_plots = args.plot
+generate_plots = True  # args.plot
 n_random_walk_steps = args.steps
 kmeans_k = args.k
 
 if generate_plots:
     try:
         import matplotlib
+        import matplotlib.pyplot as plt
+        import matplotlib.cm as cm
         import pylab
     except:
         LOG.error("Failed to import matplotlib even though generate_plots was set to true.")
@@ -35,6 +38,8 @@ if generate_plots:
 p11 = 0.97
 p22 = 0.76
 P = [[p11, 1 - p11], [1 - p22, p22]]
+
+LOG.debug("Initial transition matrix:\n" + str(P))
 
 # 2) Generate a discrete trajectory (Markov chain) s(t) using P
 s_t = []
@@ -66,13 +71,16 @@ if generate_plots:
     LOG.debug("Generating plot for random walk scattered by normal distribution in 2D.")
     x = [ob[0] for ob in x_t]
     y = [ob[1] for ob in x_t]
-    matplotlib.pyplot.scatter(x,y)
-    matplotlib.pyplot.show()
+    plt.ioff()
+    plt.figure(1)
+    plt.subplot(411)
+    plt.title('Normal distribution of random walk')
+    plt.scatter(x, y)
 
 
 # 5) Define a rotation matrix and translation vector to rotate the low-dimensional x(t) into a high-
 # dimensional space Omega. We get X(t)
-angle = 0.333
+angle = 3.141
 transl = np.asarray([5, 5, 5, 5, 5], dtype=np.float32)
 rot = np.matrix([[0, 0, np.cos(angle), -np.sin(angle), 0], [0, 0, np.sin(angle), np.cos(angle), 0]])
 X_t = []
@@ -94,11 +102,11 @@ for k in range(0, len(X_t)):
     X_t[k] = X_t[k] + np.random.multivariate_normal(mean=mean, cov=cov)
 
 if generate_plots:
-    LOG.debug("Generating plot for rotated (by "+str(angle)+") random walk with Gaussian background noise.")
-    x = [ob[2] for ob in X_t]
-    y = [ob[3] for ob in X_t]
-    matplotlib.pyplot.scatter(x,y)
-    matplotlib.pyplot.show()
+    LOG.debug("Generating plot for rotated (by " + str(angle) + ") random walk with Gaussian background noise.")
+    plt.figure(1)
+    plt.subplot(412)
+    plt.title('Projection of normal distribution of random walk, rotated and with noise')
+    plt.scatter([ob[2] for ob in X_t], [ob[3] for ob in X_t])
 
 '''
     Reconstruction
@@ -121,8 +129,11 @@ if generate_plots:
     while importer.has_more_data():
         data = importer.get_data(n_random_walk_steps)
     importer.close_file()
-    matplotlib.pyplot.scatter([ob[0] for ob in data], [ob[1] for ob in data])
-    matplotlib.pyplot.show()
+    plt.figure(1)
+    plt.subplot(413)
+    plt.title('TICA result')
+    plt.scatter([ob[0] for ob in data], [ob[1] for ob in data])
+
 
 
 # II) Use k-means to discretize the data (must separate the two Gaussian distributions in order to
@@ -131,15 +142,31 @@ data_assigns = kmeans(kmeans_k, importer=CommonBinaryFileDataImporter(filename=o
 
 if generate_plots:
     LOG.debug("Generating plot for kmeans clustering.")
-    colors = matplotlib.cm.rainbow(np.linspace(0, 1, kmeans_k))
+    colors = cm.rainbow(np.linspace(0, 1, kmeans_k))
     importer = CommonBinaryFileDataImporter(filename=out_file)
     data = None
     while importer.has_more_data():
         data = importer.get_data(n_random_walk_steps)
     importer.close_file()
+    plt.figure(1)
+    plt.subplot(414)
+    plt.title('K-Means result')
     for k, x_t in enumerate(data):
-        matplotlib.pyplot.plot(x_t[0], x_t[1], linestyle='None', marker='.', color=colors[data_assigns[k]])
-    matplotlib.pyplot.show()
+        plt.plot(x_t[0], x_t[1], linestyle='None', marker='.', color=colors[data_assigns[k]])
+
+    # fix axes
+    x_lim = [sys.maxint, -sys.maxint]
+    y_lim = [sys.maxint, -sys.maxint]
+    for i in [1, 2, 3, 4]:
+        axes = plt.subplot(4, 1, i)
+        x_lim = [min(axes.get_xlim()[0], x_lim[0]), max(axes.get_xlim()[1], x_lim[1])]
+        y_lim = [min(axes.get_ylim()[0], y_lim[0]), max(axes.get_ylim()[1], y_lim[1])]
+    for i in [1, 2, 3, 4]:
+        axes = plt.subplot(4, 1, i)
+        axes.set_xlim(x_lim)
+        axes.set_ylim(y_lim)
+    # show plot
+    plt.show()
 
 
 # III) Use HMM with 2 hidden states. You should be able to recover the transition matrix
@@ -148,8 +175,20 @@ d = len(data_assigns) / 10
 obs = np.array([data_assigns[x * d: x * d + d - 1] for x in range(10)])
 A, B, pi = use_hmm(observations=obs, state_count=2, symbol_count=kmeans_k)
 
-LOG.debug("Transition matrix:\n" + str(A))
+if generate_plots:
+    fig = plt.figure(2)
+    ax = fig.add_subplot(1, 2, 1)
+    ax.set_aspect('equal')
+    plt.title('Initial transition matrix')
+    plt.imshow(P, interpolation='nearest', cmap=cm.ocean)
+    plt.colorbar()
 
-# cleanup
-# os.remove(binary_file)
-# os.remove(out_file)
+    ax = fig.add_subplot(1, 2, 2)
+    ax.set_aspect('equal')
+    plt.title('Estimated transition matrix')
+    plt.imshow(A, interpolation='nearest', cmap=cm.ocean)
+    plt.colorbar()
+
+    plt.show()
+
+LOG.debug("Estimated transition matrix:\n" + str(A))

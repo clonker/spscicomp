@@ -64,13 +64,11 @@ def compiler_for_nvcc(self):
     # based on source extension: we add it.
     def _compile(obj, src, ext, cc_args, extra_postargs, pp_opts):
         # use the cuda for .cu files
-
         if os.path.splitext(src)[1] == '.cu':
             self.set_executable('compiler_so', CUDA['nvcc'])
             # use only a subset of the extra_postargs, which are 1-1 translated
             # from the extra_compile_args in the Extension class
             postargs = extra_postargs['nvcc']
-            print postargs
         else:
             postargs = extra_postargs['default']
         super(obj, src, ext, cc_args, postargs, pp_opts)

@@ -9,14 +9,19 @@ from spscicomp.common.logger import Logger
 
 LOG = Logger(__name__).get()
 
-try:
-    from spscicomp.tica.extension.ticaC import ticaC
+#short patch while extension be work in progress
+use_extension = False
+print('TICA: C extension work in progress, using Python implementation')
 
-    use_extension = True
-    LOG.debug('TICA: Using C extension')
-except:
-    use_extension = False
-    LOG.debug('TICA: C extension not found, using Python implementation')
+
+#try:
+#    from spscicomp.tica.extension.ticaC import ticaC
+#
+#    use_extension = True
+#    LOG.debug('TICA: Using C extension')
+#except:
+#    use_extension = False
+#    LOG.debug('TICA: C extension not found, using Python implementation')
 
 
 class TicaPrinComp:
@@ -36,10 +41,18 @@ class TicaPrinComp:
 
     :param i_timeLag: In this setting the data has time-dependencies where i_timeLag is some lag constant.
     :type i_timeLag: int
+
+    :param i_useDampingAdapt: A Boolean flag to use a method for adapting the damping parameter `i_addEps`.
+    Default setting is `True`
+    :type bool
     """
 
-    def __init__(self, i_inFileName = None, i_outFileName = "../testdata/tica_tempOutput.npy", i_addEpsilon = 1e-16,
-                 i_timeLag = 1):
+    def __init__(self
+                 , i_inFileName = None
+                 , i_outFileName = "../testdata/tica_tempOutput.npy"
+                 , i_addEpsilon = 1e-9
+                 , i_timeLag = 1
+                 , i_useDampingAdapt = True):
 
         self.param_fileSizeThreshold = 500 * 1e+6  # file size in byte
         self.param_outFileName = i_outFileName
@@ -48,14 +61,13 @@ class TicaPrinComp:
 
             self.m_fileSize = os.path.getsize(i_inFileName)
             self.m_dataImporter = CommonBinaryFileDataImporter(i_inFileName)
-            # self.m_dataImporter.create_out_file(self.param_outFileName)
 
+            self.param_useDampingAdapt = i_useDampingAdapt
             self.param_addEpsilon = i_addEpsilon
             self.param_chunkSize = None
             self.param_timeLag = i_timeLag
             self.computeChunkSize()
-            #print("Chunk Size")
-            #print(self.param_chunkSize)
+
             self.m_covMat = np.array([])
             self.m_eigenDecomp = ticaEDecomp.TicaEigenDecomp(None)
             self.m_colMeans = None
@@ -164,9 +176,11 @@ class TicaPrinComp:
         self.m_dataImporter.rewind()
 
         shapeData = self.m_dataImporter.get_shape_inFile()
+        #use_extension = False
         if use_extension is True:
             self.m_covMat = ticaC.computeCov(self.m_dataImporter.get_data,
                                              self.m_dataImporter.has_more_data,
+                                             self.m_colMeans,
                                              self.param_chunkSize,
                                              shapeData[0])
         else:
@@ -180,9 +194,10 @@ class TicaPrinComp:
 
             while self.m_dataImporter.has_more_data():
 
+                dataChunk = np.asarray(self.m_dataImporter.get_data(self.param_chunkSize)[:, :], dtype=np.float32)
                 meanFreeChunk = dataChunk[:, 0:shapeData[1]] - self.m_colMeans
-                self.m_covMat = np.dot(meanFreeChunk.transpose(), meanFreeChunk)
                 del dataChunk
+                self.m_covMat += np.dot(meanFreeChunk.transpose(), meanFreeChunk)
                 del meanFreeChunk
 
             self.m_covMat *= 1.0 / (shapeData[0] - 1.0)
@@ -237,6 +252,31 @@ class TicaPrinComp:
         self.m_eigenDecomp.computeEigenDecomp(self.m_covMat)
 
     # ---------------------------------------------------------------------------------------------#
+    def naiveDampingParamAdapt(self):
+        """
+        This function adapts possible singular eigenvalues of the covariance matrix.
+        This is done in a naive way by adding small constants to the effect that small negative eigenvalues
+        become positive and eigenvalues which are `nan` will be set on a small not negative number.
+        :return:
+        """
+
+        temp = self.m_eigenDecomp.m_eigenValReal + self.param_addEpsilon
+
+        if ( any(temp < 0) or any(np.isnan(temp)) ):
+
+            iter = 1
+            while ( any(temp < 0) or any(np.isnan(temp)) ):
+
+                temp = self.m_eigenDecomp.m_eigenValReal + self.param_addEpsilon * 10**iter
+                iter += 1
+
+            return 1.0 / np.sqrt(temp)
+
+        else:
+
+            return 1.0 / np.sqrt(temp)
+
+    # ---------------------------------------------------------------------------------------------#
     def normalizePCs(self, i_pcsChunk):
         """
         This function computes the normalizes the principle components :math:`Y` of the input data :math:`X`.
@@ -251,7 +291,15 @@ class TicaPrinComp:
         :rtype: numpy.array
         """
 
-        lamb = 1.0 / np.sqrt(self.m_eigenDecomp.m_eigenValReal + self.param_addEpsilon)
+        temp = self.m_eigenDecomp.m_eigenValReal + self.param_addEpsilon
+
+        if ( any(temp < 0) or any(np.isnan(temp)) ) and self.param_useDampingAdapt:
+
+            lamb = self.naiveDampingParamAdapt()
+
+        else:
+
+            lamb = 1.0 / np.sqrt(self.m_eigenDecomp.m_eigenValReal + self.param_addEpsilon)
 
         if not 1 < i_pcsChunk.shape[0]:
 
@@ -339,7 +387,7 @@ class TicaPrinComp:
                 self.m_covMatTimeLag += np.dot(normalizedPCs[0:(m - self.param_timeLag), :].T,
                                                normalizedPCs[self.param_timeLag:m, :])
 
-            lastRowChunkBefore = normalizedPCs[m - 1, :]
+            lastRowsChunkBefore = normalizedPCs[(m-self.param_timeLag):m, :]
             del normalizedPCs
 
             while self.m_prinComp.m_dataImporter.has_more_data():
@@ -352,15 +400,15 @@ class TicaPrinComp:
                 del dataChunk
                 normalizedPCs = self.m_prinComp.normalizePCs(pcs)
                 del pcs
-                self.m_covMatTimeLag += np.dot(matlib.asmatrix(lastRowChunkBefore).T,
-                                               matlib.asmatrix(normalizedPCs[0, :]))
+                self.m_covMatTimeLag += np.dot(matlib.asmatrix(lastRowsChunkBefore).T,
+                                               matlib.asmatrix(normalizedPCs[0:self.param_timeLag, :]))
 
                 if 1 < m:
 
                     self.m_covMatTimeLag += np.dot(normalizedPCs[0:(m - self.param_timeLag), :].T,
                                                    normalizedPCs[self.param_timeLag:m, :])
 
-                lastRowChunkBefore = normalizedPCs[m - 1, :]
+                lastRowsChunkBefore = normalizedPCs[(m-self.param_timeLag):m, :]
                 del normalizedPCs
 
             self.m_covMatTimeLag *= 1.0 / (dimData[0] - self.param_timeLag - 1.0)

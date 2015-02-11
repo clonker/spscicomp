@@ -14,21 +14,31 @@ class TicaAmuse:
     :param i_outFileName: A filename of the binary file which stored the results.
     :type i_outFileName: string
 
-    :param i_addEps: A damping parameter to avoid dividing by zero in the normalization part of the amuse algorithmen.
+    :param i_addEps: A damping parameter to avoid dividing by zero in the normalization part of the amuse algorithm.
     :type i_addEps: float
 
     :param i_timeLag: In this setting the data has time-dependencies where i_timeLag is some lag constant.
     :type i_timeLag: int
+
+    :param i_useDampingAdapt: A Boolean flag to use a method for adapting the damping parameter `i_addEps`.
+    Default setting is `True`
+    :type bool
     """
 
-    def __init__( self, i_inFileName = None, i_outFileName = "../testdata/tica_independentComp.npy", i_addEps = 1e-16, i_timeLag = 1 ):
+    def __init__( self
+                  , i_inFileName = None
+                  , i_outFileName = "../testdata/tica_independentComp.npy"
+                  , i_addEps = 1e-9
+                  , i_timeLag = 1
+                  , i_useDampingAdapt = True ):
 
         if i_inFileName is not None:
 
             self.m_prinCompInst = ticaPrinComp.TicaPrinComp( i_inFileName = i_inFileName
                                                             ,i_outFileName = i_outFileName
                                                             ,i_addEpsilon = i_addEps
-                                                            ,i_timeLag = i_timeLag)
+                                                            ,i_timeLag = i_timeLag
+                                                            ,i_useDampingAdapt = i_useDampingAdapt)
             self.m_prinCompTL   = self.m_prinCompInst.getPrinCompTL(  )
             # self.m_prinCompTL      = ticaPrinComp.TicaPrinCompTimeLagged( '../testdata/covTestBinary.npy', i_outFileName )
 

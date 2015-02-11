@@ -1,3 +1,4 @@
+import importlib
 import numpy
 import spscicomp.hmm.algorithms
 import spscicomp.hmm.concurrent
@@ -105,7 +106,7 @@ def hmm_baum_welch_multiple(A, B, pi, observations, maxit=1000, kernel=spscicomp
     """
     A1, B1, pi1, prob, it = \
         spscicomp.hmm.algorithms.baum_welch_multiple(
-            observations, A, B, pi, 
+            observations, A, B, pi,
             maxit=maxit, kernel=kernel, accuracy=accuracy, dtype=numpy.float32
         )
     return A1, B1, pi1
@@ -158,7 +159,7 @@ def hmm_baum_welch_multiple_file(A, B, pi, observation_file, observation_length,
                                                                      observation_dtype)
             weights[k], nomsA[k], denomsA[k], nomsB[k], denomsB[k], gamma_0[k] = \
                     spscicomp.hmm.algorithms.noms_and_denoms(A, B, pi, observation, kernel=kernel, dtype=dtype)
-        
+
         A, B, pi = spscicomp.hmm.algorithms.update_multiple(weights, nomsA, denomsA, nomsB, denomsB, gamma_0,
                                                             dtype=dtype)
 
@@ -172,48 +173,46 @@ def hmm_baum_welch_multiple_file(A, B, pi, observation_file, observation_length,
     return A, B, pi
 
 
-def use_hmm(observations, state_count, symbol_count, maxit=1000, accuracy=-1, dtype=numpy.float32):
-
-    A = spscicomp.hmm.utility.generate_random_matrice(state_count, state_count)
-    B = spscicomp.hmm.utility.generate_random_matrice(state_count, symbol_count)
-    pi = spscicomp.hmm.utility.generate_random_array(state_count)
-
+def use_hmm(observations, state_count, symbol_count, maxit=1000, accuracy=-1, retries=10, dtype=numpy.float32):
+    curr_A, curr_B, curr_pi = None, None, None
+    curr_eps = None
     try:
-        __import__('spscicomp.hmm.kernel.opencl')
-        A, B, pi, eps, it = spscicomp.hmm.algorithms.baum_welch_multiple(obs=observations, A=A, B=B, pi=pi,
-                                                                         kernel=spscicomp.hmm.kernel.opencl,
-                                                                         dtype=dtype, maxit=maxit, accuracy=accuracy)
+        importlib.import_module('spscicomp.hmm.kernel.opencl')
+        kernel = spscicomp.hmm.kernel.opencl
         LOG.debug('OpenCL-Kernel used')
-        return A, B, pi
     except:
         LOG.debug('OpenCL-Kernel not available')
+        try:
+            importlib.import_module('spscicomp.hmm.kernel.c')
+            kernel = spscicomp.hmm.kernel.c
+            if numpy.result_type(observations) != numpy.int16:
+                LOG.debug('Observations data type was not int16, thus casting it for c-extension.')
+                observations = numpy.array(observations, dtype=numpy.int16)
+            LOG.debug('C-Kernel used')
+        except:
+            LOG.debug('C-Kernel not available')
+            kernel = spscicomp.hmm.kernel.python
+            LOG.debug('Python-Kernel used')
 
-    try:
-        __import__('spscicomp.hmm.kernel.c')
-        if numpy.result_type(observations) != numpy.int16:
-            LOG.debug('Observations data type was not int16, thus casting it for c-extension.')
-            observations = numpy.array(observations, dtype=numpy.int16)
+    for _ in range(0, retries):
+        A = spscicomp.hmm.utility.generate_random_matrice(state_count, state_count)
+        B = spscicomp.hmm.utility.generate_random_matrice(state_count, symbol_count)
+        pi = spscicomp.hmm.utility.generate_random_array(state_count)
 
         A, B, pi, eps, it = spscicomp.hmm.algorithms.baum_welch_multiple(obs=observations, A=A, B=B, pi=pi,
-                                                               kernel=spscicomp.hmm.kernel.c, dtype=dtype,
-                                                               maxit=maxit, accuracy=accuracy)
-        LOG.debug('C-Kernel used')
-        return A, B, pi
-    except:
-        LOG.debug('C-Kernel not available')
-    
-    LOG.debug('Using Python-Kernel')
-    A, B, pi, eps, it = spscicomp.hmm.algorithms.baum_welch_multiple(obs=observations, A=A, B=B, pi=pi,
-                                                                     kernel=spscicomp.hmm.kernel.python,
-                                                                     dtype=numpy.float32, maxit=maxit,
-                                                                     accuracy=accuracy)
-    return A, B, pi
+                                                                         kernel=kernel,
+                                                                         dtype=dtype, maxit=maxit, accuracy=accuracy)
+
+        if curr_eps is None or curr_eps < eps:
+            curr_A, curr_B, curr_pi, curr_eps = A, B, pi, eps
+
+    return curr_A, curr_B, curr_pi
 
 
 #use_hmm([], 5, 3)
 
 #    if (hmm.utility.available_cpu_count()>4):
-        
+
 
 
 

@@ -173,7 +173,7 @@ if generate_plots:
 data_assigns = np.array(data_assigns)
 d = len(data_assigns) / 10
 obs = np.array([data_assigns[x * d: x * d + d - 1] for x in range(10)])
-A, B, pi = use_hmm(observations=obs, state_count=2, symbol_count=kmeans_k)
+A, B, pi = use_hmm(observations=obs, state_count=2, symbol_count=kmeans_k, retries=10)
 
 if generate_plots:
     fig = plt.figure(2)

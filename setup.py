@@ -3,7 +3,6 @@ from distutils.command.build_ext import build_ext
 import os
 from os.path import join as pjoin
 import numpy
-import distutils.ccompiler
 
 # adapted from https://github.com/rmcgibbo/npcuda-example
 def find_in_path(name, path):

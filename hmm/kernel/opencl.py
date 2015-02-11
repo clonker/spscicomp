@@ -1,3 +1,4 @@
+import os
 import pyopencl
 import numpy
 import string
@@ -288,10 +289,10 @@ def forward_naive(ob, A, B, pi, T, N, alpha, matrices, scratch):
     return alpha
 
 
-_FORWARD_SOURCE_SCALING  = 'lib/opencl/forward_naive_scaling.cl'
-_FORWARD_SOURCE          = 'lib/opencl/forward.cl'
-_BACKWARD_SOURCE_SCALING = 'lib/opencl/backward_naive_scaling.cl'
-_UPDATE_SOURCE           = 'lib/opencl/update.cl'
+_FORWARD_SOURCE_SCALING  = str(os.path.dirname(os.path.realpath(__file__))) + '/../lib/opencl/forward_naive_scaling.cl'
+_FORWARD_SOURCE          = str(os.path.dirname(os.path.realpath(__file__))) + '/../lib/opencl/forward.cl'
+_BACKWARD_SOURCE_SCALING = str(os.path.dirname(os.path.realpath(__file__))) + '/../lib/opencl/backward_naive_scaling.cl'
+_UPDATE_SOURCE           = str(os.path.dirname(os.path.realpath(__file__))) + '/../lib/opencl/update.cl'
 
 platform = pyopencl.get_platforms()[0]
 device   = platform.get_devices()[0]

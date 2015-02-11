@@ -1,21 +1,28 @@
 import numpy as np
 import numpy.matlib as matlib
-import Tica_EigenDecomp as ticaEDecomp
+import spscicomp.tica.Tica_EigenDecomp as ticaEDecomp
 from common_data_importer import CommonBinaryFileDataImporter
 from array import array
 import os
+from spscicomp.common.logger import Logger
+
+
+LOG = Logger(__name__).get()
 
 #short patch while extension be work in progress
 use_extension = False
 print('TICA: C extension work in progress, using Python implementation')
-# try:
-#     import ticaC
+
+
+#try:
+#    from spscicomp.tica.extension.ticaC import ticaC
 #
-#     use_extension = True
-#     print('TICA: Using C extension')
-# except:
-#     use_extension = False
-#     print('TICA: C extension not found, using Python implementation')
+#    use_extension = True
+#    LOG.debug('TICA: Using C extension')
+#except:
+#    use_extension = False
+#    LOG.debug('TICA: C extension not found, using Python implementation')
+
 
 class TicaPrinComp:
     """
@@ -60,8 +67,7 @@ class TicaPrinComp:
             self.param_chunkSize = None
             self.param_timeLag = i_timeLag
             self.computeChunkSize()
-            # print("Chunk Size")
-            # print(self.param_chunkSize)
+
             self.m_covMat = np.array([])
             self.m_eigenDecomp = ticaEDecomp.TicaEigenDecomp(None)
             self.m_colMeans = None

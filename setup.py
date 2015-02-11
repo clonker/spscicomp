@@ -3,7 +3,7 @@ from distutils.command.build_ext import build_ext
 import os
 from os.path import join as pjoin
 import numpy
-
+import distutils.ccompiler
 
 # adapted from https://github.com/rmcgibbo/npcuda-example
 def find_in_path(name, path):
@@ -65,10 +65,15 @@ def compiler_for_nvcc(self):
     # based on source extension: we add it.
     def _compile(obj, src, ext, cc_args, extra_postargs, pp_opts):
         # use the cuda for .cu files
-        self.set_executable('compiler_so', CUDA['nvcc'])
-        # use only a subset of the extra_postargs, which are 1-1 translated
-        # from the extra_compile_args in the Extension class
-        postargs = extra_postargs['nvcc']
+
+        if os.path.splitext(src)[1] == '.cu':
+            self.set_executable('compiler_so', CUDA['nvcc'])
+            # use only a subset of the extra_postargs, which are 1-1 translated
+            # from the extra_compile_args in the Extension class
+            postargs = extra_postargs['nvcc']
+            print postargs
+        else:
+            postargs = extra_postargs['default']
         super(obj, src, ext, cc_args, postargs, pp_opts)
         # reset the default compiler_so, which we might have changed for cuda
         self.compiler_so = default_compiler_so
@@ -87,12 +92,12 @@ class custom_build_ext(build_ext):
 try:
     CUDA = locate_cuda()
     cuda_ext_modules = [
-        Extension('kmeans_c_extension_cuda',
-                  sources=['kmeans_c_extension.cpp', 'kmeans_chunk_center_cuda.cu'],
+        Extension('spscicomp.kmeans.cuda.kmeans_c_extension_cuda',
+                  sources=['kmeans/cuda/kmeans_c_extension.cpp', 'kmeans/cuda/kmeans_chunk_center_cuda.cu'],
                   library_dirs=[CUDA['lib64']],
                   libraries=['cudart'],
                   runtime_library_dirs=[CUDA['lib64']],
-                  extra_compile_args={
+                  extra_compile_args={'default' : [],
                       'nvcc': ['-arch=sm_20', '--ptxas-options=-v', '-c', '--compiler-options', "'-fPIC'"]},
                   include_dirs=[numpy.get_include(), CUDA['include'], 'src'])
     ]
@@ -114,14 +119,18 @@ setup(
     url="https://github.com/florianlitzinger/spscicomp",
     include_dirs=[numpy.get_include()],
     requires=['numpy'],
+    # Please add extra_compile_args={'default' : []} to each extension, since the compiler is rewritten.
     ext_modules=[
                     Extension('spscicomp.hmm.lib.c',
-                              sources=['hmm/lib/c/extension.c', 'hmm/lib/c/hmm.c', 'hmm/lib/c/hmm32.c']),
+                              sources=['hmm/lib/c/extension.c', 'hmm/lib/c/hmm.c', 'hmm/lib/c/hmm32.c'],
+                              extra_compile_args={'default' : []}),
                     Extension('spscicomp.kmeans.extension.kmeans_c_extension',
                               sources=['kmeans/extension/kmeans_c_extension.cpp',
-                                       'kmeans/extension/kmeans_chunk_center.cpp']),
+                                       'kmeans/extension/kmeans_chunk_center.cpp'],
+                              extra_compile_args={'default' : []}),
                     Extension('spscicomp.tica.extension.ticaC.ticaC',
-                              sources=['tica/extension/ticaC/Tica_CExtension.cpp']),
+                              sources=['tica/extension/ticaC/Tica_CExtension.cpp'],
+                              extra_compile_args={'default' : []}),
                 ] + cuda_ext_modules,
     extras_require={
         'OpenCL': ['pyopencl'],

@@ -254,7 +254,7 @@ class TicaPrinComp:
     # ---------------------------------------------------------------------------------------------#
     def naiveDampingParamAdapt(self):
         """
-        This function adapts possible singular eigenvalues of the covariance matrix.
+        This function adapts possible very small eigenvalues of the covariance matrix.
         This is done in a naive way by adding small constants to the effect that small negative eigenvalues
         become positive and eigenvalues which are `nan` will be set on a small not negative number.
         :return:
@@ -365,7 +365,7 @@ class TicaPrinComp:
         def computeCovariance(self):
             """
             Computes the time-lagged covariance matrix :math:`C^{\\tau}` with
-            :math:`c_{ij}^{\\tau} = \\frac{1}{N-\\tau-1}\\sum_{t=1}^{N-\\tau}x_{it}x_{jt+\\tau}`
+            :math:`c_{ij}^{\\tau} = \\frac{1}{N-\\tau-1}\\sum_{t=1}^{N-\\tau}x_{ti}x_{(t+\\tau)j}`
             """
 
             self.m_prinComp.m_dataImporter.rewind()

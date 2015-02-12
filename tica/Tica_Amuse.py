@@ -14,7 +14,7 @@ class TicaAmuse:
     :param i_outFileName: A filename of the binary file which stored the results.
     :type i_outFileName: string
 
-    :param i_addEps: A damping parameter to avoid dividing by zero in the normalization part of the amuse algorithm.
+    :param i_addEps: A damping parameter to avoid dividing by zero in the normalization part of the AMUSE-Algorithm.
     :type i_addEps: float
 
     :param i_timeLag: In this setting the data has time-dependencies where i_timeLag is some lag constant.

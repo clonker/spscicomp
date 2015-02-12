@@ -1,8 +1,7 @@
 import numpy as np
-from Tica_Amuse import TicaAmuse
+from spscicomp.tica.Tica_Amuse import TicaAmuse
 from matplotlib import pyplot as plt
-from common_data_importer import CommonBinaryFileDataImporter
-import os
+from spscicomp.tica.common_data_importer import CommonBinaryFileDataImporter
 
 ############################################
 # tica patch of toy_model.py in dev branch

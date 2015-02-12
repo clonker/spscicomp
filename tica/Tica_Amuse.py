@@ -1,7 +1,5 @@
 import numpy as np
 import spscicomp.tica.Tica_PrincipleComp as ticaPrinComp
-import numpy.matlib as matlib
-from common_data_importer import CommonBinaryFileDataImporter
 
 class TicaAmuse:
     """

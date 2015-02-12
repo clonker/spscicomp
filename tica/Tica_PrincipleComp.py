@@ -1,8 +1,7 @@
 import numpy as np
 import numpy.matlib as matlib
 import spscicomp.tica.Tica_EigenDecomp as ticaEDecomp
-from common_data_importer import CommonBinaryFileDataImporter
-from array import array
+from spscicomp.tica.common_data_importer import CommonBinaryFileDataImporter
 import os
 from spscicomp.common.logger import Logger
 
@@ -11,7 +10,7 @@ LOG = Logger(__name__).get()
 
 #short patch while extension be work in progress
 use_extension = False
-print('TICA: C extension work in progress, using Python implementation')
+LOG.debug('TICA: C extension be work in progress, using Python implementation')
 
 
 #try:
@@ -36,7 +35,7 @@ class TicaPrinComp:
     :param i_outFileName: A filename of the binary file in which the results are stored
     :type i_outFileName: string
 
-    :param i_addEpsilon: A damping parameter to avoid dividing by zero in the normalization part of the amuse algorithm.
+    :param i_addEpsilon: A damping parameter to avoid dividing by zero in the normalization part of the AMUSE-Algorithm.
     :type i_addEps: float
 
     :param i_timeLag: In this setting the data has time-dependencies where i_timeLag is some lag constant.

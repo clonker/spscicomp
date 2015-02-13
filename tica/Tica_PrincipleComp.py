@@ -1,8 +1,7 @@
 import numpy as np
 import numpy.matlib as matlib
 import spscicomp.tica.Tica_EigenDecomp as ticaEDecomp
-from common_data_importer import CommonBinaryFileDataImporter
-from array import array
+from spscicomp.tica.common_data_importer import CommonBinaryFileDataImporter
 import os
 from spscicomp.common.logger import Logger
 
@@ -11,7 +10,7 @@ LOG = Logger(__name__).get()
 
 #short patch while extension be work in progress
 use_extension = False
-print('TICA: C extension work in progress, using Python implementation')
+LOG.debug('TICA: C extension be work in progress, using Python implementation')
 
 
 #try:
@@ -36,7 +35,7 @@ class TicaPrinComp:
     :param i_outFileName: A filename of the binary file in which the results are stored
     :type i_outFileName: string
 
-    :param i_addEpsilon: A damping parameter to avoid dividing by zero in the normalization part of the amuse algorithm.
+    :param i_addEpsilon: A damping parameter to avoid dividing by zero in the normalization part of the AMUSE-Algorithm.
     :type i_addEps: float
 
     :param i_timeLag: In this setting the data has time-dependencies where i_timeLag is some lag constant.
@@ -254,7 +253,7 @@ class TicaPrinComp:
     # ---------------------------------------------------------------------------------------------#
     def naiveDampingParamAdapt(self):
         """
-        This function adapts possible singular eigenvalues of the covariance matrix.
+        This function adapts possible very small eigenvalues of the covariance matrix.
         This is done in a naive way by adding small constants to the effect that small negative eigenvalues
         become positive and eigenvalues which are `nan` will be set on a small not negative number.
         :return:
@@ -365,7 +364,7 @@ class TicaPrinComp:
         def computeCovariance(self):
             """
             Computes the time-lagged covariance matrix :math:`C^{\\tau}` with
-            :math:`c_{ij}^{\\tau} = \\frac{1}{N-\\tau-1}\\sum_{t=1}^{N-\\tau}x_{it}x_{jt+\\tau}`
+            :math:`c_{ij}^{\\tau} = \\frac{1}{N-\\tau-1}\\sum_{t=1}^{N-\\tau}x_{ti}x_{(t+\\tau)j}`
             """
 
             self.m_prinComp.m_dataImporter.rewind()

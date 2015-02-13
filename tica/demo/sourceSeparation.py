@@ -3,7 +3,7 @@ from matplotlib.legend_handler import HandlerLine2D
 import numpy as np
 
 from spscicomp.tica.Tica_Amuse import TicaAmuse
-from common_data_importer import CommonBinaryFileDataImporter
+from spscicomp.tica.common_data_importer import CommonBinaryFileDataImporter
 from time import time
 
 mixingImporter  = CommonBinaryFileDataImporter('../testdata/mixedSignalsBinary.npy')

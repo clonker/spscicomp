@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.7.5)  15 JAN 2015 20:49
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.7.5)  13 FEB 2015 09:20
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -922,210 +922,419 @@ LaTeX Font Info:    Font shape `T1/pcr/bx/n' in size <10> not available
 (Font)              Font shape `T1/pcr/b/n' tried instead on input line 139.
  [3] [4]
 Chapter 2.
-LaTeX Font Info:    Try loading font information for TS1+ptm on input line 338.
+LaTeX Font Info:    Try loading font information for TS1+ptm on input line 353.
 
 (/usr/local/texlive/2014/texmf-dist/tex/latex/psnfss/ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
-) [5
+)
+Underfull \hbox (badness 10000) in paragraph at lines 378--378
+[]\T1/ptm/m/it/10 metric=<spscicomp.kmeans.kmeans_metric.EuclideanMetric ob-jec
+t at
+ []
+
+[5
 
 ]
-Underfull \hbox (badness 10000) in paragraph at lines 438--438
-[]\T1/ptm/m/it/10 metric=<kmeans_metric.EuclideanMetric ob-ject at 0x7f19010162
-90>\T1/ptm/m/n/10 , \T1/ptm/m/it/10 im-
+Underfull \hbox (badness 10000) in paragraph at lines 453--453
+[]\T1/ptm/m/it/10 metric=<spscicomp.kmeans.kmeans_metric.EuclideanMetric ob-jec
+t at
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 449--449
-[]\T1/ptm/m/it/10 metric=<kmeans_metric.EuclideanMetric ob-ject at
+Overfull \hbox (87.6919pt too wide) in paragraph at lines 464--464
+[]\T1/ptm/m/it/10 metric=<spscicomp.kmeans.kmeans_metric.EuclideanMetric
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 449--449
-\T1/ptm/m/it/10 0x7f1900f60290>\T1/ptm/m/n/10 , \T1/ptm/m/it/10 im-porter=None\
-T1/ptm/m/n/10 , \T1/ptm/m/it/10 chunk_size=1000\T1/ptm/m/n/10 ,
+Underfull \hbox (badness 10000) in paragraph at lines 464--464
+\T1/ptm/m/it/10 ob-ject at 0x7f24d5f04f10>\T1/ptm/m/n/10 , \T1/ptm/m/it/10 im-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 473--473
+Underfull \hbox (badness 10000) in paragraph at lines 464--464
+\T1/ptm/m/it/10 porter=None\T1/ptm/m/n/10 , \T1/ptm/m/it/10 chunk_size=1000\T1/
+ptm/m/n/10 ,
+ []
+
+[6]
+Underfull \hbox (badness 10000) in paragraph at lines 551--551
+[]\T1/ptm/m/n/10 PyArrayObject \T1/ptm/m/it/10 *data\T1/ptm/m/n/10 , PyArray-Ob
+-ject \T1/ptm/m/it/10 *cen-ters\T1/ptm/m/n/10 , Py-Ob-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 627--627
+[]\T1/ptm/m/n/10 double \T1/ptm/m/it/10 *cu_data\T1/ptm/m/n/10 , dou-ble \T1/pt
+m/m/it/10 *cu_centers\T1/ptm/m/n/10 ,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 627--627
+\T1/ptm/m/n/10 int* \T1/ptm/m/it/10 cu_centers_counter\T1/ptm/m/n/10 , dou-ble*
+ \T1/ptm/m/it/10 cu_new_centers\T1/ptm/m/n/10 ,
+ []
+
+[7]
+Underfull \hbox (badness 10000) in paragraph at lines 671--671
+[]\T1/ptm/m/n/10 PyArrayObject \T1/ptm/m/it/10 *data\T1/ptm/m/n/10 , PyArray-Ob
+-ject \T1/ptm/m/it/10 *cen-ters\T1/ptm/m/n/10 , Py-Ob-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 729--729
 []\T1/ptm/m/it/10 metric=EuclideanMetric()\T1/ptm/m/n/10 , \T1/ptm/m/it/10 im-p
 orter=None\T1/ptm/m/n/10 ,
  []
 
-[6] [7] [8
+[8] [9] [10
 
 ]
 Chapter 3.
-[9] [10
 
-] [11
+Underfull \hbox (badness 10000) in paragraph at lines 840--840
+[]\T1/ptm/m/it/10 ob\T1/ptm/m/n/10 , \T1/ptm/m/it/10 A\T1/ptm/m/n/10 , \T1/ptm/
+m/it/10 B\T1/ptm/m/n/10 , \T1/ptm/m/it/10 pi\T1/ptm/m/n/10 , \T1/ptm/m/it/10 ac
+-cu-racy=0.001\T1/ptm/m/n/10 , \T1/ptm/m/it/10 maxit=1000\T1/ptm/m/n/10 , \T1/p
+tm/m/it/10 ker-
+ []
 
 
-] (./spscicomp.ind [12
+Underfull \hbox (badness 10000) in paragraph at lines 840--840
+\T1/ptm/m/it/10 nel=<module `sp-sci-comp.hmm.kernel.python' from
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 840--840
+\T1/ptm/m/it/10 `/home/florian/PyCharmProjects/spscicomp/hmm/kernel/python.pyc'
+>\T1/ptm/m/n/10 ,
+ []
+
+LaTeX Font Info:    Font shape `T1/phv/bx/n' in size <12> not available
+(Font)              Font shape `T1/phv/b/n' tried instead on input line 925.
+[11] [12]
+LaTeX Font Info:    Font shape `T1/phv/bx/n' in size <9> not available
+(Font)              Font shape `T1/phv/b/n' tried instead on input line 1163.
+ [13] [14]
+Underfull \hbox (badness 10000) in paragraph at lines 1361--1361
+[]\T1/ptm/m/it/10 alpha\T1/ptm/m/n/10 , \T1/ptm/m/it/10 beta\T1/ptm/m/n/10 , \T
+1/ptm/m/it/10 A\T1/ptm/m/n/10 , \T1/ptm/m/it/10 B\T1/ptm/m/n/10 , \T1/ptm/m/it/
+10 ob\T1/ptm/m/n/10 , \T1/ptm/m/it/10 dtype=<type
+ []
+
+[15] [16]
+Chapter 4.
+
+Overfull \hbox (18.07162pt too wide) in paragraph at lines 1480--1480
+[]\T1/ptm/m/it/10 i_inFileName=None\T1/ptm/m/n/10 , \T1/ptm/m/it/10 i_outFileNa
+me='../testdata/tica_independentComp.npy'\T1/ptm/m/n/10 ,
+ []
+
+
+Overfull \hbox (58.52168pt too wide) in paragraph at lines 1542--1542
+[]\T1/ptm/m/it/10 i_inFileName=None\T1/ptm/m/n/10 , \T1/ptm/m/it/10 i_outFileNa
+me='../testdata/tica_tempOutput.npy'\T1/ptm/m/n/10 ,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1542--1542
+\T1/ptm/m/it/10 i_addEpsilon=1e-09\T1/ptm/m/n/10 , \T1/ptm/m/it/10 i_timeLag=1\
+T1/ptm/m/n/10 ,
+ []
+
+[17
+
+] [18] [19] [20]
+Chapter 5.
+[21
+
+] [22
+
+]
+Chapter 6.
+[23] [24
+
+] [25
+
+
+] (./spscicomp.ind [26
 
 
 ]
-Overfull \hbox (25.04964pt too wide) in paragraph at lines 7--8
+Underfull \hbox (badness 10000) in paragraph at lines 16--17
+[]\T1/ptm/m/n/10 calcNumbOfDomComps()
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 19--20
+[]\T1/ptm/m/n/10 CKmeans (class in sp-sci-
+ []
+
+
+Overfull \hbox (25.04964pt too wide) in paragraph at lines 20--21
 []\T1/ptm/m/n/10 close_file() (com-mon_data_importer.CommonFileDataImporter
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 9--10
+Underfull \hbox (badness 10000) in paragraph at lines 23--24
 []\T1/ptm/m/n/10 CommonBinaryFileDataImporter (class in com-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 11--12
+Underfull \hbox (badness 10000) in paragraph at lines 25--26
 []\T1/ptm/m/n/10 CommonFileDataImporter (class in com-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 12--13
+Underfull \hbox (badness 10000) in paragraph at lines 26--27
 []\T1/ptm/m/n/10 CommonSimpleDataImporter (class in com-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 13--14
-[]\T1/ptm/m/n/10 cuda.cuda_kmeans.CUDAKmeans (class in ex-ten-
+Overfull \hbox (4.36009pt too wide) in paragraph at lines 27--28
+[]\T1/ptm/m/n/10 computeChunkSize() (Tica_PrincipleComp.TicaPrinComp
  []
 
 
-Overfull \hbox (49.98967pt too wide) in paragraph at lines 25--26
+Overfull \hbox (1.57994pt too wide) in paragraph at lines 28--29
+[]\T1/ptm/m/n/10 computeColMeans() (Tica_PrincipleComp.TicaPrinComp
+ []
+
+
+Overfull \hbox (5.61009pt too wide) in paragraph at lines 29--30
+[]\T1/ptm/m/n/10 computeCovariance() (Tica_PrincipleComp.TicaPrinComp
+ []
+
+
+Overfull \hbox (117.39905pt too wide) in paragraph at lines 30--32
+[]\T1/ptm/m/n/10 computeCovariance() (Tica_PrincipleComp.TicaPrinComp.TicaPrinC
+ompTimeLagged
+ []
+
+
+Overfull \hbox (30.42029pt too wide) in paragraph at lines 32--33
+[]\T1/ptm/m/n/10 computeEigenDecomp() (Tica_EigenDecomp.TicaEigenDecomp
+ []
+
+
+Overfull \hbox (86.14919pt too wide) in paragraph at lines 33--35
+[]\T1/ptm/m/n/10 computeICs() (Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTime
+Lagged
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 35--36
+[]\T1/ptm/m/n/10 computePCs() (Tica_PrincipleComp.TicaPrinComp
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 36--37
+[]\T1/ptm/m/n/10 cuda.cuda_kmeans.CUDAKmeans (class in sp-sci-
+ []
+
+
+Overfull \hbox (49.98967pt too wide) in paragraph at lines 50--51
 []\T1/ptm/m/n/10 get_centers() (kmeans_data_generator.KmeansRandomDataGenerator
 
  []
 
 
-Overfull \hbox (47.81952pt too wide) in paragraph at lines 26--27
+Overfull \hbox (47.81952pt too wide) in paragraph at lines 51--52
 []\T1/ptm/m/n/10 get_data() (com-mon_data_importer.CommonBinaryFileDataImporter
 
  []
 
 
-Overfull \hbox (20.59981pt too wide) in paragraph at lines 27--28
+Overfull \hbox (20.59981pt too wide) in paragraph at lines 52--53
 []\T1/ptm/m/n/10 get_data() (com-mon_data_importer.CommonFileDataImporter
  []
 
 
-Overfull \hbox (33.3797pt too wide) in paragraph at lines 28--29
+Overfull \hbox (33.3797pt too wide) in paragraph at lines 53--54
 []\T1/ptm/m/n/10 get_data() (com-mon_data_importer.CommonSimpleDataImporter
  []
 
 
-Overfull \hbox (38.32988pt too wide) in paragraph at lines 29--30
+Overfull \hbox (38.32988pt too wide) in paragraph at lines 54--55
 []\T1/ptm/m/n/10 get_data() (kmeans_data_generator.KmeansRandomDataGenerator
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 33--35
+Overfull \hbox (62.81938pt too wide) in paragraph at lines 55--56
+[]\T1/ptm/m/n/10 get_outData() (com-mon_data_importer.CommonBinaryFileDataImpor
+ter
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 60--62
 []\T1/ptm/m/n/10 has_more_data() (com-
  []
 
 
-Overfull \hbox (24.83018pt too wide) in paragraph at lines 33--35
+Overfull \hbox (24.83018pt too wide) in paragraph at lines 60--62
 \T1/ptm/m/n/10 mon_data_importer.CommonBinaryFileDataImporter
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 35--36
+Underfull \hbox (badness 10000) in paragraph at lines 62--63
 []\T1/ptm/m/n/10 has_more_data() (com-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 35--36
+Underfull \hbox (badness 10000) in paragraph at lines 62--63
 \T1/ptm/m/n/10 mon_data_importer.CommonFileDataImporter
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 36--37
+Underfull \hbox (badness 10000) in paragraph at lines 63--64
 []\T1/ptm/m/n/10 has_more_data() (com-
  []
 
 
-Overfull \hbox (10.39037pt too wide) in paragraph at lines 36--37
+Overfull \hbox (10.39037pt too wide) in paragraph at lines 63--64
 \T1/ptm/m/n/10 mon_data_importer.CommonSimpleDataImporter
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 40--42
+Underfull \hbox (badness 10000) in paragraph at lines 67--69
 []\T1/ptm/m/n/10 init_file_input_stream() (com-
  []
 
 
-Overfull \hbox (24.83018pt too wide) in paragraph at lines 40--42
+Overfull \hbox (24.83018pt too wide) in paragraph at lines 67--69
 \T1/ptm/m/n/10 mon_data_importer.CommonBinaryFileDataImporter
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 42--44
+Underfull \hbox (badness 10000) in paragraph at lines 69--71
 []\T1/ptm/m/n/10 init_file_input_stream() (com-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 42--44
+Underfull \hbox (badness 10000) in paragraph at lines 69--71
 \T1/ptm/m/n/10 mon_data_importer.CommonFileDataImporter
  []
 
+[27
 
-Underfull \hbox (badness 10000) in paragraph at lines 53--54
+]
+Underfull \hbox (badness 10000) in paragraph at lines 86--87
 []\T1/ptm/m/n/10 KmeansRandomDataGenerator (class in
  []
 
 
-Overfull \hbox (41.45967pt too wide) in paragraph at lines 61--62
+Underfull \hbox (badness 10000) in paragraph at lines 90--91
+[]\T1/ptm/m/n/10 naiveDampingParamAdapt()
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 91--92
+[]\T1/ptm/m/n/10 normalizePCs() (Tica_PrincipleComp.TicaPrinComp
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 101--103
+[]\T1/ptm/m/n/10 performTransformation()
+ []
+
+
+Overfull \hbox (69.25981pt too wide) in paragraph at lines 101--103
+\T1/ptm/m/n/10 (Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged
+ []
+
+
+Overfull \hbox (10.97049pt too wide) in paragraph at lines 108--109
+[]\T1/ptm/m/n/10 reorderingEigenV() (Tica_EigenDecomp.TicaEigenDecomp
+ []
+
+
+Overfull \hbox (41.45967pt too wide) in paragraph at lines 109--110
 []\T1/ptm/m/n/10 rewind() (com-mon_data_importer.CommonBinaryFileDataImporter
  []
 
 
-Overfull \hbox (14.23996pt too wide) in paragraph at lines 62--63
+Overfull \hbox (14.23996pt too wide) in paragraph at lines 110--111
 []\T1/ptm/m/n/10 rewind() (com-mon_data_importer.CommonFileDataImporter
  []
 
 
-Overfull \hbox (60.55972pt too wide) in paragraph at lines 66--68
+Overfull \hbox (63.52948pt too wide) in paragraph at lines 111--112
+[]\T1/ptm/m/n/10 rewindPatch() (com-mon_data_importer.CommonBinaryFileDataImpor
+ter
+ []
+
+
+Overfull \hbox (85.23912pt too wide) in paragraph at lines 116--118
+[]\T1/ptm/m/n/10 setTimeLag() (Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTime
+Lagged
+ []
+
+
+Overfull \hbox (129.61862pt too wide) in paragraph at lines 122--124
+[]\T1/ptm/m/n/10 symmetrizeCovariance() (Tica_PrincipleComp.TicaPrinComp.TicaPr
+inCompTimeLagged
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 135--136
+[]\T1/ptm/m/n/10 TicaPrinComp.TicaPrinCompTimeLagged (class in
+ []
+
+
+Overfull \hbox (60.55972pt too wide) in paragraph at lines 136--138
 []\T1/ptm/m/n/10 to_binary_file() (kmeans_data_generator.KmeansRandomDataGenera
 tor
  []
 
 
-Overfull \hbox (30.00993pt too wide) in paragraph at lines 68--69
+Overfull \hbox (30.00993pt too wide) in paragraph at lines 138--139
 []\T1/ptm/m/n/10 to_file() (kmeans_data_generator.KmeansRandomDataGenerator
  []
 
-[13
 
-])
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 606.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 606.
+Overfull \hbox (56.14934pt too wide) in paragraph at lines 148--149
+[]\T1/ptm/m/n/10 write_data() (com-mon_data_importer.CommonBinaryFileDataImport
+er
+ []
+
+[28])
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1916.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1916.
  (./spscicomp.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 606.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 606.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1916.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1916.
+
 Package rerunfilecheck Info: File `spscicomp.out' has not changed.
-(rerunfilecheck)             Checksum: 29FF5F1901B095BEE5064AEFCA07D68C;695.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 606.
+(rerunfilecheck)             Checksum: CEBFC92F2AD42B25050930311FB3C45D;1238.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1916.
  ) 
 Here is how much of TeX's memory you used:
- 8866 strings out of 494996
- 125148 string characters out of 6179735
- 221561 words of memory out of 5000000
- 11795 multiletter control sequences out of 15000+600000
- 53492 words of font info for 60 fonts, out of 8000000 for 9000
+ 9052 strings out of 494996
+ 129121 string characters out of 6179735
+ 225238 words of memory out of 5000000
+ 11887 multiletter control sequences out of 15000+600000
+ 64689 words of font info for 69 fonts, out of 8000000 for 9000
  15 hyphenation exceptions out of 8191
- 36i,11n,45p,339b,522s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 36i,12n,45p,435b,565s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/local/texlive/2014/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/local/t
-exlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/te
-xlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texl
-ive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texliv
-e/2014/texmf-dist/fonts/type1/urw/courier/ucrb8a.pfb></usr/local/texlive/2014/t
-exmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/2014/texmf-dis
-t/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/local/texlive/2014/texmf-dist/fonts
-/type1/urw/helvetic/uhvbo8a.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1
-/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/urw/ti
-mes/utmb8a.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/urw/times/utmr8a
-.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on spscicomp.pdf (17 pages, 131603 bytes).
+exlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/te
+xlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/tex
+live/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texli
+ve/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive
+/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texlive/20
+14/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2014/
+texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2014/t
+exmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2014/tex
+mf-dist/fonts/type1/urw/courier/ucrb8a.pfb></usr/local/texlive/2014/texmf-dist/
+fonts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/2014/texmf-dist/fonts/ty
+pe1/urw/helvetic/uhvb8a.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/urw
+/helvetic/uhvbo8a.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/urw/helve
+tic/uhvr8a.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/urw/times/utmb8a
+.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr
+/local/texlive/2014/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on spscicomp.pdf (32 pages, 220490 bytes).
 PDF statistics:
- 281 PDF objects out of 1000 (max. 8388607)
- 246 compressed objects within 3 object streams
- 60 named destinations out of 1000 (max. 500000)
- 105 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 565 PDF objects out of 1000 (max. 8388607)
+ 507 compressed objects within 6 object streams
+ 145 named destinations out of 1000 (max. 500000)
+ 177 words of extra memory for PDF output out of 10000 (max. 10000000)
 

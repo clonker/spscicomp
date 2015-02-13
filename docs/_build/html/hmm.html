@@ -60,7 +60,7 @@
 <span id="algorithms"></span><h2>algorithms<a class="headerlink" href="#module-algorithms" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="algorithms.baum_welch">
-<tt class="descclassname">algorithms.</tt><tt class="descname">baum_welch</tt><big>(</big><em>ob</em>, <em>A</em>, <em>B</em>, <em>pi</em>, <em>accuracy=0.001</em>, <em>maxit=1000</em>, <em>kernel=&lt;module 'hmm.kernel.python' from 'd:\\Studium\\FU\\GitHub\\spscicomp_dev\\hmm\\kernel\\python.py'&gt;</em>, <em>dtype=&lt;class 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#algorithms.baum_welch" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">algorithms.</tt><tt class="descname">baum_welch</tt><big>(</big><em>ob</em>, <em>A</em>, <em>B</em>, <em>pi</em>, <em>accuracy=0.001</em>, <em>maxit=1000</em>, <em>kernel=&lt;module 'spscicomp.hmm.kernel.python' from '/home/florian/PyCharmProjects/spscicomp/hmm/kernel/python.pyc'&gt;</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#algorithms.baum_welch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform an optimization iteration with a given initial model.</p>
 <p>Locally maximize P(O|A,B,pi) in a neighborhood of (A,B,pi) by iterating
 <cite>update</cite>. Stops if the probability does not change or the maximal
@@ -70,14 +70,22 @@ iteration number is reached.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>ob</strong> (<em>numpy.array shape (T)</em>) &#8211; observation sequence</li>
-<li><strong>A</strong> (<em>numpy.array shape (N,N)</em>) &#8211; initial transition matrix</li>
-<li><strong>B</strong> (<em>numpy.array shape (N,M)</em>) &#8211; initial symbol probabilities</li>
-<li><strong>pi</strong> (<em>numpy.array shape (N)</em>) &#8211; initial distribution</li>
-<li><strong>accuracy</strong> (<em>float, optional</em>) &#8211; ending criteria for the iteration</li>
-<li><strong>maxit</strong> (<em>int, optional</em>) &#8211; ending criteria for the iteration</li>
-<li><strong>kernel</strong> (<em>module, optional</em>) &#8211; module containing all functions to make calculations with</li>
-<li><strong>dtype</strong> (<em>{ numpy.float32, numpy.float32 }, optional</em>) &#8211; datatype to be used for the matrices.</li>
+<li><strong>ob</strong> (<em>numpy.array shape (T)</em>) &#8211;
+observation sequence</li>
+<li><strong>A</strong> (<em>numpy.array shape (N,N)</em>) &#8211;
+initial transition matrix</li>
+<li><strong>B</strong> (<em>numpy.array shape (N,M)</em>) &#8211;
+initial symbol probabilities</li>
+<li><strong>pi</strong> (<em>numpy.array shape (N)</em>) &#8211;
+initial distribution</li>
+<li><strong>accuracy</strong> (<em>float, optional</em>) &#8211;
+ending criteria for the iteration</li>
+<li><strong>maxit</strong> (<em>int, optional</em>) &#8211;
+ending criteria for the iteration</li>
+<li><strong>kernel</strong> (<em>module, optional</em>) &#8211;
+module containing all functions to make calculations with</li>
+<li><strong>dtype</strong> (<em>{ numpy.float32, numpy.float32 }, optional</em>) &#8211;
+datatype to be used for the matrices.</li>
 </ul>
 </td>
 </tr>
@@ -100,11 +108,8 @@ number of iterations done</li>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p><a class="reference internal" href="#module-kernel.python" title="kernel.python"><tt class="xref py py-func docutils literal"><span class="pre">kernel.python()</span></tt></a>, <tt class="xref py py-func docutils literal"><span class="pre">kernel.c()</span></tt>, <tt class="xref py py-func docutils literal"><span class="pre">kernel.fortran()</span></tt></p>
-<dl class="last docutils">
-<dt><tt class="xref py py-func docutils literal"><span class="pre">baum_welch_multiple()</span></tt></dt>
-<dd>perform optimization with multiple observations.</dd>
-</dl>
+<p class="last">kernel.python, kernel.c, kernel.fortran : possible kernels
+baum_welch_multiple : perform optimization with multiple observations.</p>
 </div>
 </dd></dl>
 
@@ -127,84 +132,99 @@ vol. 77, issue 2</td></tr>
 </table>
 <dl class="function">
 <dt id="kernel.python.backward">
-<tt class="descclassname">kernel.python.</tt><tt class="descname">backward</tt><big>(</big><em>A</em>, <em>B</em>, <em>ob</em>, <em>scaling</em>, <em>dtype=&lt;class 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.backward" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">kernel.python.</tt><tt class="descname">backward</tt><big>(</big><em>A</em>, <em>B</em>, <em>ob</em>, <em>scaling</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.backward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute all backward coefficients. With scaling!</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>A</strong> (<em>numpy.array of floating numbers and shape (N,N)</em>) &#8211; transition matrix of the hidden states</li>
-<li><strong>B</strong> (<em>numpy.array of floating numbers and shape (N,M)</em>) &#8211; symbol probability matrix for each hidden state</li>
-<li><strong>ob</strong> (<em>numpy.array of integers and shape (T)</em>) &#8211; observation sequence of integer between 0 and M, used as indices in B</li>
+<li><strong>A</strong> (<em>numpy.array of floating numbers and shape (N,N)</em>) &#8211;
+transition matrix of the hidden states</li>
+<li><strong>B</strong> (<em>numpy.array of floating numbers and shape (N,M)</em>) &#8211;
+symbol probability matrix for each hidden state</li>
+<li><strong>ob</strong> (<em>numpy.array of integers and shape (T)</em>) &#8211;
+observation sequence of integer between 0 and M, used as indices in B</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>beta</strong> &#8211;
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>beta</strong> (<em>np.array of floating numbers and shape (T,N)</em>) &#8211;
 beta[t,i] is the ith forward coefficient of time t. These can be
 used in many different algorithms related to HMMs.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.array of floating numbers and shape (T,N)</p>
 </td>
 </tr>
 </tbody>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<dl class="last docutils">
-<dt><a class="reference internal" href="#kernel.python.backward_no_scaling" title="kernel.python.backward_no_scaling"><tt class="xref py py-func docutils literal"><span class="pre">backward_no_scaling()</span></tt></a></dt>
-<dd>Compute backward coefficients without scaling</dd>
-</dl>
+<p class="last">backward_no_scaling : Compute backward coefficients without scaling</p>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="kernel.python.backward_no_scaling">
-<tt class="descclassname">kernel.python.</tt><tt class="descname">backward_no_scaling</tt><big>(</big><em>A</em>, <em>B</em>, <em>ob</em>, <em>dtype=&lt;class 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.backward_no_scaling" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">kernel.python.</tt><tt class="descname">backward_no_scaling</tt><big>(</big><em>A</em>, <em>B</em>, <em>ob</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.backward_no_scaling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute all backward coefficients. No scaling.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>A</strong> (<em>numpy.array of floating numbers and shape (N,N)</em>) &#8211; transition matrix of the hidden states</li>
-<li><strong>B</strong> (<em>numpy.array of floating numbers and shape (N,M)</em>) &#8211; symbol probability matrix for each hidden state</li>
-<li><strong>ob</strong> (<em>numpy.array of integers and shape (T)</em>) &#8211; observation sequence of integer between 0 and M, used as indices in B</li>
+<li><strong>A</strong> (<em>numpy.array of floating numbers and shape (N,N)</em>) &#8211;
+transition matrix of the hidden states</li>
+<li><strong>B</strong> (<em>numpy.array of floating numbers and shape (N,M)</em>) &#8211;
+symbol probability matrix for each hidden state</li>
+<li><strong>ob</strong> (<em>numpy.array of integers and shape (T)</em>) &#8211;
+observation sequence of integer between 0 and M, used as indices in B</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>beta</strong> &#8211;
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>beta</strong> (<em>np.array of floating numbers and shape (T,N)</em>) &#8211;
 beta[t,i] is the ith backward coefficient of time t</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.array of floating numbers and shape (T,N)</p>
 </td>
 </tr>
 </tbody>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<dl class="last docutils">
-<dt><a class="reference internal" href="#kernel.python.backward" title="kernel.python.backward"><tt class="xref py py-func docutils literal"><span class="pre">backward()</span></tt></a></dt>
-<dd>Compute backward coefficients using given scaling factors.</dd>
-</dl>
+<p class="last">backward : Compute backward coefficients using given scaling factors.</p>
 </div>
 </dd></dl>
 
 <dl class="function">
+<dt id="kernel.python.draw_state">
+<tt class="descclassname">kernel.python.</tt><tt class="descname">draw_state</tt><big>(</big><em>distr</em><big>)</big><a class="headerlink" href="#kernel.python.draw_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>helper function for random_sequence to get the state to a given probability</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>distr</strong> (<em>array with probabilities where state are the indices</em>)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>state</strong> (<em>integer</em>) &#8211;
+which randomly chosen with given distribution</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="kernel.python.forward">
-<tt class="descclassname">kernel.python.</tt><tt class="descname">forward</tt><big>(</big><em>A</em>, <em>B</em>, <em>pi</em>, <em>ob</em>, <em>dtype=&lt;class 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.forward" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">kernel.python.</tt><tt class="descname">forward</tt><big>(</big><em>A</em>, <em>B</em>, <em>pi</em>, <em>ob</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute P(ob|A,B,pi) and all forward coefficients. With scaling!</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>A</strong> (<em>numpy.array of floating numbers and shape (N,N)</em>) &#8211; transition matrix of the hidden states</li>
-<li><strong>B</strong> (<em>numpy.array of floating numbers and shape (N,M)</em>) &#8211; symbol probability matrix for each hidden state</li>
-<li><strong>pi</strong> (<em>numpy.array of floating numbers and shape (N)</em>) &#8211; initial distribution</li>
-<li><strong>ob</strong> (<em>numpy.array of integers and shape (T)</em>) &#8211; observation sequence of integer between 0 and M, used as indices in B</li>
+<li><strong>A</strong> (<em>numpy.array of floating numbers and shape (N,N)</em>) &#8211;
+transition matrix of the hidden states</li>
+<li><strong>B</strong> (<em>numpy.array of floating numbers and shape (N,M)</em>) &#8211;
+symbol probability matrix for each hidden state</li>
+<li><strong>pi</strong> (<em>numpy.array of floating numbers and shape (N)</em>) &#8211;
+initial distribution</li>
+<li><strong>ob</strong> (<em>numpy.array of integers and shape (T)</em>) &#8211;
+observation sequence of integer between 0 and M, used as indices in B</li>
 </ul>
 </td>
 </tr>
@@ -226,26 +246,27 @@ rescale backward coefficients.</li>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<dl class="last docutils">
-<dt><a class="reference internal" href="#kernel.python.forward_no_scaling" title="kernel.python.forward_no_scaling"><tt class="xref py py-func docutils literal"><span class="pre">forward_no_scaling()</span></tt></a></dt>
-<dd>Compute forward coefficients without scaling</dd>
-</dl>
+<p class="last">forward_no_scaling : Compute forward coefficients without scaling</p>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="kernel.python.forward_no_scaling">
-<tt class="descclassname">kernel.python.</tt><tt class="descname">forward_no_scaling</tt><big>(</big><em>A</em>, <em>B</em>, <em>pi</em>, <em>ob</em>, <em>dtype=&lt;class 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.forward_no_scaling" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">kernel.python.</tt><tt class="descname">forward_no_scaling</tt><big>(</big><em>A</em>, <em>B</em>, <em>pi</em>, <em>ob</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.forward_no_scaling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute P(ob|A,B,pi) and all forward coefficients. No scaling done.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>A</strong> (<em>numpy.array of floating numbers and shape (N,N)</em>) &#8211; transition matrix of the hidden states</li>
-<li><strong>B</strong> (<em>numpy.array of floating numbers and shape (N,M)</em>) &#8211; symbol probability matrix for each hidden state</li>
-<li><strong>pi</strong> (<em>numpy.array of floating numbers and shape (N)</em>) &#8211; initial distribution</li>
-<li><strong>ob</strong> (<em>numpy.array of integers and shape (T)</em>) &#8211; observation sequence of integer between 0 and M, used as indices in B</li>
+<li><strong>A</strong> (<em>numpy.array of floating numbers and shape (N,N)</em>) &#8211;
+transition matrix of the hidden states</li>
+<li><strong>B</strong> (<em>numpy.array of floating numbers and shape (N,M)</em>) &#8211;
+symbol probability matrix for each hidden state</li>
+<li><strong>pi</strong> (<em>numpy.array of floating numbers and shape (N)</em>) &#8211;
+initial distribution</li>
+<li><strong>ob</strong> (<em>numpy.array of integers and shape (T)</em>) &#8211;
+observation sequence of integer between 0 and M, used as indices in B</li>
 </ul>
 </td>
 </tr>
@@ -264,10 +285,7 @@ used in many different algorithms related to HMMs.</li>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<dl class="last docutils">
-<dt><a class="reference internal" href="#kernel.python.forward" title="kernel.python.forward"><tt class="xref py py-func docutils literal"><span class="pre">forward()</span></tt></a></dt>
-<dd>Compute forward coefficients and scaling factors</dd>
-</dl>
+<p class="last">forward : Compute forward coefficients and scaling factors</p>
 </div>
 </dd></dl>
 
@@ -280,17 +298,19 @@ used in many different algorithms related to HMMs.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>A</strong> (<em>numpy.array shape (N,N)</em>) &#8211; transition matrix of the model</li>
-<li><strong>B</strong> (<em>numpy.array shape (N,M)</em>) &#8211; symbol probability matrix of the model</li>
-<li><strong>pi</strong> (<em>numpy.array shape (N)</em>) &#8211; starting probability vector of the model</li>
+<li><strong>A</strong> (<em>numpy.array shape (N,N)</em>) &#8211;
+transition matrix of the model</li>
+<li><strong>B</strong> (<em>numpy.array shape (N,M)</em>) &#8211;
+symbol probability matrix of the model</li>
+<li><strong>pi</strong> (<em>numpy.array shape (N)</em>) &#8211;
+starting probability vector of the model</li>
+<li><strong>T</strong> (<em>integer</em>) &#8211;
+length of generated observation sequence</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>obs</strong> &#8211;
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>obs</strong> (<em>numpy.array shape (T)</em>) &#8211;
 observation sequence containing only symbols, i.e. ints in [0,M)</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.array shape (T)</p>
 </td>
 </tr>
 </tbody>
@@ -300,32 +320,30 @@ observation sequence containing only symbols, i.e. ints in [0,M)</p>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <dl class="last docutils">
-<dt><tt class="xref py py-func docutils literal"><span class="pre">draw_state()</span></tt></dt>
-<dd>draw the index of the state, obeying the probability distribution vector distr</dd>
+<dt>draw_state <span class="classifier-delimiter">:</span> <span class="classifier">draw the index of the state, obeying the probability</span></dt>
+<dd>distribution vector distr</dd>
 </dl>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="kernel.python.state_counts">
-<tt class="descclassname">kernel.python.</tt><tt class="descname">state_counts</tt><big>(</big><em>gamma</em>, <em>T</em>, <em>dtype=&lt;class 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.state_counts" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">kernel.python.</tt><tt class="descname">state_counts</tt><big>(</big><em>gamma</em>, <em>T</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.state_counts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sum the probabilities of being in state i to time t</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>alpha</strong> (<em>numpy.array shape (T,N)</em>) &#8211; forward coefficients</li>
-<li><strong>beta</strong> (<em>numpy.array shape (T,N)</em>) &#8211; backward coefficients</li>
-<li><strong>dtype</strong> (<em>item datatype [optional]</em>) &#8211; </li>
+<li><strong>gamma</strong> (<em>numpy.array shape (T,N)</em>) &#8211;
+gamma[t,i] is the probabilty at time t to be in state i !</li>
+<li><strong>T</strong> (<em>number of observationsymbols</em>)</li>
+<li><strong>dtype</strong> (<em>item datatype [optional]</em>)</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>count</strong> &#8211;
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>count</strong> (<em>numpy.array shape (N)</em>) &#8211;
 count[i] is the summed probabilty to be in state i !</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.array shape (N)</p>
 </td>
 </tr>
 </tbody>
@@ -335,30 +353,30 @@ count[i] is the summed probabilty to be in state i !</p>
 scaling is independ in i.</p>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#kernel.python.forward" title="kernel.python.forward"><tt class="xref py py-func docutils literal"><span class="pre">forward()</span></tt></a>, <a class="reference internal" href="#kernel.python.forward_no_scaling" title="kernel.python.forward_no_scaling"><tt class="xref py py-func docutils literal"><span class="pre">forward_no_scaling()</span></tt></a>, <a class="reference internal" href="#kernel.python.backward" title="kernel.python.backward"><tt class="xref py py-func docutils literal"><span class="pre">backward()</span></tt></a>, <a class="reference internal" href="#kernel.python.backward_no_scaling" title="kernel.python.backward_no_scaling"><tt class="xref py py-func docutils literal"><span class="pre">backward_no_scaling()</span></tt></a></p>
+<p class="last">forward, forward_no_scaling : to calculate <cite>alpha</cite>
+backward, backward_no_scaling : to calculate <cite>beta</cite></p>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="kernel.python.state_probabilities">
-<tt class="descclassname">kernel.python.</tt><tt class="descname">state_probabilities</tt><big>(</big><em>alpha</em>, <em>beta</em>, <em>dtype=&lt;class 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.state_probabilities" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">kernel.python.</tt><tt class="descname">state_probabilities</tt><big>(</big><em>alpha</em>, <em>beta</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.state_probabilities" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the (T,N)-probabilty matrix for being in state i at time t.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>alpha</strong> (<em>numpy.array shape (T,N)</em>) &#8211; forward coefficients</li>
-<li><strong>beta</strong> (<em>numpy.array shape (T,N)</em>) &#8211; backward coefficients</li>
-<li><strong>dtype</strong> (<em>item datatype [optional]</em>) &#8211; </li>
+<li><strong>alpha</strong> (<em>numpy.array shape (T,N)</em>) &#8211;
+forward coefficients</li>
+<li><strong>beta</strong> (<em>numpy.array shape (T,N)</em>) &#8211;
+backward coefficients</li>
+<li><strong>dtype</strong> (<em>item datatype [optional]</em>)</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>gamma</strong> &#8211;
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>gamma</strong> (<em>numpy.array shape (T,N)</em>) &#8211;
 gamma[t,i] is the probabilty at time t to be in state i !</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.array shape (T,N)</p>
 </td>
 </tr>
 </tbody>
@@ -368,32 +386,29 @@ gamma[t,i] is the probabilty at time t to be in state i !</p>
 scaling is independ in i.</p>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#kernel.python.forward" title="kernel.python.forward"><tt class="xref py py-func docutils literal"><span class="pre">forward()</span></tt></a>, <a class="reference internal" href="#kernel.python.forward_no_scaling" title="kernel.python.forward_no_scaling"><tt class="xref py py-func docutils literal"><span class="pre">forward_no_scaling()</span></tt></a>, <a class="reference internal" href="#kernel.python.backward" title="kernel.python.backward"><tt class="xref py py-func docutils literal"><span class="pre">backward()</span></tt></a>, <a class="reference internal" href="#kernel.python.backward_no_scaling" title="kernel.python.backward_no_scaling"><tt class="xref py py-func docutils literal"><span class="pre">backward_no_scaling()</span></tt></a></p>
+<p class="last">forward, forward_no_scaling : to calculate <cite>alpha</cite>
+backward, backward_no_scaling : to calculate <cite>beta</cite></p>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="kernel.python.symbol_counts">
-<tt class="descclassname">kernel.python.</tt><tt class="descname">symbol_counts</tt><big>(</big><em>gamma</em>, <em>ob</em>, <em>M</em>, <em>dtype=&lt;class 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.symbol_counts" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">kernel.python.</tt><tt class="descname">symbol_counts</tt><big>(</big><em>gamma</em>, <em>ob</em>, <em>M</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.symbol_counts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sum the observed probabilities to see symbol k in state i.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>alpha</strong> (<em>numpy.array shape (T,N)</em>) &#8211; forward coefficients</li>
-<li><strong>beta</strong> (<em>numpy.array shape (T,N)</em>) &#8211; backward coefficients</li>
-<li><strong>ob</strong> (<em>numpy.array shape (T)</em>) &#8211; </li>
-<li><strong>M</strong> (<em>integer</em>) &#8211; </li>
-<li><strong>dtype</strong> (<em>item datatype, optional</em>) &#8211; </li>
+<li><strong>gamma</strong> (<em>numpy.array shape (T,N)</em>) &#8211;
+gamma[t,i] is the probabilty at time t to be in state i !</li>
+<li><strong>ob</strong> (<em>numpy.array shape (T)</em>)</li>
+<li><strong>M</strong> (<em>integer. number of possible observationsymbols</em>)</li>
+<li><strong>dtype</strong> (<em>item datatype, optional</em>)</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>counts</strong></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><p>...</p>
-</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>counts</strong> (<em>numpy.array shape (N,M)</em>)</p>
 </td>
 </tr>
 </tbody>
@@ -403,34 +418,37 @@ scaling is independ in i.</p>
 scaling is independ in i.</p>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#kernel.python.forward" title="kernel.python.forward"><tt class="xref py py-func docutils literal"><span class="pre">forward()</span></tt></a>, <a class="reference internal" href="#kernel.python.forward_no_scaling" title="kernel.python.forward_no_scaling"><tt class="xref py py-func docutils literal"><span class="pre">forward_no_scaling()</span></tt></a>, <a class="reference internal" href="#kernel.python.backward" title="kernel.python.backward"><tt class="xref py py-func docutils literal"><span class="pre">backward()</span></tt></a>, <a class="reference internal" href="#kernel.python.backward_no_scaling" title="kernel.python.backward_no_scaling"><tt class="xref py py-func docutils literal"><span class="pre">backward_no_scaling()</span></tt></a></p>
+<p class="last">forward, forward_no_scaling : to calculate <cite>alpha</cite>
+backward, backward_no_scaling : to calculate <cite>beta</cite></p>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="kernel.python.transition_counts">
-<tt class="descclassname">kernel.python.</tt><tt class="descname">transition_counts</tt><big>(</big><em>alpha</em>, <em>beta</em>, <em>A</em>, <em>B</em>, <em>ob</em>, <em>dtype=&lt;class 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.transition_counts" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">kernel.python.</tt><tt class="descname">transition_counts</tt><big>(</big><em>alpha</em>, <em>beta</em>, <em>A</em>, <em>B</em>, <em>ob</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.transition_counts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sum for all t the probability to transition from state i to state j.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>alpha</strong> (<em>numpy.array shape (T,N)</em>) &#8211; forward coefficients</li>
-<li><strong>beta</strong> (<em>numpy.array shape (T,N)</em>) &#8211; backward coefficients</li>
-<li><strong>A</strong> (<em>numpy.array shape (N,N)</em>) &#8211; transition matrix of the model</li>
-<li><strong>B</strong> (<em>numpy.array shape (N,M)</em>) &#8211; symbol probabilty matrix of the model</li>
-<li><strong>ob</strong> (<em>numpy.array shape (T)</em>) &#8211; observation sequence containing only symbols, i.e. ints in [0,M)</li>
-<li><strong>dtype</strong> (<em>item datatype [optional]</em>) &#8211; </li>
+<li><strong>alpha</strong> (<em>numpy.array shape (T,N)</em>) &#8211;
+forward coefficients</li>
+<li><strong>beta</strong> (<em>numpy.array shape (T,N)</em>) &#8211;
+backward coefficients</li>
+<li><strong>A</strong> (<em>numpy.array shape (N,N)</em>) &#8211;
+transition matrix of the model</li>
+<li><strong>B</strong> (<em>numpy.array shape (N,M)</em>) &#8211;
+symbol probabilty matrix of the model</li>
+<li><strong>ob</strong> (<em>numpy.array shape (T)</em>) &#8211;
+observation sequence containing only symbols, i.e. ints in [0,M)</li>
+<li><strong>dtype</strong> (<em>item datatype [optional]</em>)</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>counts</strong> &#8211;
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>counts</strong> (<em>numpy.array shape (N, N)</em>) &#8211;
 counts[i, j] is the summed probability to transition from i to j
 int time [0,T)</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.array shape (N, N)</p>
 </td>
 </tr>
 </tbody>
@@ -440,40 +458,37 @@ int time [0,T)</p>
 does not depend on the second variable.</p>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<dl class="last docutils">
-<dt><a class="reference internal" href="#kernel.python.transition_probabilities" title="kernel.python.transition_probabilities"><tt class="xref py py-func docutils literal"><span class="pre">transition_probabilities()</span></tt></a></dt>
-<dd>return the matrix of transition probabilities</dd>
-<dt><a class="reference internal" href="#kernel.python.forward" title="kernel.python.forward"><tt class="xref py py-func docutils literal"><span class="pre">forward()</span></tt></a></dt>
-<dd>calculate forward coefficients <cite>alpha</cite></dd>
-<dt><a class="reference internal" href="#kernel.python.backward" title="kernel.python.backward"><tt class="xref py py-func docutils literal"><span class="pre">backward()</span></tt></a></dt>
-<dd>calculate backward coefficients <cite>beta</cite></dd>
-</dl>
+<p class="last">transition_probabilities : return the matrix of transition probabilities
+forward : calculate forward coefficients <cite>alpha</cite>
+backward : calculate backward coefficients <cite>beta</cite></p>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="kernel.python.transition_probabilities">
-<tt class="descclassname">kernel.python.</tt><tt class="descname">transition_probabilities</tt><big>(</big><em>alpha</em>, <em>beta</em>, <em>A</em>, <em>B</em>, <em>ob</em>, <em>dtype=&lt;class 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.transition_probabilities" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">kernel.python.</tt><tt class="descname">transition_probabilities</tt><big>(</big><em>alpha</em>, <em>beta</em>, <em>A</em>, <em>B</em>, <em>ob</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.transition_probabilities" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute for each t the probability to transition from state i to state j.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>alpha</strong> (<em>numpy.array shape (T,N)</em>) &#8211; forward coefficients</li>
-<li><strong>beta</strong> (<em>numpy.array shape (T,N)</em>) &#8211; backward coefficients</li>
-<li><strong>A</strong> (<em>numpy.array shape (N,N)</em>) &#8211; transition matrix of the model</li>
-<li><strong>B</strong> (<em>numpy.array shape (N,M)</em>) &#8211; symbol probabilty matrix of the model</li>
-<li><strong>ob</strong> (<em>numpy.array shape (T)</em>) &#8211; observation sequence containing only symbols, i.e. ints in [0,M)</li>
-<li><strong>dtype</strong> (<em>item datatype [optional]</em>) &#8211; </li>
+<li><strong>alpha</strong> (<em>numpy.array shape (T,N)</em>) &#8211;
+forward coefficients</li>
+<li><strong>beta</strong> (<em>numpy.array shape (T,N)</em>) &#8211;
+backward coefficients</li>
+<li><strong>A</strong> (<em>numpy.array shape (N,N)</em>) &#8211;
+transition matrix of the model</li>
+<li><strong>B</strong> (<em>numpy.array shape (N,M)</em>) &#8211;
+symbol probabilty matrix of the model</li>
+<li><strong>ob</strong> (<em>numpy.array shape (T)</em>) &#8211;
+observation sequence containing only symbols, i.e. ints in [0,M)</li>
+<li><strong>dtype</strong> (<em>item datatype [optional]</em>)</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>xi</strong> &#8211;
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>xi</strong> (<em>numpy.array shape (T-1, N, N)</em>) &#8211;
 xi[t, i, j] is the probability to transition from i to j at time t.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.array shape (T, N, N)</p>
 </td>
 </tr>
 </tbody>
@@ -483,29 +498,27 @@ xi[t, i, j] is the probability to transition from i to j at time t.</p>
 does not depend on the second variable.</p>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<dl class="last docutils">
-<dt><a class="reference internal" href="#kernel.python.state_counts" title="kernel.python.state_counts"><tt class="xref py py-func docutils literal"><span class="pre">state_counts()</span></tt></a></dt>
-<dd>calculate the probability to be in state i at time t</dd>
-<dt><a class="reference internal" href="#kernel.python.forward" title="kernel.python.forward"><tt class="xref py py-func docutils literal"><span class="pre">forward()</span></tt></a></dt>
-<dd>calculate forward coefficients <cite>alpha</cite></dd>
-<dt><a class="reference internal" href="#kernel.python.backward" title="kernel.python.backward"><tt class="xref py py-func docutils literal"><span class="pre">backward()</span></tt></a></dt>
-<dd>calculate backward coefficients <cite>beta</cite></dd>
-</dl>
+<p class="last">state_counts : calculate the probability to be in state i at time t
+forward : calculate forward coefficients <cite>alpha</cite>
+backward : calculate backward coefficients <cite>beta</cite></p>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="kernel.python.update">
-<tt class="descclassname">kernel.python.</tt><tt class="descname">update</tt><big>(</big><em>gamma</em>, <em>xi</em>, <em>ob</em>, <em>M</em>, <em>dtype=&lt;class 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.update" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">kernel.python.</tt><tt class="descname">update</tt><big>(</big><em>gamma</em>, <em>xi</em>, <em>ob</em>, <em>M</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#kernel.python.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return an updated model for given state and transition counts.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>gamma</strong> (<em>numpy.array shape (T,N)</em>) &#8211; state probabilities for each t</li>
-<li><strong>xi</strong> (<em>numpy.array shape (T,N,N)</em>) &#8211; transition probabilities for each t</li>
-<li><strong>ob</strong> (<em>numpy.array shape (T)</em>) &#8211; observation sequence containing only symbols, i.e. ints in [0,M)</li>
+<li><strong>gamma</strong> (<em>numpy.array shape (T,N)</em>) &#8211;
+state probabilities for each t</li>
+<li><strong>xi</strong> (<em>numpy.array shape (T,N,N)</em>) &#8211;
+transition probabilities for each t</li>
+<li><strong>ob</strong> (<em>numpy.array shape (T)</em>) &#8211;
+observation sequence containing only symbols, i.e. ints in [0,M)</li>
 </ul>
 </td>
 </tr>
@@ -527,12 +540,8 @@ new initial distribution</li>
 <p>This function is part of the Baum-Welch algorithm for a single observation.</p>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<dl class="last docutils">
-<dt><a class="reference internal" href="#kernel.python.state_probabilities" title="kernel.python.state_probabilities"><tt class="xref py py-func docutils literal"><span class="pre">state_probabilities()</span></tt></a></dt>
-<dd>to calculate <cite>gamma</cite></dd>
-<dt><a class="reference internal" href="#kernel.python.transition_probabilities" title="kernel.python.transition_probabilities"><tt class="xref py py-func docutils literal"><span class="pre">transition_probabilities()</span></tt></a></dt>
-<dd>to calculate <cite>xi</cite></dd>
-</dl>
+<p class="last">state_probabilities : to calculate <cite>gamma</cite>
+transition_probabilities : to calculate <cite>xi</cite></p>
 </div>
 </dd></dl>
 

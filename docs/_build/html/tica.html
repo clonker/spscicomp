@@ -56,7 +56,7 @@
 <span id="tica-amuse"></span><h2>Tica_Amuse<a class="headerlink" href="#module-Tica_Amuse" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="Tica_Amuse.TicaAmuse">
-<em class="property">class </em><tt class="descclassname">Tica_Amuse.</tt><tt class="descname">TicaAmuse</tt><big>(</big><em>i_inFileName=None</em>, <em>i_outFileName='../testdata/tica_independentComp.npy'</em>, <em>i_addEps=1e-16</em>, <em>i_timeLag=1</em><big>)</big><a class="headerlink" href="#Tica_Amuse.TicaAmuse" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">Tica_Amuse.</tt><tt class="descname">TicaAmuse</tt><big>(</big><em>i_inFileName=None</em>, <em>i_outFileName='../testdata/tica_independentComp.npy'</em>, <em>i_addEps=1e-09</em>, <em>i_timeLag=1</em>, <em>i_useDampingAdapt=True</em><big>)</big><a class="headerlink" href="#Tica_Amuse.TicaAmuse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implementation of AMUSE-Algorithm, which basically uses functionality of <a class="reference internal" href="#Tica_PrincipleComp.TicaPrinComp" title="Tica_PrincipleComp.TicaPrinComp"><tt class="xref py py-class docutils literal"><span class="pre">TicaPrinComp</span></tt></a>.
 A <a class="reference internal" href="common.html#common_data_importer.CommonDataImporter" title="common_data_importer.CommonDataImporter"><tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt></a> object to be used for importing the numerical data.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -66,17 +66,24 @@ A <a class="reference internal" href="common.html#common_data_importer.CommonDat
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>i_inFileName</strong> (<em>string</em>) &#8211; A filename of the binary file which loads the data</li>
 <li><strong>i_outFileName</strong> (<em>string</em>) &#8211; A filename of the binary file which stored the results.</li>
-<li><strong>i_addEps</strong> (<em>float</em>) &#8211; A damping parameter to avoid dividing by zero in the normalization part of the amuse algorithmen.</li>
+<li><strong>i_addEps</strong> (<em>float</em>) &#8211; A damping parameter to avoid dividing by zero in the normalization part of the amuse algorithm.</li>
 <li><strong>i_timeLag</strong> (<em>int</em>) &#8211; In this setting the data has time-dependencies where i_timeLag is some lag constant.</li>
+<li><strong>i_useDampingAdapt</strong> &#8211; A Boolean flag to use a method for adapting the damping parameter <cite>i_addEps</cite>.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
+<p>Default setting is <cite>True</cite>
+:type bool</p>
 <dl class="method">
 <dt id="Tica_Amuse.TicaAmuse.performAmuse">
 <tt class="descname">performAmuse</tt><big>(</big><em>i_numDomComp=1</em><big>)</big><a class="headerlink" href="#Tica_Amuse.TicaAmuse.performAmuse" title="Permalink to this definition">¶</a></dt>
-<dd><p>Runs the AMUSE-Algorithm and stores the results in a binary file with the stated filename(see above <cite>i_outFileName</cite>).</p>
+<dd><p>Runs the AMUSE-Algorithm and stores the results in a binary file with
+the stated filename(see above <cite>i_outFileName</cite>).
+Performs the hole algorithm only for one given time-lag.
+If needed you can run the method again for another time-lag by setting the time-lag
+with the function <tt class="xref py py-func docutils literal"><span class="pre">setTimeLag()</span></tt>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -87,6 +94,14 @@ A <a class="reference internal" href="common.html#common_data_importer.CommonDat
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="Tica_Amuse.TicaAmuse.setTimeLag">
+<tt class="descname">setTimeLag</tt><big>(</big><em>i_timeLag</em><big>)</big><a class="headerlink" href="#Tica_Amuse.TicaAmuse.setTimeLag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the time-lag.
+:param i_timeLag: New time-lag.
+:type i_timeLag: int</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -94,7 +109,7 @@ A <a class="reference internal" href="common.html#common_data_importer.CommonDat
 <span id="tica-principlecomp"></span><h2>Tica_PrincipleComp<a class="headerlink" href="#module-Tica_PrincipleComp" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="Tica_PrincipleComp.TicaPrinComp">
-<em class="property">class </em><tt class="descclassname">Tica_PrincipleComp.</tt><tt class="descname">TicaPrinComp</tt><big>(</big><em>i_inFileName=None</em>, <em>i_outFileName='../testdata/tica_tempOutput.npy'</em>, <em>i_addEpsilon=1e-16</em>, <em>i_timeLag=1</em><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">Tica_PrincipleComp.</tt><tt class="descname">TicaPrinComp</tt><big>(</big><em>i_inFileName=None</em>, <em>i_outFileName='../testdata/tica_tempOutput.npy'</em>, <em>i_addEpsilon=1e-09</em>, <em>i_timeLag=1</em>, <em>i_useDampingAdapt=True</em><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implementation of computation of principle components highly adapted for the amuse algorithm.
 The class <a class="reference internal" href="#Tica_PrincipleComp.TicaPrinComp" title="Tica_PrincipleComp.TicaPrinComp"><tt class="xref py py-class docutils literal"><span class="pre">TicaPrinComp</span></tt></a> contains the subclass <a class="reference internal" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged" title="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged"><tt class="xref py py-class docutils literal"><span class="pre">TicaPrinCompTimeLagged</span></tt></a>.
 A <a class="reference internal" href="common.html#common_data_importer.CommonDataImporter" title="common_data_importer.CommonDataImporter"><tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt></a> object to be used for importing the numerical data.</p>
@@ -107,11 +122,14 @@ A <a class="reference internal" href="common.html#common_data_importer.CommonDat
 <li><strong>i_outFileName</strong> (<em>string</em>) &#8211; A filename of the binary file in which the results are stored</li>
 <li><strong>i_addEpsilon</strong> &#8211; A damping parameter to avoid dividing by zero in the normalization part of the amuse algorithm.</li>
 <li><strong>i_timeLag</strong> (<em>int</em>) &#8211; In this setting the data has time-dependencies where i_timeLag is some lag constant.</li>
+<li><strong>i_useDampingAdapt</strong> &#8211; A Boolean flag to use a method for adapting the damping parameter <cite>i_addEps</cite>.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
+<p>Default setting is <cite>True</cite>
+:type bool</p>
 <dl class="class">
 <dt id="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged">
 <em class="property">class </em><tt class="descname">TicaPrinCompTimeLagged</tt><big>(</big><em>i_ticaPrinComp</em><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged" title="Permalink to this definition">¶</a></dt>
@@ -139,7 +157,7 @@ independent components <span class="math">\(Z\)</span>.</p>
 <dt id="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.computeICs">
 <tt class="descname">computeICs</tt><big>(</big><em>i_numDomComp=1</em><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.computeICs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Main method in the class <a class="reference internal" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged" title="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged"><tt class="xref py py-class docutils literal"><span class="pre">TicaPrinCompTimeLagged</span></tt></a>.
-Computes the independent components n the basis of normalized principle components supplied by
+Computes the independent components on the basis of normalized principle components supplied by
 <a class="reference internal" href="#Tica_PrincipleComp.TicaPrinComp" title="Tica_PrincipleComp.TicaPrinComp"><tt class="xref py py-class docutils literal"><span class="pre">TicaPrinComp</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -149,6 +167,22 @@ Computes the independent components n the basis of normalized principle componen
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.performTransformation">
+<tt class="descname">performTransformation</tt><big>(</big><em>i_domComp</em><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.performTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the independent components and saves needed components in a output numpy binary file.
+:param i_domComp: Needed components of TICA
+:type i_domComp: int</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.setTimeLag">
+<tt class="descname">setTimeLag</tt><big>(</big><em>i_timeLag</em><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.setTimeLag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a new time-lag value.
+:param i_timeLag:
+:type: int</p>
 </dd></dl>
 
 <dl class="method">
@@ -188,6 +222,12 @@ of the number of rows of the input file will be performed.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.computeColMeans">
+<tt class="descclassname">TicaPrinComp.</tt><tt class="descname">computeColMeans</tt><big>(</big><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.computeColMeans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes mean per column of the input data.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="Tica_PrincipleComp.TicaPrinComp.computeCovariance">
 <tt class="descclassname">TicaPrinComp.</tt><tt class="descname">computeCovariance</tt><big>(</big><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.computeCovariance" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function computes chunk by chunk the instantaneous covariance matrix <span class="math">\(C\)</span>.
@@ -219,6 +259,15 @@ by <span class="math">\(Y = \Gamma^{T}(X-mean(X))\)</span>.</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.naiveDampingParamAdapt">
+<tt class="descclassname">TicaPrinComp.</tt><tt class="descname">naiveDampingParamAdapt</tt><big>(</big><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.naiveDampingParamAdapt" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function adapts possible singular eigenvalues of the covariance matrix.
+This is done in a naive way by adding small constants to the effect that small negative eigenvalues
+become positive and eigenvalues which are <cite>nan</cite> will be set on a small not negative number.
+:return:</p>
 </dd></dl>
 
 <dl class="method">
@@ -266,7 +315,9 @@ Here are considered only real eigen values.</p>
 <dt id="Tica_EigenDecomp.TicaEigenDecomp.computeEigenDecomp">
 <tt class="descname">computeEigenDecomp</tt><big>(</big><em>i_matrix</em><big>)</big><a class="headerlink" href="#Tica_EigenDecomp.TicaEigenDecomp.computeEigenDecomp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs the eigen decomposition of <tt class="xref py py-class docutils literal"><span class="pre">numpy.linalg</span></tt> and rearrange(see <tt class="xref py py-func docutils literal"><span class="pre">reorderingEigenV()</span></tt>)
-the eigenvalues if they are real.</p>
+the eigenvalues if they are real.
+If the eigenvalues have a imaginary part a warning will logged, the imaginary parts will be set to zero
+and the real parts will be rearranged.</p>
 </dd></dl>
 
 <dl class="method">

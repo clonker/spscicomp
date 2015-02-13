@@ -1,32 +1,59 @@
 \begin{theindex}
 \def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
 
+  \bigletter A
+  \item algorithms (module), \hyperpage{11}
+
+  \indexspace
+  \bigletter B
+  \item backward() (in module kernel.python), \hyperpage{12}
+  \item backward\_no\_scaling() (in module kernel.python), \hyperpage{12}
+  \item baum\_welch() (in module algorithms), \hyperpage{11}
+
+  \indexspace
   \bigletter C
+  \item cal\_chunk\_centers (C function), \hyperpage{6, 7}
+  \item calcNumbOfDomComps() (Tica\_PrincipleComp.TicaPrinComp method), \hyperpage{18}
   \item calculate\_centers() (kmeans.DefaultKmeans method), \hyperpage{5}
-  \item CKmeans (class in extension.c\_kmeans), \hyperpage{6}
-  \item close\_file() (common\_data\_importer.CommonFileDataImporter method), \hyperpage{3}
+  \item chunk\_centers\_sum\_cuda (C function), \hyperpage{7}
+  \item CKmeans (class in spscicomp.kmeans.extension.c\_kmeans), \hyperpage{6}
+  \item close\_file() (common\_data\_importer.CommonFileDataImporter method), \hyperpage{4}
+  \item closest\_center (C function), \hyperpage{6}
   \item common\_data\_importer (module), \hyperpage{3}
   \item CommonBinaryFileDataImporter (class in common\_data\_importer), \hyperpage{3}
   \item CommonDataImporter (class in common\_data\_importer), \hyperpage{3}
   \item CommonFileDataImporter (class in common\_data\_importer), \hyperpage{3}
   \item CommonSimpleDataImporter (class in common\_data\_importer), \hyperpage{4}
-  \item cuda.cuda\_kmeans.CUDAKmeans (class in extension.c\_kmeans), \hyperpage{6}
+  \item computeChunkSize() (Tica\_PrincipleComp.TicaPrinComp method), \hyperpage{18}
+  \item computeColMeans() (Tica\_PrincipleComp.TicaPrinComp method), \hyperpage{18}
+  \item computeCovariance() (Tica\_PrincipleComp.TicaPrinComp method), \hyperpage{18}
+  \item computeCovariance() (Tica\_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged method), 
+		\hyperpage{18}
+  \item computeEigenDecomp() (Tica\_EigenDecomp.TicaEigenDecomp method), \hyperpage{19}
+  \item computeICs() (Tica\_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged method), 
+		\hyperpage{18}
+  \item computePCs() (Tica\_PrincipleComp.TicaPrinComp method), \hyperpage{19}
+  \item cuda.cuda\_kmeans.CUDAKmeans (class in spscicomp.kmeans.extension.c\_kmeans), \hyperpage{7}
 
   \indexspace
   \bigletter D
   \item DefaultKmeans (class in kmeans), \hyperpage{5}
+  \item draw\_state() (in module kernel.python), \hyperpage{12}
 
   \indexspace
-  \bigletter E
-  \item extension.c\_kmeans (module), \hyperpage{6}
+  \bigletter F
+  \item forward() (in module kernel.python), \hyperpage{12}
+  \item forward\_no\_scaling() (in module kernel.python), \hyperpage{13}
 
   \indexspace
   \bigletter G
-  \item get\_centers() (kmeans\_data\_generator.KmeansRandomDataGenerator method), \hyperpage{7}
+  \item get\_centers() (kmeans\_data\_generator.KmeansRandomDataGenerator method), \hyperpage{9}
   \item get\_data() (common\_data\_importer.CommonBinaryFileDataImporter method), \hyperpage{3}
-  \item get\_data() (common\_data\_importer.CommonFileDataImporter method), \hyperpage{3}
+  \item get\_data() (common\_data\_importer.CommonFileDataImporter method), \hyperpage{4}
   \item get\_data() (common\_data\_importer.CommonSimpleDataImporter method), \hyperpage{4}
-  \item get\_data() (kmeans\_data\_generator.KmeansRandomDataGenerator method), \hyperpage{7}
+  \item get\_data() (kmeans\_data\_generator.KmeansRandomDataGenerator method), \hyperpage{9}
+  \item get\_outData() (common\_data\_importer.CommonBinaryFileDataImporter method), \hyperpage{3}
+  \item getData() (Tica\_DataImport.TicaDataImport method), \hyperpage{19}
 
   \indexspace
   \bigletter H
@@ -41,30 +68,83 @@
 		\hyperpage{3}
   \item init\_file\_input\_stream() (common\_data\_importer.CommonFileDataImporter method), 
 		\hyperpage{4}
+  \item initkmeans\_c\_extension (C function), \hyperpage{6}
+  \item initkmeans\_c\_extension\_cuda (C function), \hyperpage{7}
 
   \indexspace
   \bigletter K
+  \item kernel.python (module), \hyperpage{12}
   \item Kmeans (class in kmeans), \hyperpage{6}
   \item kmeans (module), \hyperpage{5}
   \item kmeans() (in module kmeans\_main), \hyperpage{5}
-  \item kmeans\_data\_generator (module), \hyperpage{7}
+  \item kmeans\_c\_extensionMethods (C variable), \hyperpage{6, 7}
+  \item kmeans\_chunk\_center (C function), \hyperpage{7}
+  \item kmeans\_chunk\_center\_cuda (C function), \hyperpage{8}
+  \item kmeans\_data\_generator (module), \hyperpage{9}
   \item kmeans\_main (module), \hyperpage{5}
-  \item KmeansDataGenerator (class in kmeans\_data\_generator), \hyperpage{7}
-  \item KmeansRandomDataGenerator (class in kmeans\_data\_generator), \hyperpage{7}
+  \item KmeansDataGenerator (class in kmeans\_data\_generator), \hyperpage{9}
+  \item KmeansRandomDataGenerator (class in kmeans\_data\_generator), \hyperpage{9}
+
+  \indexspace
+  \bigletter N
+  \item naiveDampingParamAdapt() (Tica\_PrincipleComp.TicaPrinComp method), \hyperpage{19}
+  \item normalizePCs() (Tica\_PrincipleComp.TicaPrinComp method), \hyperpage{19}
 
   \indexspace
   \bigletter O
-  \item opencl.opencl\_kmeans.OpenCLKmeans (class in extension.c\_kmeans), \hyperpage{6}
+  \item opencl.opencl\_kmeans.OpenCLKmeans (class in spscicomp.kmeans.extension.c\_kmeans), 
+		\hyperpage{9}
+
+  \indexspace
+  \bigletter P
+  \item performAmuse() (Tica\_Amuse.TicaAmuse method), \hyperpage{17}
+  \item performTransformation() (Tica\_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged method), 
+		\hyperpage{18}
 
   \indexspace
   \bigletter R
+  \item random\_sequence() (in module kernel.python), \hyperpage{13}
+  \item readTable() (Tica\_DataImport.TicaDataImport method), \hyperpage{20}
+  \item reorderingEigenV() (Tica\_EigenDecomp.TicaEigenDecomp method), \hyperpage{19}
   \item rewind() (common\_data\_importer.CommonBinaryFileDataImporter method), \hyperpage{3}
   \item rewind() (common\_data\_importer.CommonFileDataImporter method), \hyperpage{4}
+  \item rewindPatch() (common\_data\_importer.CommonBinaryFileDataImporter method), \hyperpage{3}
+
+  \indexspace
+  \bigletter S
+  \item setTimeLag() (Tica\_Amuse.TicaAmuse method), \hyperpage{17}
+  \item setTimeLag() (Tica\_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged method), 
+		\hyperpage{18}
+  \item spscicomp.kmeans.extension.c\_kmeans (module), \hyperpage{6}
+  \item state\_counts() (in module kernel.python), \hyperpage{14}
+  \item state\_probabilities() (in module kernel.python), \hyperpage{14}
+  \item symbol\_counts() (in module kernel.python), \hyperpage{14}
+  \item symmetrizeCovariance() (Tica\_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged method), 
+		\hyperpage{18}
 
   \indexspace
   \bigletter T
+  \item Tica\_Amuse (module), \hyperpage{17}
+  \item Tica\_DataImport (module), \hyperpage{19}
+  \item Tica\_EigenDecomp (module), \hyperpage{19}
+  \item Tica\_PrincipleComp (module), \hyperpage{17}
+  \item TicaAmuse (class in Tica\_Amuse), \hyperpage{17}
+  \item TicaDataImport (class in Tica\_DataImport), \hyperpage{19}
+  \item TicaEigenDecomp (class in Tica\_EigenDecomp), \hyperpage{19}
+  \item TicaPrinComp (class in Tica\_PrincipleComp), \hyperpage{17}
+  \item TicaPrinComp.TicaPrinCompTimeLagged (class in Tica\_PrincipleComp), \hyperpage{18}
   \item to\_binary\_file() (kmeans\_data\_generator.KmeansRandomDataGenerator method), 
-		\hyperpage{7}
-  \item to\_file() (kmeans\_data\_generator.KmeansRandomDataGenerator method), \hyperpage{7}
+		\hyperpage{9}
+  \item to\_file() (kmeans\_data\_generator.KmeansRandomDataGenerator method), \hyperpage{9}
+  \item transition\_counts() (in module kernel.python), \hyperpage{15}
+  \item transition\_probabilities() (in module kernel.python), \hyperpage{15}
+
+  \indexspace
+  \bigletter U
+  \item update() (in module kernel.python), \hyperpage{16}
+
+  \indexspace
+  \bigletter W
+  \item write\_data() (common\_data\_importer.CommonBinaryFileDataImporter method), \hyperpage{3}
 
 \end{theindex}

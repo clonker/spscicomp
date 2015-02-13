@@ -1,7 +1,7 @@
 This is makeindex, version 2.15 [TeX Live 2014] (kpathsea + Thai support).
 Scanning style file ./python.ist......done (6 attributes redefined, 0 ignored).
-Scanning input file spscicomp.idx....done (33 entries accepted, 0 rejected).
-Sorting entries....done (184 comparisons).
-Generating output file spscicomp.ind....done (70 lines written, 0 warnings).
+Scanning input file spscicomp.idx....done (88 entries accepted, 0 rejected).
+Sorting entries....done (619 comparisons).
+Generating output file spscicomp.ind....done (150 lines written, 0 warnings).
 Output written in spscicomp.ind.
 Transcript written in spscicomp.ilg.

@@ -21,7 +21,7 @@ parser.add_argument('-k', default='4', type=int, help='number of clusters for th
 args = parser.parse_args()
 LOG.debug("Options given: " + str(args))
 
-generate_plots = True  # args.plot
+generate_plots = args.plot
 n_random_walk_steps = args.steps
 kmeans_k = args.k
 

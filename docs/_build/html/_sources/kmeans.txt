@@ -18,7 +18,7 @@ kmeans
 ========
 c_kmeans
 ========
-.. automodule:: extension.c_kmeans
+.. automodule:: spscicomp.kmeans.extension.c_kmeans
    :members:
 .. c:function:: static PyObject* cal_chunk_centers(PyObject *dummy, PyObject *args)
 

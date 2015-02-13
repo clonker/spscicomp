@@ -1,6 +1,6 @@
 import numpy as np
 from abc import ABCMeta, abstractmethod
-from kmeans_metric import EuclideanMetric
+from spscicomp.kmeans.kmeans_metric import EuclideanMetric
 
 
 class Kmeans:

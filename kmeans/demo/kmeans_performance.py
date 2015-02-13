@@ -1,10 +1,10 @@
 import unittest
 import timeit
 
-from kmeans import *
-from common.common_data_importer import *
-from kmeans_data_generator import *
-from kmeans_plot import *
+from spscicomp.kmeans import *
+from spscicomp.common.common_data_importer import *
+from spscicomp.kmeans.kmeans_data_generator import *
+from spscicomp.kmeans.kmeans_plot import *
 
 
 class TestKmeansTimed(unittest.TestCase):

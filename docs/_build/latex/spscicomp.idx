@@ -1,0 +1,88 @@
+\indexentry{common\_data\_importer (module)|hyperpage}{3}
+\indexentry{CommonBinaryFileDataImporter (class in common\_data\_importer)|hyperpage}{3}
+\indexentry{get\_data() (common\_data\_importer.CommonBinaryFileDataImporter method)|hyperpage}{3}
+\indexentry{get\_outData() (common\_data\_importer.CommonBinaryFileDataImporter method)|hyperpage}{3}
+\indexentry{has\_more\_data() (common\_data\_importer.CommonBinaryFileDataImporter method)|hyperpage}{3}
+\indexentry{init\_file\_input\_stream() (common\_data\_importer.CommonBinaryFileDataImporter method)|hyperpage}{3}
+\indexentry{rewind() (common\_data\_importer.CommonBinaryFileDataImporter method)|hyperpage}{3}
+\indexentry{rewindPatch() (common\_data\_importer.CommonBinaryFileDataImporter method)|hyperpage}{3}
+\indexentry{write\_data() (common\_data\_importer.CommonBinaryFileDataImporter method)|hyperpage}{3}
+\indexentry{CommonDataImporter (class in common\_data\_importer)|hyperpage}{3}
+\indexentry{CommonFileDataImporter (class in common\_data\_importer)|hyperpage}{3}
+\indexentry{close\_file() (common\_data\_importer.CommonFileDataImporter method)|hyperpage}{4}
+\indexentry{get\_data() (common\_data\_importer.CommonFileDataImporter method)|hyperpage}{4}
+\indexentry{has\_more\_data() (common\_data\_importer.CommonFileDataImporter method)|hyperpage}{4}
+\indexentry{init\_file\_input\_stream() (common\_data\_importer.CommonFileDataImporter method)|hyperpage}{4}
+\indexentry{rewind() (common\_data\_importer.CommonFileDataImporter method)|hyperpage}{4}
+\indexentry{CommonSimpleDataImporter (class in common\_data\_importer)|hyperpage}{4}
+\indexentry{get\_data() (common\_data\_importer.CommonSimpleDataImporter method)|hyperpage}{4}
+\indexentry{has\_more\_data() (common\_data\_importer.CommonSimpleDataImporter method)|hyperpage}{4}
+\indexentry{kmeans\_main (module)|hyperpage}{5}
+\indexentry{kmeans() (in module kmeans\_main)|hyperpage}{5}
+\indexentry{kmeans (module)|hyperpage}{5}
+\indexentry{DefaultKmeans (class in kmeans)|hyperpage}{5}
+\indexentry{calculate\_centers() (kmeans.DefaultKmeans method)|hyperpage}{5}
+\indexentry{Kmeans (class in kmeans)|hyperpage}{6}
+\indexentry{spscicomp.kmeans.extension.c\_kmeans (module)|hyperpage}{6}
+\indexentry{CKmeans (class in spscicomp.kmeans.extension.c\_kmeans)|hyperpage}{6}
+\indexentry{cal\_chunk\_centers (C function)|hyperpage}{6}
+\indexentry{initkmeans\_c\_extension (C function)|hyperpage}{6}
+\indexentry{kmeans\_c\_extensionMethods (C variable)|hyperpage}{6}
+\indexentry{closest\_center (C function)|hyperpage}{6}
+\indexentry{kmeans\_chunk\_center (C function)|hyperpage}{7}
+\indexentry{cuda.cuda\_kmeans.CUDAKmeans (class in spscicomp.kmeans.extension.c\_kmeans)|hyperpage}{7}
+\indexentry{cal\_chunk\_centers (C function)|hyperpage}{7}
+\indexentry{initkmeans\_c\_extension\_cuda (C function)|hyperpage}{7}
+\indexentry{kmeans\_c\_extensionMethods (C variable)|hyperpage}{7}
+\indexentry{chunk\_centers\_sum\_cuda (C function)|hyperpage}{7}
+\indexentry{kmeans\_chunk\_center\_cuda (C function)|hyperpage}{8}
+\indexentry{opencl.opencl\_kmeans.OpenCLKmeans (class in spscicomp.kmeans.extension.c\_kmeans)|hyperpage}{9}
+\indexentry{kmeans\_data\_generator (module)|hyperpage}{9}
+\indexentry{KmeansDataGenerator (class in kmeans\_data\_generator)|hyperpage}{9}
+\indexentry{KmeansRandomDataGenerator (class in kmeans\_data\_generator)|hyperpage}{9}
+\indexentry{get\_centers() (kmeans\_data\_generator.KmeansRandomDataGenerator method)|hyperpage}{9}
+\indexentry{get\_data() (kmeans\_data\_generator.KmeansRandomDataGenerator method)|hyperpage}{9}
+\indexentry{to\_binary\_file() (kmeans\_data\_generator.KmeansRandomDataGenerator method)|hyperpage}{9}
+\indexentry{to\_file() (kmeans\_data\_generator.KmeansRandomDataGenerator method)|hyperpage}{9}
+\indexentry{algorithms (module)|hyperpage}{11}
+\indexentry{baum\_welch() (in module algorithms)|hyperpage}{11}
+\indexentry{kernel.python (module)|hyperpage}{12}
+\indexentry{backward() (in module kernel.python)|hyperpage}{12}
+\indexentry{backward\_no\_scaling() (in module kernel.python)|hyperpage}{12}
+\indexentry{draw\_state() (in module kernel.python)|hyperpage}{12}
+\indexentry{forward() (in module kernel.python)|hyperpage}{12}
+\indexentry{forward\_no\_scaling() (in module kernel.python)|hyperpage}{13}
+\indexentry{random\_sequence() (in module kernel.python)|hyperpage}{13}
+\indexentry{state\_counts() (in module kernel.python)|hyperpage}{14}
+\indexentry{state\_probabilities() (in module kernel.python)|hyperpage}{14}
+\indexentry{symbol\_counts() (in module kernel.python)|hyperpage}{14}
+\indexentry{transition\_counts() (in module kernel.python)|hyperpage}{15}
+\indexentry{transition\_probabilities() (in module kernel.python)|hyperpage}{15}
+\indexentry{update() (in module kernel.python)|hyperpage}{16}
+\indexentry{Tica\_Amuse (module)|hyperpage}{17}
+\indexentry{TicaAmuse (class in Tica\_Amuse)|hyperpage}{17}
+\indexentry{performAmuse() (Tica\_Amuse.TicaAmuse method)|hyperpage}{17}
+\indexentry{setTimeLag() (Tica\_Amuse.TicaAmuse method)|hyperpage}{17}
+\indexentry{Tica\_PrincipleComp (module)|hyperpage}{17}
+\indexentry{TicaPrinComp (class in Tica\_PrincipleComp)|hyperpage}{17}
+\indexentry{TicaPrinComp.TicaPrinCompTimeLagged (class in Tica\_PrincipleComp)|hyperpage}{18}
+\indexentry{computeCovariance() (Tica\_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged method)|hyperpage}{18}
+\indexentry{computeICs() (Tica\_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged method)|hyperpage}{18}
+\indexentry{performTransformation() (Tica\_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged method)|hyperpage}{18}
+\indexentry{setTimeLag() (Tica\_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged method)|hyperpage}{18}
+\indexentry{symmetrizeCovariance() (Tica\_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged method)|hyperpage}{18}
+\indexentry{calcNumbOfDomComps() (Tica\_PrincipleComp.TicaPrinComp method)|hyperpage}{18}
+\indexentry{computeChunkSize() (Tica\_PrincipleComp.TicaPrinComp method)|hyperpage}{18}
+\indexentry{computeColMeans() (Tica\_PrincipleComp.TicaPrinComp method)|hyperpage}{18}
+\indexentry{computeCovariance() (Tica\_PrincipleComp.TicaPrinComp method)|hyperpage}{18}
+\indexentry{computePCs() (Tica\_PrincipleComp.TicaPrinComp method)|hyperpage}{19}
+\indexentry{naiveDampingParamAdapt() (Tica\_PrincipleComp.TicaPrinComp method)|hyperpage}{19}
+\indexentry{normalizePCs() (Tica\_PrincipleComp.TicaPrinComp method)|hyperpage}{19}
+\indexentry{Tica\_EigenDecomp (module)|hyperpage}{19}
+\indexentry{TicaEigenDecomp (class in Tica\_EigenDecomp)|hyperpage}{19}
+\indexentry{computeEigenDecomp() (Tica\_EigenDecomp.TicaEigenDecomp method)|hyperpage}{19}
+\indexentry{reorderingEigenV() (Tica\_EigenDecomp.TicaEigenDecomp method)|hyperpage}{19}
+\indexentry{Tica\_DataImport (module)|hyperpage}{19}
+\indexentry{TicaDataImport (class in Tica\_DataImport)|hyperpage}{19}
+\indexentry{getData() (Tica\_DataImport.TicaDataImport method)|hyperpage}{19}
+\indexentry{readTable() (Tica\_DataImport.TicaDataImport method)|hyperpage}{20}

@@ -1,5 +1,5 @@
-from kmeans import DefaultKmeans
-from common.logger import Logger
+from spscicomp.kmeans.kmeans import DefaultKmeans
+from spscicomp.common.logger import Logger
 
 LOG = Logger(__name__).get()
 
@@ -22,17 +22,17 @@ def kmeans(k, importer=None):
     kmeans_implementation = None
     if importer:
         try:
-            from cuda.cuda_kmeans import CUDAKmeans
+            from spscicomp.kmeans.cuda.cuda_kmeans import CUDAKmeans
 
             kmeans_implementation = CUDAKmeans(importer=importer)
         except:
             try:
-                from opencl.opencl_kmeans import OpenCLKmeans
+                from spscicomp.kmeans.opencl.opencl_kmeans import OpenCLKmeans
 
                 kmeans_implementation = OpenCLKmeans(importer=importer)
             except:
                 try:
-                    from extension.c_kmeans import CKmeans
+                    from spscicomp.kmeans.extension.c_kmeans import CKmeans
 
                     kmeans_implementation = CKmeans(importer=importer)
                 except:

@@ -1,0 +1,436 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The Amuse algorithm &mdash; spscicomp beta documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="spscicomp beta documentation" href="index.html" />
+    <link rel="prev" title="The HMM algorithm" href="hmm.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hmm.html" title="The HMM algorithm"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">spscicomp beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="the-amuse-algorithm">
+<h1>The Amuse algorithm<a class="headerlink" href="#the-amuse-algorithm" title="Permalink to this headline">¶</a></h1>
+<p>The implementation of the Amuse algorithm consists of the following modules:</p>
+<div class="section" id="module-Tica_Amuse">
+<span id="tica-amuse"></span><h2>Tica_Amuse<a class="headerlink" href="#module-Tica_Amuse" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Tica_Amuse.TicaAmuse">
+<em class="property">class </em><tt class="descclassname">Tica_Amuse.</tt><tt class="descname">TicaAmuse</tt><big>(</big><em>i_inFileName=None</em>, <em>i_outFileName='../testdata/tica_independentComp.npy'</em>, <em>i_addEps=1e-09</em>, <em>i_timeLag=1</em>, <em>i_useDampingAdapt=True</em><big>)</big><a class="headerlink" href="#Tica_Amuse.TicaAmuse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implementation of AMUSE-Algorithm, which basically uses functionality of <a class="reference internal" href="#Tica_PrincipleComp.TicaPrinComp" title="Tica_PrincipleComp.TicaPrinComp"><tt class="xref py py-class docutils literal"><span class="pre">TicaPrinComp</span></tt></a>.
+A <a class="reference internal" href="common.html#common_data_importer.CommonDataImporter" title="common_data_importer.CommonDataImporter"><tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt></a> object to be used for importing the numerical data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>i_inFileName</strong> (<em>string</em>) &#8211; A filename of the binary file which loads the data</li>
+<li><strong>i_outFileName</strong> (<em>string</em>) &#8211; A filename of the binary file which stored the results.</li>
+<li><strong>i_addEps</strong> (<em>float</em>) &#8211; A damping parameter to avoid dividing by zero in the normalization part of the amuse algorithm.</li>
+<li><strong>i_timeLag</strong> (<em>int</em>) &#8211; In this setting the data has time-dependencies where i_timeLag is some lag constant.</li>
+<li><strong>i_useDampingAdapt</strong> &#8211; A Boolean flag to use a method for adapting the damping parameter <cite>i_addEps</cite>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Default setting is <cite>True</cite>
+:type bool</p>
+<dl class="method">
+<dt id="Tica_Amuse.TicaAmuse.performAmuse">
+<tt class="descname">performAmuse</tt><big>(</big><em>i_numDomComp=1</em><big>)</big><a class="headerlink" href="#Tica_Amuse.TicaAmuse.performAmuse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the AMUSE-Algorithm and stores the results in a binary file with
+the stated filename(see above <cite>i_outFileName</cite>).
+Performs the hole algorithm only for one given time-lag.
+If needed you can run the method again for another time-lag by setting the time-lag
+with the function <tt class="xref py py-func docutils literal"><span class="pre">setTimeLag()</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i_numDomComp</strong> (<em>int</em>) &#8211; Number of independent components which are needed.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_Amuse.TicaAmuse.setTimeLag">
+<tt class="descname">setTimeLag</tt><big>(</big><em>i_timeLag</em><big>)</big><a class="headerlink" href="#Tica_Amuse.TicaAmuse.setTimeLag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the time-lag.
+:param i_timeLag: New time-lag.
+:type i_timeLag: int</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-Tica_PrincipleComp">
+<span id="tica-principlecomp"></span><h2>Tica_PrincipleComp<a class="headerlink" href="#module-Tica_PrincipleComp" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Tica_PrincipleComp.TicaPrinComp">
+<em class="property">class </em><tt class="descclassname">Tica_PrincipleComp.</tt><tt class="descname">TicaPrinComp</tt><big>(</big><em>i_inFileName=None</em>, <em>i_outFileName='../testdata/tica_tempOutput.npy'</em>, <em>i_addEpsilon=1e-09</em>, <em>i_timeLag=1</em>, <em>i_useDampingAdapt=True</em><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implementation of computation of principle components highly adapted for the amuse algorithm.
+The class <a class="reference internal" href="#Tica_PrincipleComp.TicaPrinComp" title="Tica_PrincipleComp.TicaPrinComp"><tt class="xref py py-class docutils literal"><span class="pre">TicaPrinComp</span></tt></a> contains the subclass <a class="reference internal" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged" title="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged"><tt class="xref py py-class docutils literal"><span class="pre">TicaPrinCompTimeLagged</span></tt></a>.
+A <a class="reference internal" href="common.html#common_data_importer.CommonDataImporter" title="common_data_importer.CommonDataImporter"><tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt></a> object to be used for importing the numerical data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>i_inFileName</strong> (<em>string</em>) &#8211; A filename of the binary file which loads the data</li>
+<li><strong>i_outFileName</strong> (<em>string</em>) &#8211; A filename of the binary file in which the results are stored</li>
+<li><strong>i_addEpsilon</strong> &#8211; A damping parameter to avoid dividing by zero in the normalization part of the amuse algorithm.</li>
+<li><strong>i_timeLag</strong> (<em>int</em>) &#8211; In this setting the data has time-dependencies where i_timeLag is some lag constant.</li>
+<li><strong>i_useDampingAdapt</strong> &#8211; A Boolean flag to use a method for adapting the damping parameter <cite>i_addEps</cite>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Default setting is <cite>True</cite>
+:type bool</p>
+<dl class="class">
+<dt id="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged">
+<em class="property">class </em><tt class="descname">TicaPrinCompTimeLagged</tt><big>(</big><em>i_ticaPrinComp</em><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged" title="Permalink to this definition">¶</a></dt>
+<dd><p>A subclass contained in <a class="reference internal" href="#Tica_PrincipleComp.TicaPrinComp" title="Tica_PrincipleComp.TicaPrinComp"><tt class="xref py py-class docutils literal"><span class="pre">TicaPrinComp</span></tt></a>. This class contains the time-lagged relevant implementations
+of the AMUSE-Algorithm. Especially it is implemented the computation of the
+time-lagged covariance matrix <span class="math">\(C^{\tau}\)</span>.
+The class <a class="reference internal" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged" title="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged"><tt class="xref py py-class docutils literal"><span class="pre">TicaPrinCompTimeLagged</span></tt></a> also performs the transformations, which are leads to the
+independent components <span class="math">\(Z\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i_ticaPrinComp</strong> (<a class="reference internal" href="#Tica_PrincipleComp.TicaPrinComp" title="Tica_PrincipleComp.TicaPrinComp"><tt class="xref py py-class docutils literal"><span class="pre">TicaPrinComp</span></tt></a>) &#8211; A <a class="reference internal" href="#Tica_PrincipleComp.TicaPrinComp" title="Tica_PrincipleComp.TicaPrinComp"><tt class="xref py py-class docutils literal"><span class="pre">TicaPrinComp</span></tt></a> object as input parameter to indicate the dependencies.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.computeCovariance">
+<tt class="descname">computeCovariance</tt><big>(</big><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.computeCovariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the time-lagged covariance matrix <span class="math">\(C^{\tau}\)</span> with
+<span class="math">\(c_{ij}^{\tau} = \frac{1}{N-\tau-1}\sum_{t=1}^{N-\tau}x_{it}x_{jt+\tau}\)</span></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.computeICs">
+<tt class="descname">computeICs</tt><big>(</big><em>i_numDomComp=1</em><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.computeICs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main method in the class <a class="reference internal" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged" title="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged"><tt class="xref py py-class docutils literal"><span class="pre">TicaPrinCompTimeLagged</span></tt></a>.
+Computes the independent components on the basis of normalized principle components supplied by
+<a class="reference internal" href="#Tica_PrincipleComp.TicaPrinComp" title="Tica_PrincipleComp.TicaPrinComp"><tt class="xref py py-class docutils literal"><span class="pre">TicaPrinComp</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i_numDumComp</strong> &#8211; Number of needed independent components.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.performTransformation">
+<tt class="descname">performTransformation</tt><big>(</big><em>i_domComp</em><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.performTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the independent components and saves needed components in a output numpy binary file.
+:param i_domComp: Needed components of TICA
+:type i_domComp: int</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.setTimeLag">
+<tt class="descname">setTimeLag</tt><big>(</big><em>i_timeLag</em><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.setTimeLag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a new time-lag value.
+:param i_timeLag:
+:type: int</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.symmetrizeCovariance">
+<tt class="descname">symmetrizeCovariance</tt><big>(</big><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.TicaPrinCompTimeLagged.symmetrizeCovariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Symmetrizes the time-lagged covariance matrix <span class="math">\(C^{\tau}\)</span> by
+<span class="math">\(C_{sym}^{\tau} = \frac{1}{2} \left[ C^{\tau} + \left( C^{\tau} \right)^{T} \right]\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.calcNumbOfDomComps">
+<tt class="descclassname">TicaPrinComp.</tt><tt class="descname">calcNumbOfDomComps</tt><big>(</big><em>i_amountOfTotalVariance</em><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.calcNumbOfDomComps" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>Not used actually!</cite>
+This function returns, by a given amount of the total variance, the number of relevant
+principle components.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i_amountOfTotalVariance</strong> (<em>float</em>) &#8211; Amount of total variance.</td>
+</tr>
+</tbody>
+</table>
+<p>:return : Return the number of dominant principle components.
+:rtype: int</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.computeChunkSize">
+<tt class="descclassname">TicaPrinComp.</tt><tt class="descname">computeChunkSize</tt><big>(</big><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.computeChunkSize" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes in a naive way the chunk size, which is used to load a data chunk from the memory map
+of <tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt>.
+If the file size of the input file is greater than the threshold a bisection
+of the number of rows of the input file will be performed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.computeColMeans">
+<tt class="descclassname">TicaPrinComp.</tt><tt class="descname">computeColMeans</tt><big>(</big><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.computeColMeans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes mean per column of the input data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.computeCovariance">
+<tt class="descclassname">TicaPrinComp.</tt><tt class="descname">computeCovariance</tt><big>(</big><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.computeCovariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes chunk by chunk the instantaneous covariance matrix <span class="math">\(C\)</span>.
+If a c-extension is available, then it will used by the flag <cite>use_extension</cite></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.computePCs">
+<tt class="descclassname">TicaPrinComp.</tt><tt class="descname">computePCs</tt><big>(</big><em>i_dataChunk</em>, <em>i_domComp</em><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.computePCs" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes the principle components of the input data <span class="math">\(X\)</span>.
+Let <span class="math">\(\Gamma\)</span> be the matrix which contains the ordered eigenvectors of the instantaneous
+covariance matrix <span class="math">\(C\)</span>. The principle components <span class="math">\(Y\)</span> are computed
+by <span class="math">\(Y = \Gamma^{T}(X-mean(X))\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>i_dataChunk</strong> (<em>numpy.array</em>) &#8211; A data chunk as a subset of hole data.</li>
+<li><strong>i_domComp</strong> (<em>int</em>) &#8211; Number of dominated components which are considered.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return o_pc:</th><td class="field-body"><p class="first">The principle components <span class="math">\(Y\)</span>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.naiveDampingParamAdapt">
+<tt class="descclassname">TicaPrinComp.</tt><tt class="descname">naiveDampingParamAdapt</tt><big>(</big><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.naiveDampingParamAdapt" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function adapts possible singular eigenvalues of the covariance matrix.
+This is done in a naive way by adding small constants to the effect that small negative eigenvalues
+become positive and eigenvalues which are <cite>nan</cite> will be set on a small not negative number.
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_PrincipleComp.TicaPrinComp.normalizePCs">
+<tt class="descclassname">TicaPrinComp.</tt><tt class="descname">normalizePCs</tt><big>(</big><em>i_pcsChunk</em><big>)</big><a class="headerlink" href="#Tica_PrincipleComp.TicaPrinComp.normalizePCs" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes the normalizes the principle components <span class="math">\(Y\)</span> of the input data <span class="math">\(X\)</span>.
+Let <span class="math">\(\Lambda\)</span> be a diagonal matrix with the ordered eigenvalues of the instantaneous
+#covariance matrix <span class="math">\(C\)</span>. The normalized principle components <span class="math">\(\tilde{Y}\)</span> are computed
+by <span class="math">\(\tilde{Y} = \Lambda^{-\frac{1}{2}}Y)\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i_pcsChunk</strong> (<em>numpy.array</em>) &#8211; A chunk of principle components.</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Return o_pcNorm:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">The normalized principle components <span class="math">\(\tilde{Y}\)</span>.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">numpy.array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-Tica_EigenDecomp">
+<span id="tica-eigendecomp"></span><h2>Tica_EigenDecomp<a class="headerlink" href="#module-Tica_EigenDecomp" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Tica_EigenDecomp.TicaEigenDecomp">
+<em class="property">class </em><tt class="descclassname">Tica_EigenDecomp.</tt><tt class="descname">TicaEigenDecomp</tt><big>(</big><em>i_matrix</em><big>)</big><a class="headerlink" href="#Tica_EigenDecomp.TicaEigenDecomp" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class that post processes the results of the eigen decomposition of <tt class="xref py py-class docutils literal"><span class="pre">numpy.linalg.eig</span></tt>.
+Performs a reordering of the eigen values and the corresponding eigen vectors.
+Here are considered only real eigen values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i_matrix</strong> (<em>numpy.array[]</em>) &#8211; A matrix from which the eigen decomposition will realized.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="Tica_EigenDecomp.TicaEigenDecomp.computeEigenDecomp">
+<tt class="descname">computeEigenDecomp</tt><big>(</big><em>i_matrix</em><big>)</big><a class="headerlink" href="#Tica_EigenDecomp.TicaEigenDecomp.computeEigenDecomp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the eigen decomposition of <tt class="xref py py-class docutils literal"><span class="pre">numpy.linalg</span></tt> and rearrange(see <tt class="xref py py-func docutils literal"><span class="pre">reorderingEigenV()</span></tt>)
+the eigenvalues if they are real.
+If the eigenvalues have a imaginary part a warning will logged, the imaginary parts will be set to zero
+and the real parts will be rearranged.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_EigenDecomp.TicaEigenDecomp.reorderingEigenV">
+<tt class="descname">reorderingEigenV</tt><big>(</big><big>)</big><a class="headerlink" href="#Tica_EigenDecomp.TicaEigenDecomp.reorderingEigenV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reordering of eigenvalues and corresponding eigenvectors by the largest eigenvalue.
+Ordering only for real eigenvalues.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-Tica_DataImport">
+<span id="tica-dataimport"></span><h2>Tica_DataImport<a class="headerlink" href="#module-Tica_DataImport" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Tica_DataImport.TicaDataImport">
+<em class="property">class </em><tt class="descclassname">Tica_DataImport.</tt><tt class="descname">TicaDataImport</tt><big>(</big><em>i_fileName</em><big>)</big><a class="headerlink" href="#Tica_DataImport.TicaDataImport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple class which import csv data with the <tt class="xref py py-class docutils literal"><span class="pre">numpy</span></tt> function <tt class="xref py py-func docutils literal"><span class="pre">numpy.loadtxt()</span></tt>.</p>
+<dl class="method">
+<dt id="Tica_DataImport.TicaDataImport.getData">
+<tt class="descname">getData</tt><big>(</big><big>)</big><a class="headerlink" href="#Tica_DataImport.TicaDataImport.getData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the loaded csv data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Return a numpy matrix.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">numpy.matrix</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tica_DataImport.TicaDataImport.readTable">
+<tt class="descname">readTable</tt><big>(</big><em>i_fileName</em><big>)</big><a class="headerlink" href="#Tica_DataImport.TicaDataImport.readTable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a csv file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i_fileName</strong> (<em>string</em>) &#8211; A filename of the csv file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">The Amuse algorithm</a><ul>
+<li><a class="reference internal" href="#module-Tica_Amuse">Tica_Amuse</a></li>
+<li><a class="reference internal" href="#module-Tica_PrincipleComp">Tica_PrincipleComp</a></li>
+<li><a class="reference internal" href="#module-Tica_EigenDecomp">Tica_EigenDecomp</a></li>
+<li><a class="reference internal" href="#module-Tica_DataImport">Tica_DataImport</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hmm.html"
+                        title="previous chapter">The HMM algorithm</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tica.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hmm.html" title="The HMM algorithm"
+             >previous</a> |</li>
+        <li><a href="index.html">spscicomp beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, The Project Group.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

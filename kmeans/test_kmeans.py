@@ -1,10 +1,10 @@
 import unittest
 
-from common.common_data_importer import *
-from kmeans_data_generator import *
-from extension.c_kmeans import *
+from spscicomp.common.common_data_importer import *
+from spscicomp.kmeans.kmeans_data_generator import *
+from spscicomp.kmeans.extension.c_kmeans import *
 from os import remove
-from opencl.opencl_kmeans import OpenCLKmeans
+from spscicomp.kmeans.opencl.opencl_kmeans import OpenCLKmeans
 
 
 class TestKmeansMetric(unittest.TestCase):

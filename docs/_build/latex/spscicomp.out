@@ -1,0 +1,21 @@
+\BOOKMARK [0][-]{chapter.1}{Common modules}{}% 1
+\BOOKMARK [1][-]{section.1.1}{common\137data\137importer}{chapter.1}% 2
+\BOOKMARK [0][-]{chapter.2}{The k-means algorithm}{}% 3
+\BOOKMARK [1][-]{section.2.1}{kmeans\137main}{chapter.2}% 4
+\BOOKMARK [1][-]{section.2.2}{kmeans}{chapter.2}% 5
+\BOOKMARK [1][-]{section.2.3}{c\137kmeans}{chapter.2}% 6
+\BOOKMARK [1][-]{section.2.4}{cuda\137kmeans}{chapter.2}% 7
+\BOOKMARK [1][-]{section.2.5}{opencl\137kmeans}{chapter.2}% 8
+\BOOKMARK [1][-]{section.2.6}{kmeans\137data\137generator}{chapter.2}% 9
+\BOOKMARK [0][-]{chapter.3}{The HMM algorithm}{}% 10
+\BOOKMARK [1][-]{section.3.1}{algorithms}{chapter.3}% 11
+\BOOKMARK [1][-]{section.3.2}{kernel}{chapter.3}% 12
+\BOOKMARK [0][-]{chapter.4}{The Amuse algorithm}{}% 13
+\BOOKMARK [1][-]{section.4.1}{Tica\137Amuse}{chapter.4}% 14
+\BOOKMARK [1][-]{section.4.2}{Tica\137PrincipleComp}{chapter.4}% 15
+\BOOKMARK [1][-]{section.4.3}{Tica\137EigenDecomp}{chapter.4}% 16
+\BOOKMARK [1][-]{section.4.4}{Tica\137DataImport}{chapter.4}% 17
+\BOOKMARK [0][-]{chapter.5}{How to build the documentation}{}% 18
+\BOOKMARK [0][-]{chapter.6}{Indices and tables}{}% 19
+\BOOKMARK [0][-]{section*.85}{Python Module Index}{}% 20
+\BOOKMARK [0][-]{section*.86}{Index}{}% 21

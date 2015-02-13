@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
-from kmeans import DefaultKmeans
+from spscicomp.kmeans import DefaultKmeans
 
 
 # Plots 2D data only.

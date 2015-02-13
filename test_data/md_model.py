@@ -11,7 +11,7 @@ LOG = Logger(__name__).get()
 
 time_lag = 1
 n_components = 4
-kmeans_k = 10
+kmeans_k = 100
 state_count = 3
 
 binary_file = 'bpti.npy'
@@ -45,7 +45,7 @@ if not os.path.exists(hmm_file):
     LOG.debug('Running HMM...')
     d = len(data_assigns) / 10
     obs = np.array([data_assigns[x * d: x * d + d - 1] for x in range(10)])
-    A, B, pi = use_hmm(observations=obs, state_count=state_count, symbol_count=kmeans_k)
+    A, B, pi = use_hmm(observations=obs, state_count=state_count, symbol_count=kmeans_k, retries=2)
     np.save(hmm_file, A)
 else:
     A = np.load(hmm_file)

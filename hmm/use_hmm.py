@@ -176,23 +176,23 @@ def hmm_baum_welch_multiple_file(A, B, pi, observation_file, observation_length,
 def use_hmm(observations, state_count, symbol_count, maxit=1000, accuracy=-1, retries=10, dtype=numpy.float32):
     curr_A, curr_B, curr_pi = None, None, None
     curr_eps = None
+#    try:
+#        importlib.import_module('spscicomp.hmm.kernel.opencl')
+#        kernel = spscicomp.hmm.kernel.opencl
+#        LOG.debug('OpenCL-Kernel used')
+#    except:
+#        LOG.debug('OpenCL-Kernel not available')
     try:
-        importlib.import_module('spscicomp.hmm.kernel.opencl')
-        kernel = spscicomp.hmm.kernel.opencl
-        LOG.debug('OpenCL-Kernel used')
+        importlib.import_module('spscicomp.hmm.kernel.c')
+        kernel = spscicomp.hmm.kernel.c
+        if numpy.result_type(observations) != numpy.int16:
+            LOG.debug('Observations data type was not int16, thus casting it for c-extension.')
+            observations = numpy.array(observations, dtype=numpy.int16)
+        LOG.debug('C-Kernel used')
     except:
-        LOG.debug('OpenCL-Kernel not available')
-        try:
-            importlib.import_module('spscicomp.hmm.kernel.c')
-            kernel = spscicomp.hmm.kernel.c
-            if numpy.result_type(observations) != numpy.int16:
-                LOG.debug('Observations data type was not int16, thus casting it for c-extension.')
-                observations = numpy.array(observations, dtype=numpy.int16)
-            LOG.debug('C-Kernel used')
-        except:
-            LOG.debug('C-Kernel not available')
-            kernel = spscicomp.hmm.kernel.python
-            LOG.debug('Python-Kernel used')
+        LOG.debug('C-Kernel not available')
+        kernel = spscicomp.hmm.kernel.python
+        LOG.debug('Python-Kernel used')
 
     for _ in range(0, retries):
         A = spscicomp.hmm.utility.generate_random_matrice(state_count, state_count)

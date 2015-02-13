@@ -5,9 +5,26 @@
 \contentsline {section}{\numberline {2.1}kmeans\_main}{5}{section.2.1}
 \contentsline {section}{\numberline {2.2}kmeans}{5}{section.2.2}
 \contentsline {section}{\numberline {2.3}c\_kmeans}{6}{section.2.3}
-\contentsline {section}{\numberline {2.4}cuda\_kmeans}{6}{section.2.4}
-\contentsline {section}{\numberline {2.5}opencl\_kmeans}{6}{section.2.5}
-\contentsline {section}{\numberline {2.6}kmeans\_data\_generator}{7}{section.2.6}
-\contentsline {chapter}{\numberline {3}Indices and tables}{9}{chapter.3}
-\contentsline {chapter}{Python Module Index}{11}{section*.31}
-\contentsline {chapter}{Index}{13}{section*.32}
+\contentsline {section}{\numberline {2.4}cuda\_kmeans}{7}{section.2.4}
+\contentsline {section}{\numberline {2.5}opencl\_kmeans}{9}{section.2.5}
+\contentsline {section}{\numberline {2.6}kmeans\_data\_generator}{9}{section.2.6}
+\contentsline {chapter}{\numberline {3}The HMM algorithm}{11}{chapter.3}
+\contentsline {section}{\numberline {3.1}algorithms}{11}{section.3.1}
+\contentsline {section}{\numberline {3.2}kernel}{12}{section.3.2}
+\contentsline {subsection}{\numberline {3.2.1}python}{12}{subsection.3.2.1}
+\contentsline {paragraph}{Notes}{14}{paragraph*.49}
+\contentsline {paragraph}{Notes}{14}{paragraph*.51}
+\contentsline {paragraph}{Notes}{14}{paragraph*.53}
+\contentsline {paragraph}{Notes}{15}{paragraph*.55}
+\contentsline {paragraph}{Notes}{15}{paragraph*.57}
+\contentsline {paragraph}{Notes}{16}{paragraph*.59}
+\contentsline {paragraph}{Notes}{16}{paragraph*.61}
+\contentsline {chapter}{\numberline {4}The Amuse algorithm}{17}{chapter.4}
+\contentsline {section}{\numberline {4.1}Tica\_Amuse}{17}{section.4.1}
+\contentsline {section}{\numberline {4.2}Tica\_PrincipleComp}{17}{section.4.2}
+\contentsline {section}{\numberline {4.3}Tica\_EigenDecomp}{19}{section.4.3}
+\contentsline {section}{\numberline {4.4}Tica\_DataImport}{19}{section.4.4}
+\contentsline {chapter}{\numberline {5}How to build the documentation}{21}{chapter.5}
+\contentsline {chapter}{\numberline {6}Indices and tables}{23}{chapter.6}
+\contentsline {chapter}{Python Module Index}{25}{section*.85}
+\contentsline {chapter}{Index}{27}{section*.86}

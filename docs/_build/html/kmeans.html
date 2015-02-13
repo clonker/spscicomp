@@ -90,7 +90,7 @@ available, they are selected and initialized automatically in the above order. T
 <span id="kmeans"></span><h2>kmeans<a class="headerlink" href="#module-kmeans" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="kmeans.DefaultKmeans">
-<em class="property">class </em><tt class="descclassname">kmeans.</tt><tt class="descname">DefaultKmeans</tt><big>(</big><em>metric=&lt;kmeans_metric.EuclideanMetric object at 0x03AA7DF0&gt;</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#kmeans.DefaultKmeans" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">kmeans.</tt><tt class="descname">DefaultKmeans</tt><big>(</big><em>metric=&lt;spscicomp.kmeans.kmeans_metric.EuclideanMetric object at 0x7f24d5fe96d0&gt;</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#kmeans.DefaultKmeans" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default implementation of the k-means algorithm. Once supplied with an <a class="reference internal" href="common.html#common_data_importer.CommonDataImporter" title="common_data_importer.CommonDataImporter"><tt class="xref py py-class docutils literal"><span class="pre">CommonDataImporter</span></tt></a> object, use the
 calculate_centers method to compute k cluster centers.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -155,13 +155,20 @@ are returned.</li>
 
 <dl class="class">
 <dt id="kmeans.Kmeans">
-<em class="property">class </em><tt class="descclassname">kmeans.</tt><tt class="descname">Kmeans</tt><big>(</big><em>metric=&lt;kmeans_metric.EuclideanMetric object at 0x03AA7C10&gt;</em>, <em>importer=None</em><big>)</big><a class="headerlink" href="#kmeans.Kmeans" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">kmeans.</tt><tt class="descname">Kmeans</tt><big>(</big><em>metric=&lt;spscicomp.kmeans.kmeans_metric.EuclideanMetric object at 0x7f24d5fe90d0&gt;</em>, <em>importer=None</em><big>)</big><a class="headerlink" href="#kmeans.Kmeans" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract k-means algorithm. Implementations are expected to override the calculate_centers method.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="c-kmeans">
-<h2>c_kmeans<a class="headerlink" href="#c-kmeans" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-spscicomp.kmeans.extension.c_kmeans">
+<span id="c-kmeans"></span><h2>c_kmeans<a class="headerlink" href="#module-spscicomp.kmeans.extension.c_kmeans" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="spscicomp.kmeans.extension.c_kmeans.CKmeans">
+<em class="property">class </em><tt class="descclassname">spscicomp.kmeans.extension.c_kmeans.</tt><tt class="descname">CKmeans</tt><big>(</big><em>metric=&lt;spscicomp.kmeans.kmeans_metric.EuclideanMetric object at 0x7f24d5f04f10&gt;</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#spscicomp.kmeans.extension.c_kmeans.CKmeans" title="Permalink to this definition">¶</a></dt>
+<dd><p>An implementation of the k-means algorithm in C. Refer to the <a class="reference internal" href="#kmeans.DefaultKmeans" title="kmeans.DefaultKmeans"><tt class="xref py py-class docutils literal"><span class="pre">DefaultKmeans</span></tt></a> class for parameters and
+public methods.</p>
+</dd></dl>
+
 <dl class="function">
 <dt id="c.cal_chunk_centers">
 static PyObject* <tt class="descname">cal_chunk_centers</tt><big>(</big>PyObject<em>&nbsp;*dummy</em>, PyObject<em>&nbsp;*args</em><big>)</big><a class="headerlink" href="#c.cal_chunk_centers" title="Permalink to this definition">¶</a></dt>
@@ -274,8 +281,8 @@ PyObject* <tt class="descname">kmeans_chunk_center</tt><big>(</big>PyArrayObject
 <div class="section" id="cuda-kmeans">
 <h2>cuda_kmeans<a class="headerlink" href="#cuda-kmeans" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="kmeans.cuda.cuda_kmeans.CUDAKmeans">
-<em class="property">class </em><tt class="descclassname">cuda.cuda_kmeans.</tt><tt class="descname">CUDAKmeans</tt><big>(</big><em>metric=EuclideanMetric()</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#kmeans.cuda.cuda_kmeans.CUDAKmeans" title="Permalink to this definition">¶</a></dt>
+<dt id="spscicomp.kmeans.extension.c_kmeans.cuda.cuda_kmeans.CUDAKmeans">
+<em class="property">class </em><tt class="descclassname">cuda.cuda_kmeans.</tt><tt class="descname">CUDAKmeans</tt><big>(</big><em>metric=EuclideanMetric()</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#spscicomp.kmeans.extension.c_kmeans.cuda.cuda_kmeans.CUDAKmeans" title="Permalink to this definition">¶</a></dt>
 <dd><p>An implementation of the k-means algorithm in CUDA. Refer to the <a class="reference internal" href="#kmeans.DefaultKmeans" title="kmeans.DefaultKmeans"><tt class="xref py py-class docutils literal"><span class="pre">DefaultKmeans</span></tt></a> class for parameters and
 public methods.</p>
 </dd></dl>
@@ -395,8 +402,8 @@ PyObject* <tt class="descname">kmeans_chunk_center_cuda</tt><big>(</big>PyArrayO
 <div class="section" id="opencl-kmeans">
 <h2>opencl_kmeans<a class="headerlink" href="#opencl-kmeans" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="kmeans.opencl.opencl_kmeans.OpenCLKmeans">
-<em class="property">class </em><tt class="descclassname">opencl.opencl_kmeans.</tt><tt class="descname">OpenCLKmeans</tt><big>(</big><em>metric=EuclideanMetric()</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#kmeans.opencl.opencl_kmeans.OpenCLKmeans" title="Permalink to this definition">¶</a></dt>
+<dt id="spscicomp.kmeans.extension.c_kmeans.opencl.opencl_kmeans.OpenCLKmeans">
+<em class="property">class </em><tt class="descclassname">opencl.opencl_kmeans.</tt><tt class="descname">OpenCLKmeans</tt><big>(</big><em>metric=EuclideanMetric()</em>, <em>importer=None</em>, <em>chunk_size=1000</em>, <em>max_steps=100</em><big>)</big><a class="headerlink" href="#spscicomp.kmeans.extension.c_kmeans.opencl.opencl_kmeans.OpenCLKmeans" title="Permalink to this definition">¶</a></dt>
 <dd><p>An implementation of the k-means algorithm in OpenCL. Refer to the <a class="reference internal" href="#kmeans.DefaultKmeans" title="kmeans.DefaultKmeans"><tt class="xref py py-class docutils literal"><span class="pre">DefaultKmeans</span></tt></a> class for parameters and
 public methods.</p>
 </dd></dl>
@@ -506,7 +513,7 @@ respective <a class="reference internal" href="common.html#common_data_importer.
 <li><a class="reference internal" href="#">The k-means algorithm</a><ul>
 <li><a class="reference internal" href="#module-kmeans_main">kmeans_main</a></li>
 <li><a class="reference internal" href="#module-kmeans">kmeans</a></li>
-<li><a class="reference internal" href="#c-kmeans">c_kmeans</a></li>
+<li><a class="reference internal" href="#module-spscicomp.kmeans.extension.c_kmeans">c_kmeans</a></li>
 <li><a class="reference internal" href="#cuda-kmeans">cuda_kmeans</a></li>
 <li><a class="reference internal" href="#opencl-kmeans">opencl_kmeans</a></li>
 <li><a class="reference internal" href="#module-kmeans_data_generator">kmeans_data_generator</a></li>

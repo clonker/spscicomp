@@ -6,6 +6,30 @@ from spscicomp.common.common_data_importer import CommonBinaryFileDataImporter
 from spscicomp.kmeans.kmeans_main import kmeans
 from spscicomp.hmm.use_hmm import use_hmm
 
+'''
+    Results for
+        time_lag = 1
+        n_components = 4
+        kmeans_k = 100
+        state_count = 3
+
+        16:44:02 DEBUG spscicomp.tica.Tica_PrincipleComp: TICA: C extension be work in progress, using Python implementation
+        16:44:02 DEBUG __main__: Converting data...
+        16:44:32 DEBUG __main__: TICA output file ticad_bpti.npy not found!
+        16:44:32 DEBUG __main__: Running TICA...
+        16:44:56 DEBUG __main__: k-means output file kmeansd_bpti.npy not found!
+        16:44:56 DEBUG __main__: Running k-means...
+        16:44:56 DEBUG spscicomp.kmeans.kmeans_main: implementation chosen = <class 'spscicomp.kmeans.opencl.opencl_kmeans.OpenCLKmeans'>
+        17:14:26 DEBUG __main__: HMM output file hmmd_bpti.npy not found!
+        17:14:26 DEBUG __main__: Running HMM...
+        17:14:26 DEBUG spscicomp.hmm.use_hmm: C-Kernel used
+        17:17:59 DEBUG spscicomp.hmm.use_hmm: Finished HMM iteration with likelihood -9.50877e+06
+        17:21:26 DEBUG spscicomp.hmm.use_hmm: Finished HMM iteration with likelihood -1.08209e+07
+        17:21:26 DEBUG __main__: Transition matrix:
+            [[  9.97891188e-01   4.80510877e-04   1.62991369e-03]
+             [  3.44174478e-04   9.99570131e-01   8.61332228e-05]
+             [  2.04592384e-03   1.41762692e-04   9.97815371e-01]]
+'''
 
 LOG = Logger(__name__).get()
 

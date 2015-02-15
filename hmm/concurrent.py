@@ -1,3 +1,4 @@
+import importlib
 import numpy
 import multiprocessing
 import spscicomp.hmm.algorithms
@@ -29,13 +30,13 @@ class Task(object):
         self.A = A
         self.B = B
         self.pi = pi
-        #self.kernel = kernel
+        self.kernel = kernel.__name__
         self.dtype = dtype
 
     def __call__(self):
-        #return spscicomp.hmm.algorithms.noms_and_denoms(
-        #    self.A, self.B, self.pi, self.ob, kernel=self.kernel, dtype=self.dtype)
-        return spscicomp.hmm.algorithms.noms_and_denoms(self.A, self.B, self.pi, self.ob, kernel=spscicomp.hmm.kernel.c, dtype=self.dtype)
+        return spscicomp.hmm.algorithms.noms_and_denoms(
+            self.A, self.B, self.pi, self.ob, kernel=importlib.import_module(self.kernel), dtype=self.dtype
+        )
 
 
 def save_module(module):
@@ -44,7 +45,7 @@ def save_module(module):
 
 def baum_welch_multiple(obs, A, B, pi, accuracy=1e-3, maxit=1000, kernel=spscicomp.hmm.kernel.python,
                         dtype=numpy.float32):
-    #copy_reg.pickle(type(kernel), save_module)
+
     K, N, M = len(obs), len(A), len(B[0])
     nomsA = numpy.zeros((K, N, N), dtype=A.dtype)
     denomsA = numpy.zeros((K, N), dtype=A.dtype)

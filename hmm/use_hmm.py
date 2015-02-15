@@ -199,9 +199,11 @@ def use_hmm(observations, state_count, symbol_count, maxit=1000, accuracy=-1, re
         B = spscicomp.hmm.utility.generate_random_matrice(state_count, symbol_count)
         pi = spscicomp.hmm.utility.generate_random_array(state_count)
 
-        A, B, pi, eps, it = spscicomp.hmm.algorithms.baum_welch_multiple(obs=observations, A=A, B=B, pi=pi,
+        A, B, pi, eps, it = spscicomp.hmm.concurrent.baum_welch_multiple(obs=observations, A=A, B=B, pi=pi,
                                                                          kernel=kernel,
                                                                          dtype=dtype, maxit=maxit, accuracy=accuracy)
+
+        LOG.debug("Finished HMM iteration with likelihood "+str(eps))
 
         if curr_eps is None or curr_eps < eps:
             curr_A, curr_B, curr_pi, curr_eps = A, B, pi, eps
